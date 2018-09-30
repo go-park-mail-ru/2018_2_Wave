@@ -1,13 +1,25 @@
 package main
 
 import (
-	"test_module/server"
+	"Wave/handles"
+	"Wave/server"
 )
 
 func main() {
-	srv := server.Server{}
-	srv.Init()
-	srv.Get("/gg", srv.StaticServer)
-	srv.Get("/wp/:path", srv.StaticServer)
+	println(" -- -- -- -- -- -- -- -- -- --")
+
+	srv := server.New()
+
+	srv.Get("/index.html", srv.StaticServer)
+	srv.Get("/app.bundle.js", srv.StaticServer)
+
+	srv.Get("/img/avatars/:uid", handles.OnAvatarGET)
+
+	srv.Post("/signup", handles.OnSignUpPOST)
+	srv.Post("/login", handles.OnLogInPOST)
+
+	srv.Get("/profile", handles.OnProfileGET)
+	srv.Post("/profile", handles.OnProfilePOST)
+
 	srv.Start(":8080")
 }

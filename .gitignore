@@ -1,0 +1,5 @@
+# common
+.vscode
+
+# golang
+vendor/
