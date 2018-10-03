@@ -23,3 +23,14 @@ func OnLogInPOST(ctx *fasthttp.RequestCtx, sv *server.Server, user types.APIUser
 	)
 	setCookie(ctx, sessionCookie)
 }
+
+// OnLogOutGET - public API
+// walhalla: {
+// 		URI: 		/logout,
+// 		Method: 	GET,
+// 		Auth: 		any
+// }
+func OnLogOutGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
+	cookie := getSessionCookie(ctx)
+	sv.DB.LogOut(cookie)
+}

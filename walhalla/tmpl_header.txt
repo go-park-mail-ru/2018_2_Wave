@@ -6,6 +6,7 @@ import (
     {{if gt (len .Structs) 0}}
         "errors"
 	    "mime/multipart"
+        "strconv"
     {{end}}
 
     {{if gt (len .Handlers) 0}}

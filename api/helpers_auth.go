@@ -1,8 +1,6 @@
 package api
 
 import (
-	"Wave/server"
-
 	"github.com/valyala/fasthttp"
 )
 
@@ -24,22 +22,4 @@ func getSessionCookie(ctx *fasthttp.RequestCtx) string {
 
 func setCookie(ctx *fasthttp.RequestCtx, cookie *fasthttp.Cookie) {
 	ctx.Response.Header.SetCookie(cookie)
-}
-
-func requireAuth(ctx *fasthttp.RequestCtx, sv *server.Server) bool {
-	cookie := getSessionCookie(ctx)
-	if !sv.DB.IsLoggedIn(cookie) {
-		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-		return true
-	}
-	return false
-}
-
-func requireUnAuth(ctx *fasthttp.RequestCtx, sv *server.Server) bool {
-	cookie := getSessionCookie(ctx)
-	if !sv.DB.IsLoggedIn(cookie) {
-		ctx.SetStatusCode(fasthttp.StatusForbidden)
-		return false
-	}
-	return true
 }

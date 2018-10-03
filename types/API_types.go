@@ -20,6 +20,7 @@ type APISignUp struct {
 type APIProfile struct {
 	Username  string `json:"username"`
 	AvatarURI string `json:"avatarSource"`
+	Score     int    `json:"score"`
 }
 
 // APIEditProfile - public API
@@ -29,6 +30,20 @@ type APIEditProfile struct {
 	CurPassword string `json:"curPassword"`
 	NewPassword string `json:"newPassword"`
 	Avatar      []byte `json:"avatar"`
+}
+
+// APILeaderboardRow - public API
+// easyjson:json
+type APILeaderboardRow struct {
+	Username string `json:"username"`
+	Score    int    `json:"score"`
+}
+
+// APILeaderboard - public API
+// easyjson:json
+type APILeaderboard struct {
+	Users []APILeaderboardRow `json:"users"`
+	Total int                 `json:"total"`
 }
 
 func (pf *APISignUp) AsAPIUser() APIUser {

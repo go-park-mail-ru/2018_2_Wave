@@ -11,6 +11,20 @@ import (
 // NOTES:
 // 1. insead of '&lt;'(less) the template generates '&it;'. I don't know why but it is.
 
+func HandlerOnLeaderbordGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
+
+	println("request for OnLeaderbordGET")
+
+	cookie := getSessionCookie(ctx)
+	if !sv.DB.IsLoggedIn(cookie) {
+		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+		return
+	}
+
+	OnLeaderbordGET(ctx, sv)
+
+}
+
 func HandlerOnLogInPOST(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnLogInPOST")
@@ -31,6 +45,28 @@ func HandlerOnLogInPOST(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	}
 
 	OnLogInPOST(ctx, sv, target)
+
+}
+
+func HandlerOnLogOutGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
+
+	println("request for OnLogOutGET")
+
+	OnLogOutGET(ctx, sv)
+
+}
+
+func HandlerOnProfileHEAD(ctx *fasthttp.RequestCtx, sv *server.Server) {
+
+	println("request for OnProfileHEAD")
+
+	cookie := getSessionCookie(ctx)
+	if !sv.DB.IsLoggedIn(cookie) {
+		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+		return
+	}
+
+	OnProfileHEAD(ctx, sv)
 
 }
 
@@ -116,14 +152,20 @@ func HandlerOnSignUpPOST(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 func UseAPI(sv *server.Server) {
 
+	sv.GET("/users/:start/:count", HandlerOnLeaderbordGET)
+
 	sv.POST("/login", HandlerOnLogInPOST)
+
+	sv.GET("/logout", HandlerOnLogOutGET)
+
+	sv.HEAD("/me", HandlerOnProfileHEAD)
 
 	sv.GET("/me", HandlerOnProfileGET)
 
-	sv.POST("/user", HandlerOnProfilePOST)
+	sv.POST("/me", HandlerOnProfilePOST)
 
 	sv.GET("/img/avatars/:uid", HandlerOnAvatarGET)
 
-	sv.POST("/register", HandlerOnSignUpPOST)
+	sv.POST("/signup", HandlerOnSignUpPOST)
 
 }

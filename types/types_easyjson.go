@@ -223,6 +223,8 @@ func easyjson6601e8cdDecodeWaveTypes2(in *jlexer.Lexer, out *APIProfile) {
 			out.Username = string(in.String())
 		case "avatarSource":
 			out.AvatarURI = string(in.String())
+		case "score":
+			out.Score = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -257,6 +259,16 @@ func easyjson6601e8cdEncodeWaveTypes2(out *jwriter.Writer, in APIProfile) {
 		}
 		out.String(string(in.AvatarURI))
 	}
+	{
+		const prefix string = ",\"score\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int(int(in.Score))
+	}
 	out.RawByte('}')
 }
 
@@ -283,7 +295,205 @@ func (v *APIProfile) UnmarshalJSON(data []byte) error {
 func (v *APIProfile) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6601e8cdDecodeWaveTypes2(l, v)
 }
-func easyjson6601e8cdDecodeWaveTypes3(in *jlexer.Lexer, out *APIEditProfile) {
+func easyjson6601e8cdDecodeWaveTypes3(in *jlexer.Lexer, out *APILeaderboardRow) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "username":
+			out.Username = string(in.String())
+		case "score":
+			out.Score = int(in.Int())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson6601e8cdEncodeWaveTypes3(out *jwriter.Writer, in APILeaderboardRow) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"username\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Username))
+	}
+	{
+		const prefix string = ",\"score\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int(int(in.Score))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v APILeaderboardRow) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson6601e8cdEncodeWaveTypes3(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v APILeaderboardRow) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson6601e8cdEncodeWaveTypes3(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *APILeaderboardRow) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson6601e8cdDecodeWaveTypes3(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *APILeaderboardRow) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson6601e8cdDecodeWaveTypes3(l, v)
+}
+func easyjson6601e8cdDecodeWaveTypes4(in *jlexer.Lexer, out *APILeaderboard) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "users":
+			if in.IsNull() {
+				in.Skip()
+				out.Users = nil
+			} else {
+				in.Delim('[')
+				if out.Users == nil {
+					if !in.IsDelim(']') {
+						out.Users = make([]APILeaderboardRow, 0, 2)
+					} else {
+						out.Users = []APILeaderboardRow{}
+					}
+				} else {
+					out.Users = (out.Users)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v4 APILeaderboardRow
+					(v4).UnmarshalEasyJSON(in)
+					out.Users = append(out.Users, v4)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "total":
+			out.Total = int(in.Int())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson6601e8cdEncodeWaveTypes4(out *jwriter.Writer, in APILeaderboard) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"users\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Users == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.Users {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				(v6).MarshalEasyJSON(out)
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"total\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int(int(in.Total))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v APILeaderboard) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson6601e8cdEncodeWaveTypes4(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v APILeaderboard) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson6601e8cdEncodeWaveTypes4(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *APILeaderboard) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson6601e8cdDecodeWaveTypes4(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *APILeaderboard) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson6601e8cdDecodeWaveTypes4(l, v)
+}
+func easyjson6601e8cdDecodeWaveTypes5(in *jlexer.Lexer, out *APIEditProfile) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -325,7 +535,7 @@ func easyjson6601e8cdDecodeWaveTypes3(in *jlexer.Lexer, out *APIEditProfile) {
 		in.Consumed()
 	}
 }
-func easyjson6601e8cdEncodeWaveTypes3(out *jwriter.Writer, in APIEditProfile) {
+func easyjson6601e8cdEncodeWaveTypes5(out *jwriter.Writer, in APIEditProfile) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -375,23 +585,23 @@ func easyjson6601e8cdEncodeWaveTypes3(out *jwriter.Writer, in APIEditProfile) {
 // MarshalJSON supports json.Marshaler interface
 func (v APIEditProfile) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6601e8cdEncodeWaveTypes3(&w, v)
+	easyjson6601e8cdEncodeWaveTypes5(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v APIEditProfile) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6601e8cdEncodeWaveTypes3(w, v)
+	easyjson6601e8cdEncodeWaveTypes5(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *APIEditProfile) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6601e8cdDecodeWaveTypes3(&r, v)
+	easyjson6601e8cdDecodeWaveTypes5(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *APIEditProfile) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6601e8cdDecodeWaveTypes3(l, v)
+	easyjson6601e8cdDecodeWaveTypes5(l, v)
 }

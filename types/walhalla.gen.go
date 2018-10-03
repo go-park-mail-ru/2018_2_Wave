@@ -5,6 +5,7 @@ package types
 import (
 	"errors"
 	"mime/multipart"
+	"strconv"
 )
 
 // NOTES:
@@ -120,6 +121,21 @@ func (ct *APIProfile) UnmarshalForm(form *multipart.Form) error {
 		if len(values) == 1 {
 
 			ct.AvatarURI = values[0]
+
+		} else {
+			return errors.New("multipl values with the same name were detected")
+		}
+
+	}
+
+	if values, ok := form.Value["score"]; len(values) != 0 && ok {
+		if len(values) == 1 {
+
+			value, err := strconv.Atoi(values[0])
+			if err != nil {
+				return errors.New("Unable to parse a field")
+			}
+			ct.Score = value
 
 		} else {
 			return errors.New("multipl values with the same name were detected")

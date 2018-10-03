@@ -3,6 +3,7 @@ package database
 import (
 	"Wave/common"
 	"Wave/types"
+	"sort"
 	"strconv"
 )
 
@@ -11,8 +12,8 @@ type DB struct {
 	mockTable    map[int]types.APIUser
 	cookieToUser map[string]int
 	avatarTable  map[int][]byte
-
-	lastUID int
+	scoreTable   map[int]int
+	lastUID      int
 }
 
 // New - create and initialise new database facade
@@ -22,6 +23,7 @@ func New() *DB {
 		mockTable:    map[int]types.APIUser{},
 		cookieToUser: map[string]int{},
 		avatarTable:  map[int][]byte{},
+		scoreTable:   map[int]int{},
 	}
 	return db
 }
@@ -46,6 +48,7 @@ func (db *DB) SignUp(profile types.APISignUp) (cookie string) {
 	uid := db.lastUID
 	db.mockTable[uid] = profile.AsAPIUser()
 	db.avatarTable[uid] = profile.Avatar
+	db.scoreTable[uid] = 0
 	return db.logIn(uid)
 }
 
@@ -79,6 +82,7 @@ func (db *DB) GetProfile(cookie string) (types.APIProfile, bool) {
 		return types.APIProfile{
 			Username:  db.mockTable[uid].Username,
 			AvatarURI: "/img/avatars/" + strconv.Itoa(uid),
+			Score:     db.scoreTable[uid],
 		}, true
 	}
 	return types.APIProfile{}, false
@@ -107,6 +111,52 @@ func (db *DB) UpdateProfile(cookie string, profile types.APIEditProfile) {
 
 		db.mockTable[uid] = user
 	}
+}
+
+//*****************| Leaderboard
+
+func (db *DB) AddUserScore(cookie string) {
+
+}
+
+func (db *DB) GetUserScore(cookie string) int {
+	if uid, ok := db.cookieToUser[cookie]; ok {
+		return db.scoreTable[uid]
+	}
+	return 0
+}
+
+func (db *DB) GetTopUsers(start, count int) (board types.APILeaderboard) {
+	type Pair struct {
+		uid   int
+		score int
+	}
+	pairs := []Pair{}
+
+	for key, val := range db.scoreTable {
+		pairs = append(pairs, Pair{uid: key, score: val})
+	}
+	sort.Slice(pairs, func(i, j int) bool {
+		return pairs[i].score > pairs[j].score
+	})
+	
+	board.Total = len(pairs)
+
+	end := start + count
+	if start >= len(pairs) {
+		return board
+	}
+	if end > len(pairs) {
+		end = len(pairs)
+	}
+
+	for _, pair := range pairs[start:end] {
+		board.Users = append(board.Users, types.APILeaderboardRow{
+			Username: db.mockTable[pair.uid].Username,
+			Score:    pair.score,
+		})
+	}
+	return board
 }
 
 //*****************|

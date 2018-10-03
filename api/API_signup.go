@@ -8,7 +8,7 @@ import (
 
 // OnSignUpPOST - public API
 // walhalla: {
-// 		URI: 		/register,
+// 		URI: 		/signup,
 // 		Method: 	POST,
 // 		Data: 		form,
 // 		Target:  	types.APISignUp,

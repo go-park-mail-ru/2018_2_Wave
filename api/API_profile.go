@@ -8,6 +8,16 @@ import (
 	"strconv"
 )
 
+// OnProfileHEAD - public API
+// walhalla: {
+// 		URI: 		/me,
+// 		Method: 	HEAD,
+// 		Auth: 		yes
+// }
+func OnProfileHEAD(ctx *fasthttp.RequestCtx, sv *server.Server) {
+	// empty
+}
+
 // OnProfileGET - public API
 // walhalla: {
 // 		URI: 		/me,
@@ -26,7 +36,7 @@ func OnProfileGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 // OnProfilePOST - public API
 // walhalla: {
-// 		URI: 		/user,
+// 		URI: 		/me,
 // 		Method: 	POST,
 // 		Data: 		form,
 // 		Target:  	types.APIEditProfile,
