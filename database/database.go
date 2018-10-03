@@ -5,6 +5,7 @@ import (
 	"Wave/types"
 	"sort"
 	"strconv"
+	"sync"
 )
 
 // DB is a database facade
@@ -14,6 +15,8 @@ type DB struct {
 	avatarTable  map[int][]byte
 	scoreTable   map[int]int
 	lastUID      int
+
+	mutex sync.RWMutex
 }
 
 // New - create and initialise new database facade
@@ -32,6 +35,9 @@ func New() *DB {
 
 // IsSignedUp - weather the user is signed up
 func (db *DB) IsSignedUp(user types.APIUser) bool {
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
+
 	for _, row := range db.mockTable {
 		if row.Username == user.Username {
 			return true
@@ -43,6 +49,9 @@ func (db *DB) IsSignedUp(user types.APIUser) bool {
 // SignUp the user.
 // NOTE: each call creates new record with unique uid
 func (db *DB) SignUp(profile types.APISignUp) (cookie string) {
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
+
 	db.lastUID++
 
 	uid := db.lastUID
@@ -54,6 +63,9 @@ func (db *DB) SignUp(profile types.APISignUp) (cookie string) {
 
 // IsLoggedIn - weather the user is logged in
 func (db *DB) IsLoggedIn(cookie string) bool {
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
+
 	_, ok := db.cookieToUser[cookie]
 	return ok
 }
@@ -61,6 +73,9 @@ func (db *DB) IsLoggedIn(cookie string) bool {
 // LogIn the user if the one is signe up
 // NOTE: each call creates new session
 func (db *DB) LogIn(user types.APIUser) (cookie string) {
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
+
 	if uid, ok := db.getUID(user); ok {
 		return db.logIn(uid)
 	}
@@ -69,6 +84,9 @@ func (db *DB) LogIn(user types.APIUser) (cookie string) {
 
 // LogOut a user with the cookie if the one was logged in
 func (db *DB) LogOut(cookie string) {
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
+
 	if _, ok := db.cookieToUser[cookie]; ok {
 		delete(db.cookieToUser, cookie)
 	}
@@ -78,6 +96,9 @@ func (db *DB) LogOut(cookie string) {
 
 // GetProfile returns a profile assigned to the cookie
 func (db *DB) GetProfile(cookie string) (types.APIProfile, bool) {
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
+
 	if uid, ok := db.cookieToUser[cookie]; ok {
 		return types.APIProfile{
 			Username:  db.mockTable[uid].Username,
@@ -90,12 +111,18 @@ func (db *DB) GetProfile(cookie string) (types.APIProfile, bool) {
 
 // GetAvatar returns avatar's data
 func (db *DB) GetAvatar(uid int) ([]byte, bool) {
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
+
 	data, ok := db.avatarTable[uid]
 	return data, ok
 }
 
 // UpdateProfile updates profile
 func (db *DB) UpdateProfile(cookie string, profile types.APIEditProfile) {
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
+
 	if uid, ok := db.cookieToUser[cookie]; ok {
 		user := db.mockTable[uid]
 
@@ -115,11 +142,10 @@ func (db *DB) UpdateProfile(cookie string, profile types.APIEditProfile) {
 
 //*****************| Leaderboard
 
-func (db *DB) AddUserScore(cookie string) {
-
-}
-
 func (db *DB) GetUserScore(cookie string) int {
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
+
 	if uid, ok := db.cookieToUser[cookie]; ok {
 		return db.scoreTable[uid]
 	}
@@ -133,13 +159,16 @@ func (db *DB) GetTopUsers(start, count int) (board types.APILeaderboard) {
 	}
 	pairs := []Pair{}
 
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
+
 	for key, val := range db.scoreTable {
 		pairs = append(pairs, Pair{uid: key, score: val})
 	}
 	sort.Slice(pairs, func(i, j int) bool {
 		return pairs[i].score > pairs[j].score
 	})
-	
+
 	board.Total = len(pairs)
 
 	end := start + count
