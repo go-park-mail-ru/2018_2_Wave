@@ -1,4 +1,4 @@
-package handles
+package api
 
 import (
 	"errors"
@@ -10,24 +10,15 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-const sessionCookieLifeTime = 60 * 24 * 365
-const sessionCookieName = "session"
-
-func makeSessionCookie(value string) *fasthttp.Cookie {
-	loginCookie := &fasthttp.Cookie{}
-	loginCookie.SetMaxAge(sessionCookieLifeTime)
-	loginCookie.SetKey(sessionCookieName)
-	loginCookie.SetSecure(false)
-	loginCookie.SetValue(value)
-	return loginCookie
-}
-
-func getSessionCookie(ctx *fasthttp.RequestCtx) string {
-	return string(ctx.Request.Header.Cookie(sessionCookieName))
-}
-
-func setCookie(ctx *fasthttp.RequestCtx, cookie *fasthttp.Cookie) {
-	ctx.Response.Header.SetCookie(cookie)
+func processFormRequest(ctx *fasthttp.RequestCtx, target interface{}) bool {
+	if form, err := ctx.MultipartForm(); err != nil {
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		return false
+	} else if err := parsForm(form, target); err != nil {
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		return false
+	}
+	return true
 }
 
 // Pars the form into a flat structure pointer
@@ -71,7 +62,7 @@ func parsForm(form *multipart.Form, target interface{}) error {
 				elementKind = elementType.Kind()
 			)
 			if elementKind != reflect.Uint8 {
-				return errors.New("Only []bytes are allowed")
+				return errors.New("Only []byte are allowed")
 			}
 
 			files, ok := form.File[fieldName]

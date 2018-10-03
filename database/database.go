@@ -26,7 +26,7 @@ func New() *DB {
 	return db
 }
 
-//*****************| main functions
+//*****************| Auth
 
 // IsSignedUp - weather the user is signed up
 func (db *DB) IsSignedUp(user types.APIUser) bool {
@@ -71,7 +71,7 @@ func (db *DB) LogOut(cookie string) {
 	}
 }
 
-//*****************|
+//*****************| Profile
 
 // GetProfile returns a profile assigned to the cookie
 func (db *DB) GetProfile(cookie string) (types.APIProfile, bool) {
@@ -90,18 +90,22 @@ func (db *DB) GetAvatar(uid int) ([]byte, bool) {
 	return data, ok
 }
 
-//*****************|
-
+// UpdateProfile updates profile
 func (db *DB) UpdateProfile(cookie string, profile types.APIEditProfile) {
 	if uid, ok := db.cookieToUser[cookie]; ok {
-		if profile.Password != "" {
-			user := db.mockTable[uid]
-			user.Password = profile.Password
-			db.mockTable[uid] = user
+		user := db.mockTable[uid]
+
+		if newName := profile.Username; newName != "" {
+			user.Username = newName
+		}
+		if newPass := profile.NewPassword; newPass != "" {
+			user.Password = newPass
 		}
 		if len(profile.Avatar) != 0 {
 			db.avatarTable[uid] = profile.Avatar
 		}
+
+		db.mockTable[uid] = user
 	}
 }
 

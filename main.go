@@ -1,25 +1,21 @@
 package main
 
 import (
-	"Wave/handles"
+	"Wave/api"
 	"Wave/server"
 )
 
 func main() {
-	println(" -- -- -- -- -- -- -- -- -- --")
-
+	
 	srv := server.New()
-
-	srv.Get("/index.html", srv.StaticServer)
-	srv.Get("/app.bundle.js", srv.StaticServer)
-
-	srv.Get("/img/avatars/:uid", handles.OnAvatarGET)
-
-	srv.Post("/signup", handles.OnSignUpPOST)
-	srv.Post("/login", handles.OnLogInPOST)
-
-	srv.Get("/profile", handles.OnProfileGET)
-	srv.Post("/profile", handles.OnProfilePOST)
+	
+	api.UseAPI(srv)
+	srv.GET("/index.html", srv.StaticServer)
+	srv.GET("/app.bundle.js", srv.StaticServer)
+	
+	println("-- -- -- -- -- -- -- -- -- -- --")
+	println("-- -- -- Server started -- -- --")
+	println("-- -- -- -- -- -- -- -- -- -- --")
 
 	srv.Start(":8080")
 }

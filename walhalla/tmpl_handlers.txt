@@ -1,0 +1,71 @@
+{{range .Handlers}}
+
+func Handler{{.FunctionName}} ( ctx *fasthttp.RequestCtx, sv *server.Server) {
+    
+    println("request for {{.FunctionName}}")
+
+    {{if eq .Auth "yes"}}
+    
+        cookie := getSessionCookie(ctx)
+        if !sv.DB.IsLoggedIn(cookie) {
+            ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+            return
+        }
+
+    {{else if eq .Auth "no"}}
+        
+        cookie := getSessionCookie(ctx)
+        if sv.DB.IsLoggedIn(cookie) {
+            ctx.SetStatusCode(fasthttp.StatusForbidden)
+            return
+        }
+
+    {{end}}
+
+    {{if eq .Data "form"}}
+        
+        target := {{.Target}}{}
+
+        if form, err := ctx.MultipartForm(); err != nil {
+            ctx.SetStatusCode(fasthttp.StatusBadRequest)
+            return
+        } else if err := target.UnmarshalForm(form); err != nil {
+            ctx.SetStatusCode(fasthttp.StatusBadRequest)
+            return
+        }
+
+        {{if eq .Validation "yes"}}
+            if !target.Validate() {
+                ctx.SetStatusCode(fasthttp.StatusBadRequest)
+                return
+            }
+        {{end}}
+
+        {{.FunctionName}}( ctx, sv, target )
+
+    {{else if eq .Data "json"}}
+
+        target := {{.Target}}{}
+
+        if err := target.UnmarshalJSON( ctx.Request.Body() ); err != nil {
+            ctx.SetStatusCode(fasthttp.StatusBadRequest)
+            return
+        }
+
+        {{if eq .Validation "yes"}}
+            if !target.Validate() {
+                ctx.SetStatusCode(fasthttp.StatusBadRequest)
+                return
+            }
+        {{end}}
+
+        {{.FunctionName}}( ctx, sv, target )
+
+    {{else}}
+
+        {{.FunctionName}}( ctx, sv )
+
+    {{end}}
+}
+
+{{end}}

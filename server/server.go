@@ -40,12 +40,20 @@ func (sv *Server) wrapHandle(handle RequestHandler) fasthttp.RequestHandler {
 	}
 }
 
-func (sv *Server) Get(path string, handle RequestHandler) {
+func (sv *Server) GET(path string, handle RequestHandler) {
 	sv.router.GET(path, sv.wrapHandle(handle))
 }
 
-func (sv *Server) Post(path string, handle RequestHandler) {
+func (sv *Server) POST(path string, handle RequestHandler) {
 	sv.router.POST(path, sv.wrapHandle(handle))
+}
+
+func (sv *Server) PUT(path string, handle RequestHandler) {
+	sv.router.PUT(path, sv.wrapHandle(handle))
+}
+
+func (sv *Server) HEAD(path string, handle RequestHandler) {
+	sv.router.HEAD(path, sv.wrapHandle(handle))
 }
 
 //*****************| Utiles

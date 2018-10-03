@@ -1,0 +1,118 @@
+// NOTES:
+// 1. insead of '<'(less) the template generates '&it;'. I don't know why but it is.
+
+{{range .Structs}}
+
+func (ct *{{.StructName}}) Validate() bool {
+    {{range .Fields}}
+
+        {{if eq .Type "string"}}
+
+            {{if eq .Min ""}}{{else}}
+                if !( len( ct.{{.FieldName}} ) >= {{.Min}} ) {
+                    return false
+                }
+            {{end}}
+
+            {{if eq .Max ""}}{{else}}
+                if len( ct.{{.FieldName}} ) > {{.Max}} {
+                    return false
+                }
+            {{end}}
+
+        {{else if eq .Type "binary"}}
+
+            {{if eq .Min ""}}{{else}}
+                if !(len( ct.{{.FieldName}} ) >= {{.Min}}) {
+                    return false
+                }
+            {{end}}
+
+            {{if eq .Max ""}}{{else}}
+                if len( ct.{{.FieldName}} ) > {{.Max}} {
+                    return false
+                }
+            {{end}}
+
+        {{else if eq .Type "int"}}
+
+            {{if eq .Min ""}}{{else}}
+                if !(ct.{{.FieldName}} >= {{.Min}}) {
+                    return false
+                }
+            {{end}}
+
+            {{if eq .Max ""}}{{else}}
+                if ct.{{.FieldName}} > {{.Max}} {
+                    return false
+                }
+            {{end}}
+
+        {{else}}
+
+            THE text is placed here becouse the field's type is unsupported
+
+        {{end}}
+
+    {{end}}
+
+    return true
+}
+
+func (ct *{{.StructName}}) UnmarshalForm(form *multipart.Form) error {
+
+    {{range .Fields}}
+        {{if eq .Type "binary"}}
+
+        if files, ok := form.File["{{.FieldAlias}}"]; len(files) != 0 && ok {
+            if len(files) == 1 {
+                file := files[0]
+                data := make([]byte, file.Size)
+                entery, err := file.Open()
+                if err != nil {
+                    return err
+                }
+
+                entery.Read(data)
+                ct.{{.FieldName}} = data
+            } else {
+                return errors.New("multipl files with the same name were detected")
+            }
+        }
+
+        {{else}}
+
+        if values, ok := form.Value["{{.FieldAlias}}"]; len(values) != 0 && ok {
+            if len(values) == 1 {
+
+                {{if eq .Type "string"}}
+
+                    ct.{{.FieldName}} = values[0]
+
+                {{else if eq .Type "int"}}
+
+                    value, err := strconv.ParseInt(values[0], 10, 64)
+                    if err != nil {
+                        return errors.New("Unable to parse a field")
+                    }
+                    ct.{{.FieldName}} = value
+
+                {{else}}
+
+                    THE text is placed here becouse the field's type is unsupported
+
+                {{end}}
+
+            } else {
+                return errors.New("multipl values with the same name were detected")
+            }
+
+        }
+
+        {{end}}
+    {{end}}
+
+    return nil
+}
+
+{{end}}

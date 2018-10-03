@@ -221,7 +221,7 @@ func easyjson6601e8cdDecodeWaveTypes2(in *jlexer.Lexer, out *APIProfile) {
 		switch key {
 		case "username":
 			out.Username = string(in.String())
-		case "avatar":
+		case "avatarSource":
 			out.AvatarURI = string(in.String())
 		default:
 			in.SkipRecursive()
@@ -248,7 +248,7 @@ func easyjson6601e8cdEncodeWaveTypes2(out *jwriter.Writer, in APIProfile) {
 		out.String(string(in.Username))
 	}
 	{
-		const prefix string = ",\"avatar\":"
+		const prefix string = ",\"avatarSource\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -302,8 +302,12 @@ func easyjson6601e8cdDecodeWaveTypes3(in *jlexer.Lexer, out *APIEditProfile) {
 			continue
 		}
 		switch key {
-		case "password":
-			out.Password = string(in.String())
+		case "username":
+			out.Username = string(in.String())
+		case "curPassword":
+			out.CurPassword = string(in.String())
+		case "newPassword":
+			out.NewPassword = string(in.String())
 		case "avatar":
 			if in.IsNull() {
 				in.Skip()
@@ -326,14 +330,34 @@ func easyjson6601e8cdEncodeWaveTypes3(out *jwriter.Writer, in APIEditProfile) {
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"password\":"
+		const prefix string = ",\"username\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Password))
+		out.String(string(in.Username))
+	}
+	{
+		const prefix string = ",\"curPassword\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.CurPassword))
+	}
+	{
+		const prefix string = ",\"newPassword\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.NewPassword))
 	}
 	{
 		const prefix string = ",\"avatar\":"
