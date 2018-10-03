@@ -4,6 +4,11 @@ func Handler{{.FunctionName}} ( ctx *fasthttp.RequestCtx, sv *server.Server) {
     
     println("request for {{.FunctionName}}")
 
+    ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+    ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
     {{if eq .Auth "yes"}}
     
         cookie := getSessionCookie(ctx)

@@ -18,7 +18,7 @@ func OnLeaderbordGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 		start, err1 = strconv.Atoi(ctx.UserValue("start").(string))
 		count, err2 = strconv.Atoi(ctx.UserValue("count").(string))
 	)
-	if err1 != nil || err2 != nil {
+	if err1 != nil || err2 != nil || count < 0 {
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		return
 	}

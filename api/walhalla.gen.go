@@ -15,6 +15,11 @@ func HandlerOnLeaderbordGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnLeaderbordGET")
 
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 	cookie := getSessionCookie(ctx)
 	if !sv.DB.IsLoggedIn(cookie) {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
@@ -28,6 +33,11 @@ func HandlerOnLeaderbordGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 func HandlerOnLogInPOST(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnLogInPOST")
+
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
 	target := types.APIUser{}
 
@@ -52,6 +62,11 @@ func HandlerOnLogOutGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnLogOutGET")
 
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 	OnLogOutGET(ctx, sv)
 
 }
@@ -59,6 +74,11 @@ func HandlerOnLogOutGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 func HandlerOnProfileHEAD(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnProfileHEAD")
+
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
 	cookie := getSessionCookie(ctx)
 	if !sv.DB.IsLoggedIn(cookie) {
@@ -74,6 +94,11 @@ func HandlerOnProfileGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnProfileGET")
 
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 	cookie := getSessionCookie(ctx)
 	if !sv.DB.IsLoggedIn(cookie) {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
@@ -87,6 +112,11 @@ func HandlerOnProfileGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 func HandlerOnProfilePOST(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnProfilePOST")
+
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
 	cookie := getSessionCookie(ctx)
 	if !sv.DB.IsLoggedIn(cookie) {
@@ -117,6 +147,11 @@ func HandlerOnAvatarGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnAvatarGET")
 
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 	cookie := getSessionCookie(ctx)
 	if !sv.DB.IsLoggedIn(cookie) {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
@@ -130,6 +165,11 @@ func HandlerOnAvatarGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 func HandlerOnSignUpPOST(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 	println("request for OnSignUpPOST")
+
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
 	target := types.APISignUp{}
 
