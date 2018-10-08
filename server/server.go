@@ -1,8 +1,8 @@
 package server
 
 import (
-	"Wave/database"
-	"fmt"
+	"Wave/server/database"
+	"Wave/utiles"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
@@ -11,6 +11,7 @@ import (
 type Server struct {
 	entery *fasthttp.Server
 	router *fasthttprouter.Router
+	Conf   *utiles.MainConfig
 	DB     *database.DB
 }
 
@@ -18,17 +19,20 @@ type RequestHandler func(*fasthttp.RequestCtx, *Server)
 
 //*****************|
 
-func New() (sv *Server) {
+func New(pathToConf string) (sv *Server) {
 	sv = &Server{
 		entery: &fasthttp.Server{},
 		router: fasthttprouter.New(),
+		Conf:   &utiles.MainConfig{},
 		DB:     database.New(),
 	}
 	sv.entery.Handler = sv.router.Handler
+	sv.Conf.ReadFromFile(pathToConf)
 	return sv
 }
 
-func (sv *Server) Start(port string) error {
+func (sv *Server) Start() error {
+	port := sv.Conf.Server.Port
 	return sv.entery.ListenAndServe(port)
 }
 
@@ -54,12 +58,4 @@ func (sv *Server) PUT(path string, handle RequestHandler) {
 
 func (sv *Server) HEAD(path string, handle RequestHandler) {
 	sv.router.HEAD(path, sv.wrapHandle(handle))
-}
-
-//*****************| Utiles
-
-func (sv *Server) StaticServer(ctx *fasthttp.RequestCtx, _ *Server) {
-	_, body, _ := fasthttp.Get([]byte{}, fmt.Sprintf("http://localhost:3000%s", ctx.Path()))
-	ctx.SetContentType("text/html")
-	ctx.Write(body)
 }

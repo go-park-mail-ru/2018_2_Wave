@@ -60,7 +60,6 @@ func (ct *{{.StructName}}) Validate() bool {
 }
 
 func (ct *{{.StructName}}) UnmarshalForm(form *multipart.Form) error {
-
     {{range .Fields}}
         {{if eq .Type "binary"}}
 
@@ -110,6 +109,40 @@ func (ct *{{.StructName}}) UnmarshalForm(form *multipart.Form) error {
         }
 
         {{end}}
+    {{end}}
+
+    return nil
+}
+
+func (ct *{{.StructName}}) UnmarshalURI (ctx *fasthttp.RequestCtx) error {
+    {{range .Fields}}
+
+        if tmpValue := ctx.UserValue("{{.FieldAlias}}"); tmpValue != nil {
+            value := tmpValue.(string)
+
+            {{if eq .Type "string"}}
+
+                ct.{{.FieldName}} = value
+
+            {{else if eq .Type "int"}}
+
+                res, err := strconv.Atoi(value)
+                if err != nil {
+                    return errors.New("Unable to parse a field")
+                }
+                ct.{{.FieldName}} = res
+
+            {{else if eq .Type "binary"}}
+
+                ct.{{.FieldName}} = []byte(value)
+
+            {{else}}
+
+                THE text is placed here becouse the field's type is unsupported
+
+            {{end}}
+        }
+
     {{end}}
 
     return nil

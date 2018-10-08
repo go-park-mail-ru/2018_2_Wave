@@ -1,18 +1,18 @@
 package database
 
 import (
-	"Wave/types"
+	"Wave/server/types"
 	"testing"
 )
 
 func TestSignUp(t *testing.T) {
 	db := New()
 
-	user1A := types.APIUser{
+	user1A := types.User{
 		Username: "A",
 		Password: "kek",
 	}
-	user1B := types.APIUser{
+	user1B := types.User{
 		Username: "A",
 	}
 
@@ -27,11 +27,11 @@ func TestSignUp(t *testing.T) {
 func TestLogIn(t *testing.T) {
 	db := New()
 
-	user1A := types.APIUser{
+	user1A := types.User{
 		Username: "A",
 		Password: "kek",
 	}
-	user1B := types.APIUser{
+	user1B := types.User{
 		Username: "A",
 		Password: "lol",
 	}

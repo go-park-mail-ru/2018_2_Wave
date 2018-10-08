@@ -1,8 +1,8 @@
 package database
 
 import (
-	"Wave/common"
-	"Wave/types"
+	"Wave/server/misc"
+	"Wave/server/types"
 	"sort"
 	"strconv"
 	"sync"
@@ -10,7 +10,7 @@ import (
 
 // DB is a database facade
 type DB struct {
-	mockTable    map[int]types.APIUser
+	mockTable    map[int]types.User
 	cookieToUser map[string]int
 	avatarTable  map[int][]byte
 	scoreTable   map[int]int
@@ -23,7 +23,7 @@ type DB struct {
 func New() *DB {
 	db := &DB{
 		lastUID:      0,
-		mockTable:    map[int]types.APIUser{},
+		mockTable:    map[int]types.User{},
 		cookieToUser: map[string]int{},
 		avatarTable:  map[int][]byte{},
 		scoreTable:   map[int]int{},
@@ -34,7 +34,7 @@ func New() *DB {
 //*****************| Auth
 
 // IsSignedUp - weather the user is signed up
-func (db *DB) IsSignedUp(user types.APIUser) bool {
+func (db *DB) IsSignedUp(user types.User) bool {
 	db.mutex.RLock()
 	defer db.mutex.RUnlock()
 
@@ -48,14 +48,14 @@ func (db *DB) IsSignedUp(user types.APIUser) bool {
 
 // SignUp the user.
 // NOTE: each call creates new record with unique uid
-func (db *DB) SignUp(profile types.APISignUp) (cookie string) {
+func (db *DB) SignUp(profile types.SignUp) (cookie string) {
 	db.mutex.Lock()
 	defer db.mutex.Unlock()
 
 	db.lastUID++
 
 	uid := db.lastUID
-	db.mockTable[uid] = profile.AsAPIUser()
+	db.mockTable[uid] = profile.AsUser()
 	db.avatarTable[uid] = profile.Avatar
 	db.scoreTable[uid] = 0
 	return db.logIn(uid)
@@ -72,7 +72,7 @@ func (db *DB) IsLoggedIn(cookie string) bool {
 
 // LogIn the user if the one is signe up
 // NOTE: each call creates new session
-func (db *DB) LogIn(user types.APIUser) (cookie string) {
+func (db *DB) LogIn(user types.User) (cookie string) {
 	db.mutex.Lock()
 	defer db.mutex.Unlock()
 
@@ -95,18 +95,18 @@ func (db *DB) LogOut(cookie string) {
 //*****************| Profile
 
 // GetProfile returns a profile assigned to the cookie
-func (db *DB) GetProfile(cookie string) (types.APIProfile, bool) {
+func (db *DB) GetProfile(cookie string) (types.Profile, bool) {
 	db.mutex.RLock()
 	defer db.mutex.RUnlock()
 
 	if uid, ok := db.cookieToUser[cookie]; ok {
-		return types.APIProfile{
+		return types.Profile{
 			Username:  db.mockTable[uid].Username,
 			AvatarURI: "/img/avatars/" + strconv.Itoa(uid),
 			Score:     db.scoreTable[uid],
 		}, true
 	}
-	return types.APIProfile{}, false
+	return types.Profile{}, false
 }
 
 // GetAvatar returns avatar's data
@@ -119,7 +119,7 @@ func (db *DB) GetAvatar(uid int) ([]byte, bool) {
 }
 
 // UpdateProfile updates profile
-func (db *DB) UpdateProfile(cookie string, profile types.APIEditProfile) {
+func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) {
 	db.mutex.Lock()
 	defer db.mutex.Unlock()
 
@@ -152,7 +152,7 @@ func (db *DB) GetUserScore(cookie string) int {
 	return 0
 }
 
-func (db *DB) GetTopUsers(start, count int) (board types.APILeaderboard) {
+func (db *DB) GetTopUsers(start, count int) (board types.Leaderboard) {
 	type Pair struct {
 		uid   int
 		score int
@@ -171,16 +171,16 @@ func (db *DB) GetTopUsers(start, count int) (board types.APILeaderboard) {
 
 	board.Total = len(pairs)
 
-	end := start + count
 	if start >= len(pairs) {
 		return board
 	}
+	end := start + count
 	if end > len(pairs) {
 		end = len(pairs)
 	}
 
 	for _, pair := range pairs[start:end] {
-		board.Users = append(board.Users, types.APILeaderboardRow{
+		board.Users = append(board.Users, types.LeaderboardRow{
 			Username: db.mockTable[pair.uid].Username,
 			Score:    pair.score,
 		})
@@ -190,7 +190,7 @@ func (db *DB) GetTopUsers(start, count int) (board types.APILeaderboard) {
 
 //*****************|
 
-func (db *DB) getUID(user types.APIUser) (uid int, ok bool) {
+func (db *DB) getUID(user types.User) (uid int, ok bool) {
 	for uid, row := range db.mockTable {
 		if row.Username == user.Username {
 			if row.Password == user.Password {
@@ -203,7 +203,7 @@ func (db *DB) getUID(user types.APIUser) (uid int, ok bool) {
 }
 
 func (db *DB) logIn(uid int) (cookie string) {
-	cookie = common.GenerateCookie()
+	cookie = misc.GenerateCookie()
 	db.cookieToUser[cookie] = uid
 	return cookie
 }

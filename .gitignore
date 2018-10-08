@@ -1,6 +1,12 @@
 # common
 .vscode
+.build
 
 # golang
 vendor/
 debug
+
+# generation
+*.tmp
+*.gen.go
+*.tmp.go

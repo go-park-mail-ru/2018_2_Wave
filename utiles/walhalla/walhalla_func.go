@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"go/ast"
 )
@@ -15,9 +14,7 @@ func parseFunc(outGen *outBuilder, g *ast.FuncDecl) {
 			FunctionName: g.Name.Name,
 		}
 	)
-	err := json.Unmarshal(rulesBytes, &rule)
-	exitIfFatal(err)
-
+	exitIfFatal(rule.UnmarshalJSON(rulesBytes))
 	if !rule.Validate() {
 		exitIfFatal(errors.New("Invalid api params"))
 	}

@@ -1,21 +1,16 @@
 package main
 
 import (
-	"Wave/api"
 	"Wave/server"
+	"Wave/server/api"
 )
 
 func main() {
-	
-	srv := server.New()
-	
-	api.UseAPI(srv)
-	srv.GET("/index.html", srv.StaticServer)
-	srv.GET("/app.bundle.js", srv.StaticServer)
-	
+	srv := server.New("./resources/configs/main.json")
 	println("-- -- -- -- -- -- -- -- -- -- --")
 	println("-- -- -- Server started -- -- --")
 	println("-- -- -- -- -- -- -- -- -- -- --")
 
-	srv.Start(":8080")
+	api.UseAPI(srv)
+	srv.Start()
 }
