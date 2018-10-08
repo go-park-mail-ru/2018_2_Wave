@@ -2,7 +2,6 @@ package server
 
 import (
 	"Wave/database"
-	"fmt"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
@@ -54,12 +53,4 @@ func (sv *Server) PUT(path string, handle RequestHandler) {
 
 func (sv *Server) HEAD(path string, handle RequestHandler) {
 	sv.router.HEAD(path, sv.wrapHandle(handle))
-}
-
-//*****************| Utiles
-
-func (sv *Server) StaticServer(ctx *fasthttp.RequestCtx, _ *Server) {
-	_, body, _ := fasthttp.Get([]byte{}, fmt.Sprintf("http://localhost:3000%s", ctx.Path()))
-	ctx.SetContentType("text/html")
-	ctx.Write(body)
 }
