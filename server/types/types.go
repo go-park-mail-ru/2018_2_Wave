@@ -30,10 +30,11 @@ type Profile struct {
 // EditProfile - public API
 // easyjson:json walhalla:
 type EditProfile struct {
-	Username    string `json:"username"`
+	CurUsername string `json:"curUsername"`
+	NewUsername string `json:"newUsername"`
 	CurPassword string `json:"curPassword"`
 	NewPassword string `json:"newPassword"`
-	Avatar      []byte `json:"avatar"`
+	Avatar      string `json:"avatar"`
 }
 
 //-----------------| pagination |
