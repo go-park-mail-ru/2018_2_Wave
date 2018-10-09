@@ -8,6 +8,10 @@
 [API](http://frontend.tech-mail.ru/2018_2_Wave/)
 
 ## Запуск
+```
+./build.sh init
+go run .
+```
 
 ## Деплой
 
