@@ -1,211 +1,229 @@
 package database
 
 import (
+	"database/sql"
 	"Wave/server/misc"
 	"Wave/server/types"
-	"sort"
+	"Wave/utiles"
+	"regexp"
 	"strconv"
-	"sync"
+	"fmt"
+	"log"
+
+	_ "github.com/lib/pq"
 )
 
-// DB is a database facade
+//TODO:
+// conf file
+// password hashing
+// error processing
+// validation
+// different regexps for username & password (set min/maxlengths!)
+// log into file
+// curPassword check
+
+// ORM!
+
+const (
+	UserInfoTable = "userinfo"
+	UsernameCol   = "username"
+	UID 		  = "uid"
+
+	CookieTable	  = "cookie"
+	CookieCol	  = "cookieStr"
+)
+
+// Facade
 type DB struct {
-	mockTable    map[int]types.User
-	cookieToUser map[string]int
-	avatarTable  map[int][]byte
-	scoreTable   map[int]int
-	lastUID      int
+	dbconf	utiles.DatabaseConfig
 
-	mutex sync.RWMutex
+	db		*sql.DB
 }
 
-// New - create and initialise new database facade
-func New() *DB {
-	db := &DB{
-		lastUID:      0,
-		mockTable:    map[int]types.User{},
-		cookieToUser: map[string]int{},
-		avatarTable:  map[int][]byte{},
-		scoreTable:   map[int]int{},
+func New(dbconf_ utiles.DatabaseConfig) *DB {
+	postgr := &DB{
+		dbconf : dbconf_,
 	}
-	return db
+	
+	var err error
+	postgr.db, err = sql.Open("postgres", fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
+	postgr.dbconf.User, postgr.dbconf.Password, postgr.dbconf.Name))
+	checkErr(err)
+	log.Println("postgres connection established")
+
+	return postgr
 }
 
-//*****************| Auth
-
-// IsSignedUp - weather the user is signed up
-func (db *DB) IsSignedUp(user types.User) bool {
-	db.mutex.RLock()
-	defer db.mutex.RUnlock()
-
-	for _, row := range db.mockTable {
-		if row.Username == user.Username {
-			return true
-		}
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
 	}
+}
+
+func (db *DB) present(tableName string, colName string, target string) bool {
+	var flag string
+
+	row := db.db.QueryRow("SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "')")
+	err := row.Scan(&flag)
+	checkErr(err)
+
+	fl, _ := strconv.ParseBool(flag)
+	return fl
+}
+
+func validateCredentials(target string) bool {
+	// http://regexlib.com/REDetails.aspx?regexp_id=2298
+	reg, _ := regexp.Compile("^([a-zA-Z])[a-zA-Z_-]*[\\w_-]*[\\S]$|^([a-zA-Z])[0-9_-]*[\\S]$|^[a-zA-Z]*[\\S]$")
+
+	if reg.MatchString(target) {
+		return true
+	}
+	log.Println("bad username or/and password")
+
 	return false
 }
 
-// SignUp the user.
-// NOTE: each call creates new record with unique uid
+/****************** Authorization block ******************/
+
 func (db *DB) SignUp(profile types.SignUp) (cookie string) {
-	db.mutex.Lock()
-	defer db.mutex.Unlock()
+	if validateCredentials(profile.Username) && validateCredentials(profile.Password) {
+		if db.present(UserInfoTable, UsernameCol, profile.Username) {
+			log.Println("signup failed: user already exists")
 
-	db.lastUID++
+			return ""
+		} else {
+			cookie := misc.GenerateCookie()
+			_, err := db.db.Exec("INSERT INTO userinfo(username,password) VALUES($1, $2)", profile.Username, profile.Password)
+			checkErr(err)
+			_, err = db.db.Exec("INSERT INTO cookie(uid, cookieStr) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2)", profile.Username, cookie)
+			checkErr(err)
+			log.Println("signup successful")
 
-	uid := db.lastUID
-	db.mockTable[uid] = profile.AsUser()
-	db.avatarTable[uid] = profile.Avatar
-	db.scoreTable[uid] = 0
-	return db.logIn(uid)
-}
-
-// IsLoggedIn - weather the user is logged in
-func (db *DB) IsLoggedIn(cookie string) bool {
-	db.mutex.RLock()
-	defer db.mutex.RUnlock()
-
-	_, ok := db.cookieToUser[cookie]
-	return ok
-}
-
-// LogIn the user if the one is signe up
-// NOTE: each call creates new session
-func (db *DB) LogIn(user types.User) (cookie string) {
-	db.mutex.Lock()
-	defer db.mutex.Unlock()
-
-	if uid, ok := db.getUID(user); ok {
-		return db.logIn(uid)
+			return cookie
+		}
 	}
+
 	return ""
 }
 
-// LogOut a user with the cookie if the one was logged in
+func (db *DB) IsLoggedIn(cookie string) bool {
+	foundCookie := true
+	if !db.present(CookieTable, CookieCol, cookie) {
+		log.Println("is logged in check failed: no such cookie found, returns: false")
+		foundCookie = false
+
+		return foundCookie
+	} else {
+		log.Println("is logged in check successful: cookie found, returns: true")
+	}
+	
+	return foundCookie
+}
+
+func (db *DB) LogIn(credentials types.User) (cookie string) {
+	if db.present(UserInfoTable, UsernameCol, credentials.Username) {
+		var psswd string
+		row := db.db.QueryRow("SELECT password FROM userinfo WHERE username=$1", credentials.Username);
+		err := row.Scan(&psswd)
+		checkErr(err)
+
+		if psswd == credentials.Password {
+			cookie := misc.GenerateCookie()
+			_, err := db.db.Exec("INSERT INTO cookie(uid, cookieStr) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2);", credentials.Username, cookie)
+			checkErr(err)
+			log.Println("login successful: cookie set")
+			
+			return cookie
+		} else {
+			log.Println("login failed: wrong password")
+
+			return ""
+		}
+	}
+
+	return ""
+}
+
 func (db *DB) LogOut(cookie string) {
-	db.mutex.Lock()
-	defer db.mutex.Unlock()
+	_, err := db.db.Exec("DELETE FROM cookie WHERE cookieStr=$1", cookie);
+	checkErr(err)
 
-	if _, ok := db.cookieToUser[cookie]; ok {
-		delete(db.cookieToUser, cookie)
+	log.Println("logout successful");
+}
+
+/****************** User profile block ******************/
+
+// current user 
+func (db *DB) GetProfile(cookie string) (profile types.Profile) {
+	row := db.db.QueryRow("SELECT username,avatar,score FROM userinfo JOIN cookie ON cookie.uid = userinfo.uid AND cookieStr=$1;", cookie)
+	err := row.Scan(&profile.Username, &profile.AvatarURI, &profile.Score)
+	checkErr(err)
+	log.Println("get profile successful");
+
+	return profile
+}
+
+func (db *DB) GetAvatar(uid int) (avatarSource string) {
+	if !db.present(UserInfoTable, UID, strconv.Itoa(uid)) {
+		log.Println("get avatar failed: user doesn't exist")
+
+		return ""
 	}
+	row := db.db.QueryRow("SELECT avatar FROM userinfo WHERE uid=$1", uid)
+	err := row.Scan(&avatarSource)
+	checkErr(err)
+	log.Println("get avatar successful");
+
+	return avatarSource
 }
 
-//*****************| Profile
-
-// GetProfile returns a profile assigned to the cookie
-func (db *DB) GetProfile(cookie string) (types.Profile, bool) {
-	db.mutex.RLock()
-	defer db.mutex.RUnlock()
-
-	if uid, ok := db.cookieToUser[cookie]; ok {
-		return types.Profile{
-			Username:  db.mockTable[uid].Username,
-			AvatarURI: "/img/avatars/" + strconv.Itoa(uid),
-			Score:     db.scoreTable[uid],
-		}, true
-	}
-	return types.Profile{}, false
-}
-
-// GetAvatar returns avatar's data
-func (db *DB) GetAvatar(uid int) ([]byte, bool) {
-	db.mutex.RLock()
-	defer db.mutex.RUnlock()
-
-	data, ok := db.avatarTable[uid]
-	return data, ok
-}
-
-// UpdateProfile updates profile
 func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) {
-	db.mutex.Lock()
-	defer db.mutex.Unlock()
-
-	if uid, ok := db.cookieToUser[cookie]; ok {
-		user := db.mockTable[uid]
-
-		if newName := profile.Username; newName != "" {
-			user.Username = newName
+	if profile.NewUsername != "" {
+		if !db.present(UserInfoTable, UsernameCol, profile.NewUsername) {
+			if validateCredentials(profile.NewUsername) {
+				// to change!
+				db.db.QueryRow("UPDATE userinfo SET username=$1 WHERE userinfo.uid = (SELECT cookie.uid from cookie JOIN userinfo ON cookie.uid = userinfo.uid WHERE cookieStr=$2);", profile.NewUsername, cookie)
+				log.Println("update profile successful: username changed")
+			} else {
+				log.Println("update profile failed: bad username")
+			}
+		} else {
+			log.Println("update profile fail: username already in use")
 		}
-		if newPass := profile.NewPassword; newPass != "" {
-			user.Password = newPass
-		}
-		if len(profile.Avatar) != 0 {
-			db.avatarTable[uid] = profile.Avatar
-		}
+	}
 
-		db.mockTable[uid] = user
+	if profile.NewPassword != "" {
+		if validateCredentials(profile.NewPassword) {
+			// to change!
+			// curPassword check
+			db.db.QueryRow("UPDATE userinfo SET password=$1 WHERE userinfo.uid = (SELECT cookie.uid from cookie JOIN userinfo ON cookie.uid = userinfo.uid WHERE cookieStr=$2);", profile.NewPassword, cookie)
+			log.Println("update profile successful: password changed")
+		} else {
+			log.Println("update profile failed: bad password")
+		}
+	}
+
+	if profile.Avatar != "" {
+		//db.db.Exec("", profile.Avatar, cookie)
+		log.Println("update profile successful: avatar changed")
 	}
 }
 
-//*****************| Leaderboard
+/****************** Leaderboard block ******************/
 
-func (db *DB) GetUserScore(cookie string) int {
-	db.mutex.RLock()
-	defer db.mutex.RUnlock()
+func (db *DB) GetTopUsers(limit, offset int) (board types.Leaderboard) {
+	row := db.db.QueryRow("SELECT COUNT(*) FROM userinfo")
+	err := row.Scan(&board.Total)
+	checkErr(err)
 
-	if uid, ok := db.cookieToUser[cookie]; ok {
-		return db.scoreTable[uid]
-	}
-	return 0
-}
+	rows, err := db.db.Query("SELECT username,score FROM userinfo ORDER BY score DESC LIMIT $1 OFFSET $2;", limit, offset)
+	checkErr(err)
 
-func (db *DB) GetTopUsers(start, count int) (board types.Leaderboard) {
-	type Pair struct {
-		uid   int
-		score int
-	}
-	pairs := []Pair{}
+	temp := types.LeaderboardRow{}
 
-	db.mutex.Lock()
-	defer db.mutex.Unlock()
-
-	for key, val := range db.scoreTable {
-		pairs = append(pairs, Pair{uid: key, score: val})
-	}
-	sort.Slice(pairs, func(i, j int) bool {
-		return pairs[i].score > pairs[j].score
-	})
-
-	board.Total = len(pairs)
-
-	if start >= len(pairs) {
-		return board
-	}
-	end := start + count
-	if end > len(pairs) {
-		end = len(pairs)
-	}
-
-	for _, pair := range pairs[start:end] {
-		board.Users = append(board.Users, types.LeaderboardRow{
-			Username: db.mockTable[pair.uid].Username,
-			Score:    pair.score,
-		})
+	for rows.Next() {
+		err = rows.Scan(&temp.Username, &temp.Score)
+		board.Users = append(board.Users, temp)
 	}
 	return board
 }
-
-//*****************|
-
-func (db *DB) getUID(user types.User) (uid int, ok bool) {
-	for uid, row := range db.mockTable {
-		if row.Username == user.Username {
-			if row.Password == user.Password {
-				return uid, true
-			}
-			return 0, false
-		}
-	}
-	return 0, false
-}
-
-func (db *DB) logIn(uid int) (cookie string) {
-	cookie = misc.GenerateCookie()
-	db.cookieToUser[cookie] = uid
-	return cookie
-}
-
-//*****************|

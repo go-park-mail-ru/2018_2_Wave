@@ -1,54 +1,46 @@
 package database
 
 import (
-	"Wave/server/types"
+	"2018_2_Wave/server/types"
 	"testing"
 )
 
 func TestSignUp(t *testing.T) {
 	db := New()
-
-	user1A := types.User{
-		Username: "A",
-		Password: "kek",
-	}
-	user1B := types.User{
-		Username: "A",
+	user1 := types.SignUp{
+		Username : "user1",
+		Password : "mypass123",
 	}
 
-	if cookie := db.SignUp(user1A); cookie == "" {
-		t.Errorf("Empty cookie")
+	user2 := types.SignUp{
+		Username : "user2",
+		Password : "mypass123",
 	}
-	if !db.IsSignedUp(user1B) {
-		t.Errorf("Registration failed")
+
+	cookieA := db.SignUp(user1)
+	t.Errorf("TestSignUp: bad credentials")
+
+	cookieB := db.SignUp(user2)
+	t.Errorf("TestSignUp: credentials generated")
+
+	if cookieA == cookieB {
+		t.Errorf("TestSignUp: same cookie generated")
 	}
 }
 
-func TestLogIn(t *testing.T) {
+func TestLogOut(t *testing.T) {
 	db := New()
 
-	user1A := types.User{
-		Username: "A",
-		Password: "kek",
-	}
-	user1B := types.User{
-		Username: "A",
-		Password: "lol",
+	user := types.SignUp{
+		Username : "user",
+		Password : "pass",
 	}
 
-	cookie1 := db.SignUp(user1A)
-	cookie2 := db.LogIn(user1A)
-	cookie3 := db.LogIn(user1B)
+	userLog 
 
-	if cookie2 == "" {
-		t.Errorf("Empty cookie from valid user")
-	}
+	db.SignUp(user)
 
-	if cookie3 != "" {
-		t.Errorf("User with incorrect password mustn't be logged in")
-	}
-
-	if cookie1 == cookie2 {
-		t.Errorf("Cookies for each session must be unique")
+	idb.LogOut(user) {
+		t.Errorf("TestSignUp: same cookie generated")
 	}
 }

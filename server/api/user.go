@@ -5,7 +5,7 @@ import (
 	"Wave/server/misc"
 	"Wave/server/types"
 	"github.com/valyala/fasthttp"
-	"mime"
+	//"mime"
 	"strconv"
 )
 
@@ -63,12 +63,10 @@ func OnLogOut(ctx *fasthttp.RequestCtx, sv *server.Server) {
 // }
 func OnProfileGet(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	cookie := misc.GetSessionCookie(ctx)
-	if profile, ok := sv.DB.GetProfile(cookie); ok {
-		ctx.Write(types.Must(profile.MarshalJSON()))
-		ctx.SetStatusCode(fasthttp.StatusOK)
-		return
-	}
-	ctx.SetStatusCode(fasthttp.StatusForbidden)
+	profile := sv.DB.GetProfile(cookie)
+	ctx.Write(types.Must(profile.MarshalJSON()))
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	//ctx.SetStatusCode(fasthttp.StatusForbidden)
 }
 
 // OnProfileEdit - public API
@@ -94,12 +92,10 @@ func OnProfileEdit(ctx *fasthttp.RequestCtx, sv *server.Server, user types.EditP
 // }
 func OnAvatarGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	if uid, err := strconv.Atoi(ctx.UserValue("uid").(string)); err == nil {
-		if data, ok := sv.DB.GetAvatar(uid); ok {
-			ctx.SetContentType(mime.TypeByExtension("png"))
-			ctx.SetStatusCode(fasthttp.StatusOK)
-			ctx.Write(data)
-			return
-		}
+		sv.DB.GetAvatar(uid);
+		//ctx.SetContentType(mime.TypeByExtension("png"))
+		ctx.SetStatusCode(fasthttp.StatusOK)
+		//ctx.Write(data)
 	}
-	ctx.SetStatusCode(fasthttp.StatusNoContent)
+	//ctx.SetStatusCode(fasthttp.StatusNoContent)
 }

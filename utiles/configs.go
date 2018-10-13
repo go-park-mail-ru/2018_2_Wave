@@ -20,6 +20,9 @@ type ServerConfig struct {
 // DatabaseConfig configuration
 // easyjson:json
 type DatabaseConfig struct {
+	User 		string `json:"user"`
+	Password	string `json:"password"`
+	Name		string `json:"name"`
 }
 
 // WalhallaConfig configuration

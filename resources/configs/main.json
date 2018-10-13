@@ -14,5 +14,9 @@
     "structTmpl": "./resources/templates/struct.tmpl",
     "routerTmpl": "./resources/templates/router.tmpl"
   },
-  "database": {}
+  "database": {
+    "user": "postgres",
+    "password": "test",
+    "name": "postgres"
+  }
 }
