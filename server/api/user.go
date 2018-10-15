@@ -22,7 +22,7 @@ func OnSignUp(ctx *fasthttp.RequestCtx, sv *server.Server, user types.SignUp) {
 	cookieValue := sv.DB.SignUp(user)
 	if cookieValue == "" {
 		ctx.SetStatusCode(fasthttp.StatusForbidden)
-		reason := []byte{"userAlreadyExists"}
+		reason := []byte("userAlreadyExists")
 		ctx.Write(reason)
 
 		return
@@ -49,7 +49,7 @@ func OnLogIn(ctx *fasthttp.RequestCtx, sv *server.Server, user types.User) {
 	cookieValue := sv.DB.LogIn(user)
 	if cookieValue == "" {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-		reason := []byte{"WrongPassword"}
+		reason := []byte("WrongPassword")
 		ctx.Write(reason)
 
 		return
@@ -118,7 +118,7 @@ func OnProfileEdit(ctx *fasthttp.RequestCtx, sv *server.Server, user types.EditP
 			return
 		} else {
 			ctx.SetStatusCode(fasthttp.StatusForbidden)
-			reason := []byte{"bad"}
+			reason := []byte("bad")
 			ctx.Write(reason)
 
 			return

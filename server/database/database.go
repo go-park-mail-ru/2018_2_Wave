@@ -23,6 +23,7 @@ import (
 // update avatar
 // fetch GetUser by any username
 // GetAvatar
+// avatar on Signup
 
 // ORM!
 

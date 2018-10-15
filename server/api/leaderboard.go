@@ -19,7 +19,7 @@ import (
 func OnLeaderbordGET(ctx *fasthttp.RequestCtx, sv *server.Server, p types.Pagination) {
 	data, err := sv.DB.GetTopUsers(p.Offset, p.Limit).MarshalJSON()
 	
-	if data != nil {
+	if err == nil {
 		ctx.SetStatusCode(fasthttp.StatusOK)
 		ctx.Write(data)
 	} else {
