@@ -1,10 +1,10 @@
 package database
 
 import (
-	"database/sql"
 	"Wave/server/misc"
 	"Wave/server/types"
 	"Wave/utiles"
+	"database/sql"
 	"regexp"
 	"strconv"
 	"fmt"
@@ -14,13 +14,15 @@ import (
 )
 
 //TODO:
-// conf file
 // password hashing
 // error processing
 // validation
 // different regexps for username & password (set min/maxlengths!)
 // log into file
 // curPassword check
+// update avatar
+// fetch GetUser by any username
+// GetAvatar
 
 // ORM!
 
@@ -66,7 +68,7 @@ func (db *DB) present(tableName string, colName string, target string) bool {
 	row := db.db.QueryRow("SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "')")
 	err := row.Scan(&flag)
 	checkErr(err)
-
+	
 	fl, _ := strconv.ParseBool(flag)
 	return fl
 }
@@ -177,18 +179,24 @@ func (db *DB) GetAvatar(uid int) (avatarSource string) {
 	return avatarSource
 }
 
-func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) {
+func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) bool {
 	if profile.NewUsername != "" {
 		if !db.present(UserInfoTable, UsernameCol, profile.NewUsername) {
 			if validateCredentials(profile.NewUsername) {
 				// to change!
 				db.db.QueryRow("UPDATE userinfo SET username=$1 WHERE userinfo.uid = (SELECT cookie.uid from cookie JOIN userinfo ON cookie.uid = userinfo.uid WHERE cookieStr=$2);", profile.NewUsername, cookie)
 				log.Println("update profile successful: username changed")
+
+				return true
 			} else {
 				log.Println("update profile failed: bad username")
+
+				return false
 			}
 		} else {
 			log.Println("update profile fail: username already in use")
+
+			return false
 		}
 	}
 
@@ -198,15 +206,22 @@ func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) {
 			// curPassword check
 			db.db.QueryRow("UPDATE userinfo SET password=$1 WHERE userinfo.uid = (SELECT cookie.uid from cookie JOIN userinfo ON cookie.uid = userinfo.uid WHERE cookieStr=$2);", profile.NewPassword, cookie)
 			log.Println("update profile successful: password changed")
+
+			return true
 		} else {
 			log.Println("update profile failed: bad password")
+
+			return false
 		}
 	}
 
+	/*
 	if profile.Avatar != "" {
 		//db.db.Exec("", profile.Avatar, cookie)
 		log.Println("update profile successful: avatar changed")
 	}
+	*/
+	return false
 }
 
 /****************** Leaderboard block ******************/
