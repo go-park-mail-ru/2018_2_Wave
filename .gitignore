@@ -10,3 +10,8 @@ debug
 *.tmp
 *.gen.go
 *.tmp.go
+
+# services
+nginx
+*.py
+
