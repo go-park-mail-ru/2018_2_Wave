@@ -13,5 +13,5 @@ debug
 
 # service
 nginx/
-*.py
-__pycache__
+service_bot/
+start_bot.sh
