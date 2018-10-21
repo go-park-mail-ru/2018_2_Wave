@@ -49,8 +49,10 @@ func New(dbconf_ utiles.DatabaseConfig) *DB {
 	}
 	
 	var err error
+	//postgr.db, err = sql.Open("postgres", fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
+	//postgr.dbconf.User, postgr.dbconf.Password, postgr.dbconf.Name))
 	postgr.db, err = sql.Open("postgres", fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
-	postgr.dbconf.User, postgr.dbconf.Password, postgr.dbconf.Name))
+	"waveapp", "surf", "wave"))
 	checkErr(err)
 	log.Println("postgres connection established")
 
