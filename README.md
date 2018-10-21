@@ -9,6 +9,7 @@
 
 ## Запуск
 ```
+go get -u github.com/mailru/easyjson/...
 ./build.sh init
 go run .
 ```

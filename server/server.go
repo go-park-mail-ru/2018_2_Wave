@@ -24,10 +24,11 @@ func New(pathToConf string) (sv *Server) {
 		entery: &fasthttp.Server{},
 		router: fasthttprouter.New(),
 		Conf:   &utiles.MainConfig{},
-		DB:     database.New(),
 	}
 	sv.entery.Handler = sv.router.Handler
 	sv.Conf.ReadFromFile(pathToConf)
+
+	sv.DB = database.New(sv.Conf.Database)
 	return sv
 }
 

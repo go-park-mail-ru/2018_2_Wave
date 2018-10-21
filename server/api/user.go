@@ -5,8 +5,8 @@ import (
 	"Wave/server/misc"
 	"Wave/server/types"
 	"github.com/valyala/fasthttp"
-	"mime"
-	"strconv"
+	//"mime"
+	//"strconv"
 )
 
 
@@ -19,12 +19,22 @@ import (
 // 		Validation: true
 // }
 func OnSignUp(ctx *fasthttp.RequestCtx, sv *server.Server, user types.SignUp) {
-	ctx.SetStatusCode(fasthttp.StatusCreated)
-	var (
-		cookieValue   = sv.DB.SignUp(user)
-		sessionCookie = misc.MakeSessionCookie(cookieValue)
-	)
-	misc.SetCookie(ctx, sessionCookie)
+	cookieValue := sv.DB.SignUp(user)
+	if cookieValue == "" {
+		ctx.SetStatusCode(fasthttp.StatusForbidden)
+		reason := []byte("userAlreadyExists")
+		ctx.Write(reason)
+
+		return
+	} else {
+		sessionCookie := misc.MakeSessionCookie(cookieValue)
+		ctx.SetStatusCode(fasthttp.StatusCreated)
+		misc.SetCookie(ctx, sessionCookie)
+
+		return
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 }
 
 // OnLogIn - public API
@@ -36,12 +46,22 @@ func OnSignUp(ctx *fasthttp.RequestCtx, sv *server.Server, user types.SignUp) {
 // 		Validation: true
 // }
 func OnLogIn(ctx *fasthttp.RequestCtx, sv *server.Server, user types.User) {
-	ctx.SetStatusCode(fasthttp.StatusAccepted)
-	var (
-		cookieValue   = sv.DB.LogIn(user)
-		sessionCookie = misc.MakeSessionCookie(cookieValue)
-	)
-	misc.SetCookie(ctx, sessionCookie)
+	cookieValue := sv.DB.LogIn(user)
+	if cookieValue == "" {
+		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+		reason := []byte("WrongPassword")
+		ctx.Write(reason)
+
+		return
+	} else {
+		sessionCookie := misc.MakeSessionCookie(cookieValue)
+		ctx.SetStatusCode(fasthttp.StatusAccepted)
+		misc.SetCookie(ctx, sessionCookie)
+
+		return
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 }
 
 // OnLogOut - public API
@@ -53,6 +73,7 @@ func OnLogIn(ctx *fasthttp.RequestCtx, sv *server.Server, user types.User) {
 func OnLogOut(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	cookie := misc.GetSessionCookie(ctx)
 	sv.DB.LogOut(cookie)
+	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
 // OnProfileGet - public API
@@ -63,12 +84,19 @@ func OnLogOut(ctx *fasthttp.RequestCtx, sv *server.Server) {
 // }
 func OnProfileGet(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	cookie := misc.GetSessionCookie(ctx)
-	if profile, ok := sv.DB.GetProfile(cookie); ok {
+	if sv.DB.IsLoggedIn(cookie) {
+		profile := sv.DB.GetProfile(cookie)
 		ctx.Write(types.Must(profile.MarshalJSON()))
 		ctx.SetStatusCode(fasthttp.StatusOK)
+
+		return
+	} else {
+		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+
 		return
 	}
-	ctx.SetStatusCode(fasthttp.StatusForbidden)
+	
+	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 }
 
 // OnProfileEdit - public API
@@ -82,8 +110,26 @@ func OnProfileGet(ctx *fasthttp.RequestCtx, sv *server.Server) {
 // }
 func OnProfileEdit(ctx *fasthttp.RequestCtx, sv *server.Server, user types.EditProfile) {
 	cookie := misc.GetSessionCookie(ctx)
-	sv.DB.UpdateProfile(cookie, user)
-	ctx.SetStatusCode(fasthttp.StatusAccepted)
+	if sv.DB.IsLoggedIn(cookie) {
+		updated := sv.DB.UpdateProfile(cookie, user)
+		if updated {
+			ctx.SetStatusCode(fasthttp.StatusAccepted)
+
+			return
+		} else {
+			ctx.SetStatusCode(fasthttp.StatusForbidden)
+			reason := []byte("bad")
+			ctx.Write(reason)
+
+			return
+		}
+	} else {
+		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+
+		return
+	}
+	
+	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 }
 
 // OnAvatarGET - public API
@@ -92,14 +138,14 @@ func OnProfileEdit(ctx *fasthttp.RequestCtx, sv *server.Server, user types.EditP
 // 		Method: 	GET,
 // 		Auth: 		true
 // }
+/*
 func OnAvatarGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	if uid, err := strconv.Atoi(ctx.UserValue("uid").(string)); err == nil {
-		if data, ok := sv.DB.GetAvatar(uid); ok {
-			ctx.SetContentType(mime.TypeByExtension("png"))
-			ctx.SetStatusCode(fasthttp.StatusOK)
-			ctx.Write(data)
-			return
-		}
+		sv.DB.GetAvatar(uid);
+		//ctx.SetContentType(mime.TypeByExtension("png"))
+		ctx.SetStatusCode(fasthttp.StatusOK)
+		//ctx.Write(data)
 	}
-	ctx.SetStatusCode(fasthttp.StatusNoContent)
+	//ctx.SetStatusCode(fasthttp.StatusNoContent)
 }
+*/

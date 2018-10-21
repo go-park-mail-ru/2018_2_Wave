@@ -30,7 +30,7 @@ func main() {
 
 	out := bytes.Buffer{}
 	if err := json.Indent(&out, data, "", "  "); err != nil {
-		fmt.Printf("Error during formatin: %v\n", err)
+		fmt.Printf("Error during formating: %v\n", err)
 	}
 	out.WriteString("\n")
 

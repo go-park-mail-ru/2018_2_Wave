@@ -1,34 +1,15 @@
--- Cleanup
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS cookies;
-DROP TABLE IF EXISTS profiles;
-DROP TABLE IF EXISTS score;
-
--- Main tables
-CREATE TABLE users (
-    uid         serial  PRIMARY KEY,
-    username    text    NOT NULL,
-    watchword   text    NOT NULL
+-- User Tables Block
+CREATE TABLE userinfo (
+    uid         SERIAL          PRIMARY KEY,
+    username    TEXT            NOT NULL,
+    password    TEXT            NOT NULL,
+    score       INT             DEFAULT 0, 
+    avatar      TEXT            DEFAULT '/some/paths/lead/to/beautiful/destinations/'
 );
 
-CREATE TABLE profiles (
-    uid         int     PRIMARY KEY,
-    avatar      bytea
+CREATE TABLE cookie (
+    uid         SERIAL,
+    cookieStr   TEXT            DEFAULT '',
 
-    FOREIGN KEY(uid) REFERENCES users(uid)
-)
-
-CREATE TABLE cookies (
-    uid     int     PRIMARY KEY
-    cookie  text
-
-    FOREIGN KEY(uid) REFERENCES users(uid)
+    FOREIGN KEY (uid) REFERENCES userinfo (uid)
 );
-
--- Gameplay tables
-CREATE TABLE score (
-    uid     int     PRIMARY KEY
-    value   int     DEFAULT 0
-
-    FOREIGN KEY(uid) REFERENCES users(uid)
-)
