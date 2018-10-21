@@ -15,6 +15,7 @@ go run .
 ```
 
 ## Деплой
+https://rasseki.com
 
 ## Участники
 
