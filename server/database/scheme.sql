@@ -11,5 +11,5 @@ CREATE TABLE cookie (
     uid         SERIAL,
     cookieStr   TEXT            DEFAULT '',
 
-    FOREIGN KEY (uid) REFERENCES userinfo (uid)
+    FOREIGN KEY (uid) REFERENCES userinfo(uid)
 );

@@ -22,6 +22,12 @@ POST
 401 UNAUTHORIZED
 500 INTERNAL SERVER ERROR
 
+/img/avatars/:uid
+{uid любой, он не нужен}
+200 OK  {avatarSource}
+401 UNAUTHORIZED
+500 INTERNAL SERVER ERROR
+
 /user/edit + 
 POST
 {[newUsername],[curPassword],[newPassword],[avatar]}
@@ -34,11 +40,3 @@ POST
 200 OK {"users":{массив {username, score}},"total":int}
 500 INTERNAL SERVER ERROR
 
-
-Ошибки, которые могут вывалиться отовсюду:
-
-401 UNAUTHORIZED
-->   usermodule   ->   router(login)
-
-500 INTERNAL SERVER ERROR
-->   router(big error page)

@@ -1,0 +1,46 @@
+func (db *DB) present(tableName string, colName string, target string) (bool, error)
+return false, errScan
+return false, errParse
+return {true, false}, nil
+
+func validateCredentials(target string) bool
+return true
+return false
+
+func (db *DB)  SignUp(profile types.SignUp) (cookie string, err error)
+return "", nil
+return "", err
+return "", problem
+return cookie, nil
+
+func (db *DB) IsLoggedIn(cookie string) (bool, error)
+return {true, false}, nil
+return false, problem
+
+func (db *DB) LogIn(credentials types.User) (cookie string, err error)
+return "", err
+return cookie, nil
+return "", nil
+
+func (db *DB) LogOut(cookie string) error
+return err
+return nil
+
+func (db *DB) GetProfile(cookie string) (profile types.Profile, err error)
+return types.Profile{}, err
+return profile, nil
+
+func (db *DB) GetAvatar(uid int) (avatarSource string)
+return "", nil
+return "", problem
+return "", err
+return avatarSource, nil
+
+func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) (bool, error)
+return true, nil
+return false, nil
+return false, problem
+
+func (db *DB) GetTopUsers(limit, offset int) (board types.Leaderboard, err error)
+return types.Leaderboard{}, err
+return board, nil

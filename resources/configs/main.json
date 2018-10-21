@@ -15,8 +15,8 @@
     "routerTmpl": "./resources/templates/router.tmpl"
   },
   "database": {
-    "user": "postgres",
-    "password": "test",
-    "name": "postgres"
+    "user": "waveapp",
+    "password": "surf",
+    "name": "wave"
   }
 }

@@ -19,22 +19,24 @@ import (
 // 		Validation: true
 // }
 func OnSignUp(ctx *fasthttp.RequestCtx, sv *server.Server, user types.SignUp) {
-	cookieValue := sv.DB.SignUp(user)
-	if cookieValue == "" {
+	cookieValue, err := sv.DB.SignUp(user)
+	if cookieValue == "" && err == nil {
 		ctx.SetStatusCode(fasthttp.StatusForbidden)
-		reason := []byte("userAlreadyExists")
+		reason := []byte("{\"response\":\"user already exists\"}")
 		ctx.Write(reason)
 
 		return
-	} else {
+	} else if cookieValue != "" && err == nil {
 		sessionCookie := misc.MakeSessionCookie(cookieValue)
 		ctx.SetStatusCode(fasthttp.StatusCreated)
 		misc.SetCookie(ctx, sessionCookie)
 
 		return
-	}
+	} else if err != nil {
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 
-	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		return
+	} 
 }
 
 // OnLogIn - public API
@@ -46,22 +48,24 @@ func OnSignUp(ctx *fasthttp.RequestCtx, sv *server.Server, user types.SignUp) {
 // 		Validation: true
 // }
 func OnLogIn(ctx *fasthttp.RequestCtx, sv *server.Server, user types.User) {
-	cookieValue := sv.DB.LogIn(user)
-	if cookieValue == "" {
+	cookieValue, err := sv.DB.LogIn(user)
+	if err != nil {
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+
+		return
+	} else if cookieValue == "" {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-		reason := []byte("WrongPassword")
+		reason := []byte("{\"response\":\"wrong password\"}")
 		ctx.Write(reason)
 
 		return
-	} else {
+	} else if cookieValue != "" {
 		sessionCookie := misc.MakeSessionCookie(cookieValue)
 		ctx.SetStatusCode(fasthttp.StatusAccepted)
 		misc.SetCookie(ctx, sessionCookie)
 
 		return
-	}
-
-	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+	
 }
 
 // OnLogOut - public API
@@ -72,7 +76,12 @@ func OnLogIn(ctx *fasthttp.RequestCtx, sv *server.Server, user types.User) {
 // }
 func OnLogOut(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	cookie := misc.GetSessionCookie(ctx)
-	sv.DB.LogOut(cookie)
+	err := sv.DB.LogOut(cookie)
+	
+	if err != nil {
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+	}
+
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
@@ -84,19 +93,28 @@ func OnLogOut(ctx *fasthttp.RequestCtx, sv *server.Server) {
 // }
 func OnProfileGet(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	cookie := misc.GetSessionCookie(ctx)
-	if sv.DB.IsLoggedIn(cookie) {
-		profile := sv.DB.GetProfile(cookie)
+	isLoggedIn, err := sv.DB.IsLoggedIn(cookie)
+	
+	if err != nil {
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+
+		return
+	} else if isLoggedIn {
+		profile, e := sv.DB.GetProfile(cookie)
+		if e != nil {
+			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+			
+			return
+		}
 		ctx.Write(types.Must(profile.MarshalJSON()))
 		ctx.SetStatusCode(fasthttp.StatusOK)
 
 		return
-	} else {
+	} else if !isLoggedIn {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
 
 		return
 	}
-	
-	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 }
 
 // OnProfileEdit - public API
@@ -110,26 +128,35 @@ func OnProfileGet(ctx *fasthttp.RequestCtx, sv *server.Server) {
 // }
 func OnProfileEdit(ctx *fasthttp.RequestCtx, sv *server.Server, user types.EditProfile) {
 	cookie := misc.GetSessionCookie(ctx)
-	if sv.DB.IsLoggedIn(cookie) {
-		updated := sv.DB.UpdateProfile(cookie, user)
-		if updated {
+	isLoggedIn, err := sv.DB.IsLoggedIn(cookie)
+
+	if err != nil {
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+
+		return
+	} else if isLoggedIn {
+		isUpdated, e := sv.DB.UpdateProfile(cookie, user)
+		if e != nil {
+			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+	
+			return
+		}
+		if isUpdated {
 			ctx.SetStatusCode(fasthttp.StatusAccepted)
 
 			return
-		} else {
+		} else if !isUpdated{
 			ctx.SetStatusCode(fasthttp.StatusForbidden)
-			reason := []byte("bad")
+			reason := []byte("{\"response\":\"bad update\"}")
 			ctx.Write(reason)
 
 			return
 		}
-	} else {
+	} else if !isLoggedIn {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
 
 		return
 	}
-	
-	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 }
 
 // OnAvatarGET - public API
@@ -138,6 +165,32 @@ func OnProfileEdit(ctx *fasthttp.RequestCtx, sv *server.Server, user types.EditP
 // 		Method: 	GET,
 // 		Auth: 		true
 // }
+func OnAvatarGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
+	cookie := misc.GetSessionCookie(ctx)
+	isLoggedIn, err := sv.DB.IsLoggedIn(cookie)
+	
+	if err != nil {
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+
+		return
+	} else if isLoggedIn {
+		avatarSource, e := sv.DB.GetAvatar(cookie)
+		if e != nil {
+			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+			
+			return
+		}
+		ctx.Write([]byte(avatarSource))
+		ctx.SetStatusCode(fasthttp.StatusOK)
+
+		return
+	} else if !isLoggedIn {
+		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+
+		return
+	}
+}
+
 /*
 func OnAvatarGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 	if uid, err := strconv.Atoi(ctx.UserValue("uid").(string)); err == nil {

@@ -15,15 +15,9 @@ import (
 
 //TODO:
 // password hashing
-// error processing
 // validation
 // different regexps for username & password (set min/maxlengths!)
 // log into file
-// curPassword check
-// update avatar
-// fetch GetUser by any username
-// GetAvatar
-// avatar on Signup
 
 // ORM!
 
@@ -51,27 +45,29 @@ func New(dbconf_ utiles.DatabaseConfig) *DB {
 	var err error
 	postgr.db, err = sql.Open("postgres", fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
 	postgr.dbconf.User, postgr.dbconf.Password, postgr.dbconf.Name))
-	checkErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Println("postgres connection established")
 
 	return postgr
 }
 
-func checkErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (db *DB) present(tableName string, colName string, target string) bool {
+func (db *DB) present(tableName string, colName string, target string) (bool, error) {
 	var flag string
 
 	row := db.db.QueryRow("SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "')")
-	err := row.Scan(&flag)
-	checkErr(err)
+	errScan := row.Scan(&flag)
+	if errScan != nil {
+		return false, errScan
+	}
 	
-	fl, _ := strconv.ParseBool(flag)
-	return fl
+	fl, errParse := strconv.ParseBool(flag)
+	if errParse != nil {
+		return false, errParse
+	}
+
+	return fl, nil
 }
 
 func validateCredentials(target string) bool {
@@ -88,158 +84,223 @@ func validateCredentials(target string) bool {
 
 /****************** Authorization block ******************/
 
-func (db *DB) SignUp(profile types.SignUp) (cookie string) {
+func (db *DB) SignUp(profile types.SignUp) (cookie string, err error) {
 	if validateCredentials(profile.Username) && validateCredentials(profile.Password) {
-		if db.present(UserInfoTable, UsernameCol, profile.Username) {
+		if isPresent, problem := db.present(UserInfoTable, UsernameCol, profile.Username); isPresent && problem == nil {
 			log.Println("signup failed: user already exists")
 
-			return ""
-		} else {
-			cookie := misc.GenerateCookie()
+			return "", nil
+		} else if !isPresent && problem == nil {
+			cookie := misc.GenerateCookie() // = ?
 			_, err := db.db.Exec("INSERT INTO userinfo(username,password) VALUES($1, $2)", profile.Username, profile.Password)
-			checkErr(err)
+			
+			if err != nil {
+				return "", err
+			}
+
 			_, err = db.db.Exec("INSERT INTO cookie(uid, cookieStr) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2)", profile.Username, cookie)
-			checkErr(err)
+			
+			if err != nil {
+				return "", err
+			}
+
 			log.Println("signup successful")
 
-			return cookie
+			return cookie, nil
+		} else if problem != nil {
+			return "", problem
 		}
 	}
 
-	return ""
+	return "", nil
 }
 
-func (db *DB) IsLoggedIn(cookie string) bool {
+func (db *DB) IsLoggedIn(cookie string) (bool, error) {
 	foundCookie := true
-	if !db.present(CookieTable, CookieCol, cookie) {
+	if isPresent, problem := db.present(CookieTable, CookieCol, cookie); !isPresent && problem == nil {
 		log.Println("is logged in check failed: no such cookie found, returns: false")
 		foundCookie = false
 
-		return foundCookie
-	} else {
+		return foundCookie, nil
+	} else if isPresent && problem == nil {
 		log.Println("is logged in check successful: cookie found, returns: true")
+	} else if problem != nil {
+
+		return false, problem
 	}
 	
-	return foundCookie
+	return foundCookie, nil
 }
 
-func (db *DB) LogIn(credentials types.User) (cookie string) {
-	if db.present(UserInfoTable, UsernameCol, credentials.Username) {
+func (db *DB) LogIn(credentials types.User) (cookie string, err error) {
+	if isPresent, problem := db.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 		var psswd string
 		row := db.db.QueryRow("SELECT password FROM userinfo WHERE username=$1", credentials.Username);
 		err := row.Scan(&psswd)
-		checkErr(err)
+		
+		if err != nil {
+			return "", err
+		}
 
 		if psswd == credentials.Password {
 			cookie := misc.GenerateCookie()
 			_, err := db.db.Exec("INSERT INTO cookie(uid, cookieStr) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2);", credentials.Username, cookie)
-			checkErr(err)
+			
+			if err != nil {
+				return "", err
+			}
+
 			log.Println("login successful: cookie set")
 			
-			return cookie
+			return cookie, nil
 		} else {
 			log.Println("login failed: wrong password")
 
-			return ""
+			return "", nil
 		}
 	}
 
-	return ""
+	return "", nil
 }
 
-func (db *DB) LogOut(cookie string) {
+func (db *DB) LogOut(cookie string) error {
 	_, err := db.db.Exec("DELETE FROM cookie WHERE cookieStr=$1", cookie);
-	checkErr(err)
+	
+	if err != nil {
+		return err
+	}
 
 	log.Println("logout successful");
+
+	return nil
 }
 
 /****************** User profile block ******************/
 
-// current user 
-func (db *DB) GetProfile(cookie string) (profile types.Profile) {
+func (db *DB) GetProfile(cookie string) (profile types.Profile, err error) {
 	row := db.db.QueryRow("SELECT username,avatar,score FROM userinfo JOIN cookie ON cookie.uid = userinfo.uid AND cookieStr=$1;", cookie)
-	err := row.Scan(&profile.Username, &profile.AvatarURI, &profile.Score)
-	checkErr(err)
+	err = row.Scan(&profile.Username, &profile.AvatarURI, &profile.Score)
+	
+	if err != nil {
+		return types.Profile{}, err
+	}
 	log.Println("get profile successful");
 
-	return profile
+	return profile, nil
 }
 
-func (db *DB) GetAvatar(uid int) (avatarSource string) {
-	if !db.present(UserInfoTable, UID, strconv.Itoa(uid)) {
+/*
+func (db *DB) GetAvatar(uid int) (avatarSource string, err error) {
+	if isPresent, problem := db.present(UserInfoTable, UID, strconv.Itoa(uid)); !isPresent && problem == nil {
 		log.Println("get avatar failed: user doesn't exist")
 
-		return ""
+		return "", nil
+	} else if problem != nil {
+		return "", problem
 	}
 	row := db.db.QueryRow("SELECT avatar FROM userinfo WHERE uid=$1", uid)
 	err := row.Scan(&avatarSource)
-	checkErr(err)
+	
+	if err != nil {
+		return "", err
+	}
+
 	log.Println("get avatar successful");
 
-	return avatarSource
+	return avatarSource, nil
+}
+*/
+
+func (db *DB) GetAvatar(cookie string) (avatarSource string, err error) {
+	
+	row := db.db.QueryRow("SELECT avatar FROM userinfo JOIN cookie ON cookie.uid = userinfo.uid AND cookieStr=$1;", cookie)
+	err = row.Scan(&avatarSource)
+	
+	if err != nil {
+		return "", err
+	}
+
+	log.Println("get avatar successful");
+
+	return avatarSource, nil
 }
 
-func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) bool {
+func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) (bool, error) {
 	if profile.NewUsername != "" {
-		if !db.present(UserInfoTable, UsernameCol, profile.NewUsername) {
+		isPresent, problem := db.present(UserInfoTable, UsernameCol, profile.NewUsername);
+		if problem != nil {
+			return false, problem
+		} 
+		if !isPresent {
 			if validateCredentials(profile.NewUsername) {
 				// to change!
 				db.db.QueryRow("UPDATE userinfo SET username=$1 WHERE userinfo.uid = (SELECT cookie.uid from cookie JOIN userinfo ON cookie.uid = userinfo.uid WHERE cookieStr=$2);", profile.NewUsername, cookie)
 				log.Println("update profile successful: username changed")
 
-				return true
+				return true, nil
 			} else {
 				log.Println("update profile failed: bad username")
 
-				return false
-			}
-		} else {
+				return false, nil
+		}
+		if isPresent {
 			log.Println("update profile fail: username already in use")
 
-			return false
+			return false, nil
 		}
 	}
 
 	if profile.NewPassword != "" {
 		if validateCredentials(profile.NewPassword) {
 			// to change!
-			// curPassword check
 			db.db.QueryRow("UPDATE userinfo SET password=$1 WHERE userinfo.uid = (SELECT cookie.uid from cookie JOIN userinfo ON cookie.uid = userinfo.uid WHERE cookieStr=$2);", profile.NewPassword, cookie)
 			log.Println("update profile successful: password changed")
 
-			return true
+			return true, nil
 		} else {
 			log.Println("update profile failed: bad password")
 
-			return false
+			return false, nil
 		}
 	}
 
-	/*
 	if profile.Avatar != "" {
-		//db.db.Exec("", profile.Avatar, cookie)
+		db.db.QueryRow("UPDATE userinfo SET avatar=$1 WHERE userinfo.uid = (SELECT cookie.uid from cookie JOIN userinfo ON cookie.uid = userinfo.uid WHERE cookieStr=$2);", profile.Avatar, cookie)
 		log.Println("update profile successful: avatar changed")
+
+		return true, nil
 	}
-	*/
-	return false
+	
+	return false, nil
 }
 
 /****************** Leaderboard block ******************/
 
-func (db *DB) GetTopUsers(limit, offset int) (board types.Leaderboard) {
+func (db *DB) GetTopUsers(limit int, offset int) (board types.Leaderboard, err error) {
 	row := db.db.QueryRow("SELECT COUNT(*) FROM userinfo")
 	err := row.Scan(&board.Total)
-	checkErr(err)
+	
+	if err != nil {
+		return types.Leaderboard{}, err
+	}
 
 	rows, err := db.db.Query("SELECT username,score FROM userinfo ORDER BY score DESC LIMIT $1 OFFSET $2;", limit, offset)
-	checkErr(err)
+	
+	if err != nil {
+		return types.Leaderboard{}, err
+	}
 
 	temp := types.LeaderboardRow{}
 
 	for rows.Next() {
 		err = rows.Scan(&temp.Username, &temp.Score)
+
+		if err != nil {
+			return types.Leaderboard{}, err
+		}
+
 		board.Users = append(board.Users, temp)
 	}
-	return board
+
+	return board, nil
 }
