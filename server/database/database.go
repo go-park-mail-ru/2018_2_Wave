@@ -15,9 +15,11 @@ import (
 
 //TODO:
 // password hashing
+// 
 // validation
 // different regexps for username & password (set min/maxlengths!)
 // log into file
+// avatarr when signup
 
 // ORM!
 
