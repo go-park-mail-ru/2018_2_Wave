@@ -244,6 +244,7 @@ func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) (bool, err
 				log.Println("update profile failed: bad username")
 
 				return false, nil
+			}
 		}
 		if isPresent {
 			log.Println("update profile fail: username already in use")
@@ -280,7 +281,7 @@ func (db *DB) UpdateProfile(cookie string, profile types.EditProfile) (bool, err
 
 func (db *DB) GetTopUsers(limit int, offset int) (board types.Leaderboard, err error) {
 	row := db.db.QueryRow("SELECT COUNT(*) FROM userinfo")
-	err := row.Scan(&board.Total)
+	err = row.Scan(&board.Total)
 	
 	if err != nil {
 		return types.Leaderboard{}, err
