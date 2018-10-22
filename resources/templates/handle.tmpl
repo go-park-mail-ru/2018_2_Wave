@@ -13,7 +13,7 @@ func Handler{{.FunctionName}} ( ctx *fasthttp.RequestCtx, sv *server.Server) {
     {{if eq .Auth "true"}}   
 
         cookie := misc.GetSessionCookie(ctx)
-        if !sv.DB.IsLoggedIn(cookie) {
+        if ok, err := sv.DB.IsLoggedIn(cookie); !ok || err != nil {
             ctx.SetStatusCode(fasthttp.StatusUnauthorized)
             return
         }
@@ -21,7 +21,7 @@ func Handler{{.FunctionName}} ( ctx *fasthttp.RequestCtx, sv *server.Server) {
     {{else if eq .Auth "false"}}
 
         cookie := misc.GetSessionCookie(ctx)
-        if sv.DB.IsLoggedIn(cookie) {
+        if ok, err := sv.DB.IsLoggedIn(cookie); ok || err != nil {
             ctx.SetStatusCode(fasthttp.StatusForbidden)
             return
         }

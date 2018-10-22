@@ -65,7 +65,7 @@ func OnLogIn(ctx *fasthttp.RequestCtx, sv *server.Server, user types.User) {
 		misc.SetCookie(ctx, sessionCookie)
 
 		return
-	
+	}
 }
 
 // OnLogOut - public API
