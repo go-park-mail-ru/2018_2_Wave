@@ -9,8 +9,8 @@
 
 ## Запуск
 ```
-./build.sh init
-go run .
+go generate .
+go run .\app\generated\cmd\wave-application-server\
 ```
 
 ## Деплой

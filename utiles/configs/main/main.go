@@ -1,24 +1,29 @@
 package main
 
 import (
-	"Wave/utiles"
+	"Wave/utiles/configs"
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 )
 
-const confPath = "./resources/configs/main.json"
-
-// from project root: go run /utiles/configs .
 func main() {
+	confPath := "."
+
+	flag.Parse()
+	if flag.NArg() != 0 {
+		confPath = flag.Arg(0)
+	}
+
 	data, err := ioutil.ReadFile(confPath)
 	if err != nil {
 		data = []byte("{}")
 	}
 
-	mainConfig := utiles.MainConfig{}
+	mainConfig := configs.MainConfig{}
 
 	if err := mainConfig.UnmarshalJSON(data); err != nil {
 		fmt.Printf("Incorrect config json: %s\nError: %v", data, err)

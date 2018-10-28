@@ -5,11 +5,11 @@ import (
 
 	"Wave/app/middlewareGlob/cors"
 	"Wave/utiles/walhalla"
-	"Wave/utiles"
+	"Wave/utiles/configs"
 )
 
 func Cors(next walhalla.GlobalMiddlewareFunction, ctx *walhalla.Context) walhalla.GlobalMiddlewareFunction {
-	Conf, ok := ctx.Config.(*utiles.MainConfig)
+	Conf, ok := ctx.Config.(*configs.MainConfig)
 	if !ok {
 		panic(fmt.Errorf("Unexpected config type"))
 	}

@@ -94,7 +94,7 @@ func handler{{.Name}} ( ctx walhalla.Context ) {{.Subcategory}}.{{.Function}} {
 	paramPtr := new({{.Subcategory}}.{{.Parametr}})
 	next := func(*http.Request) middleware.Responder {
 		{{if eq .Model ""}} return code{{$Package}}.{{.Name}}(*paramPtr, &ctx )
-		{{else           }} return code{{$Package}}.{{.Name}}(*paramPtr, &ctx, code{{$Package}}.{{.Model}}(ctx.DB) )
+		{{else           }} return code{{$Package}}.{{.Name}}(*paramPtr, &ctx, code{{$Package}}.{{.Model}}(&ctx) )
 		{{end}}
 	}
 
