@@ -1,0 +1,31 @@
+{
+  "cors": {
+    "credentials": true,
+    "origins": [
+      "http://localhost:3000"
+    ],
+    "methods": [
+      "OPTIONS",
+      "DELETE",
+      "POST",
+      "GET",
+      "PUT"
+    ],
+    "headers": [
+      "*"
+    ]
+  },
+  "server": {
+    "port": ":9600",
+    "log": "srv.log"
+  },
+  "walhalla": {
+    "mainTmpl": "./resources/templates/walhalla.tmpl",
+    "otherTmpls": [
+      "./resources/templates/",
+      "./resources/templates/handles/",
+      "./resources/templates/structs/"
+    ]
+  },
+  "database": {}
+}

@@ -5,16 +5,17 @@ import "io/ioutil"
 // CORSConfig configuration
 // easyjson:json
 type CORSConfig struct {
-	Origin      string `json:"origin"`
-	Credentials string `json:"credentials"`
-	Methods     string `json:"methods"`
-	Headers     string `json:"headers"`
+	Credentials bool     `json:"credentials"`
+	Origins     []string `json:"origins"`
+	Methods     []string `json:"methods"`
+	Headers     []string `json:"headers"`
 }
 
 // ServerConfig configuration
 // easyjson:json
 type ServerConfig struct {
 	Port string `json:"port"`
+	Log  string `json:"log"`
 }
 
 // DatabaseConfig configuration
@@ -25,10 +26,8 @@ type DatabaseConfig struct {
 // WalhallaConfig configuration
 // easyjson:json
 type WalhallaConfig struct {
-	HeaderTmpl string `json:"headerTmpl"`
-	HandleTmpl string `json:"handleTmpl"`
-	StructTmpl string `json:"structTmpl"`
-	RouterTmpl string `json:"routerTmpl"`
+	MainTmpl   string   `json:"mainTmpl"`
+	OtherTmpls []string `json:"otherTmpls"`
 }
 
 // MainConfig ...

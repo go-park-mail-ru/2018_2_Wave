@@ -1,0 +1,116 @@
+// Code generatederated by walhalla; Don't edit!
+package restapi
+
+{{$Project     := .Project    }}
+{{$PackageName := .PackageName}}
+
+import (
+								"{{$Project}}/utiles/walhalla"
+    code 						"{{$Project}}/{{$PackageName}}"
+								"{{$Project}}/{{$PackageName}}/generated/restapi/operations"
+    {{range .Subcategories}}	"{{$Project}}/{{$PackageName}}/generated/restapi/operations/{{.}}"	
+	code{{.}}					"{{$Project}}/{{$PackageName}}/{{.}}"
+	{{end}}
+	
+	"crypto/tls"
+	"net/http"
+
+	{{if .BMiddlewares}} 
+		"fmt" 
+	{{end}}
+
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
+)
+
+
+
+func configureServer(s *http.Server, scheme, addr string) {}
+func configureFlags(api *operations.{{.API}}) {}
+func configureTLS(tlsConfig *tls.Config) {}
+
+
+
+func configureAPI(api *operations.{{.API}}) http.Handler {
+	api.ServeError = errors.ServeError
+	api.JSONConsumer = runtime.JSONConsumer()
+	api.JSONProducer = runtime.JSONProducer()
+
+	{{if (len .Operations) gt 0}}
+		ctx := walhalla.Context{}
+		code.SetupContext(&ctx)
+	{{end}}
+
+    {{range .Operations}} api.{{.Handler}} = {{.Subcategory}}.{{.Function}}( handler{{.OperationID}}(ctx) )
+    {{end}}
+	
+	return setupGlobalMiddleware(api.Serve(setupMiddlewares), ctx)
+}
+
+
+
+type globalMiddlewareHandler struct {
+	function func(rw http.ResponseWriter, r *http.Request)
+}
+
+func (g *globalMiddlewareHandler)ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	g.function(rw, r)
+}
+
+func setupGlobalMiddleware(handler http.Handler, ctx walhalla.Context) http.Handler { 
+	{{if (len .GlobalMiddlewares) gt 0}}
+		next := handler.ServeHTTP
+
+		{{range .GlobalMiddlewares}} 
+		{
+			gen, ok := code.MiddlewareGeneratorsGlobal["{{.}}"]
+			if !ok {
+				panic(fmt.Errorf("Unexpected middleware: {{.}}"))
+			}
+
+			next = gen(next, &ctx)
+		} {{end}}
+
+		return &globalMiddlewareHandler{
+			function: next,
+		}
+	{{else}}
+		return handler 
+	{{end}}
+}
+
+func setupMiddlewares(handler http.Handler) http.Handler {
+	return handler
+}
+
+// ----------------| Handlers
+
+{{range .FuncSettings}}
+func handler{{.Name}} ( ctx walhalla.Context ) {{.Subcategory}}.{{.Function}} {
+	{{$Subcategory := .Subcategory}}
+	{{$Package     := .Package    }}
+
+	paramPtr := new({{.Subcategory}}.{{.Parametr}})
+	next := func(*http.Request) middleware.Responder {
+		{{if eq .Model ""}} return code{{$Package}}.{{.Name}}(*paramPtr, &ctx )
+		{{else           }} return code{{$Package}}.{{.Name}}(*paramPtr, &ctx, code{{$Package}}.{{.Model}}(ctx.DB) )
+		{{end}}
+	}
+
+	{{range .Middlewares}} 
+	{
+		gen, ok := code.MiddlewareGenerators["{{.}}"]
+		if !ok {
+			panic(fmt.Errorf("Unexpected middleware: {{.}}"))
+		}
+
+		next = gen(next, &ctx)
+	} {{end}}
+
+	return func(param {{.Subcategory}}.{{.Parametr}}) middleware.Responder {
+		*paramPtr = param
+		return next(param.HTTPRequest)
+	}
+}
+{{end}}

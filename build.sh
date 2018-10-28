@@ -6,8 +6,8 @@ if [ "$#" -eq "0" ]; then
     echo '-b server   -- generate and build server'
     echo '-b walhalla -- generate and build walhalla'
     echo '   walhalla -- run \ generate+run walhalla'
-    echo '-b configs  -- generate and build config generator'
-    echo '   configs  -- run \ generate+run config generator'
+    echo '-b conf     -- generate and build config generator'
+    echo '   conf     -- run \ generate+run config generator'
     echo 'NOTES:'
     echo 'Rebuild and run:'
     echo '-x <cmd> <args> == -b <command> && <cmd> <args>'
@@ -29,13 +29,13 @@ walh_bin=./.build/walhalla
     go_build $walh_dir $walh_bin
 }
 
--b_configs() {
+-b_conf() {
     gen_file utiles configs
     go_build $conf_dir $conf_bin
 }
 
-configs() {
-    _call_if_missed $conf_bin -b_configs
+conf() {
+    _call_if_missed $conf_bin -b_conf
     _run $conf_bin
 }
 
@@ -45,12 +45,12 @@ walhalla() {
 }
 
 -b_server() {
-    walhalla server/types/ server/api/
+    walhalla app/user/
     go_build . ./.build/server
 }
 
 init() {
-    configs
+    conf
     walhalla
     -b_server
 }
@@ -68,7 +68,7 @@ else
 fi
 
 _call_if_missed() {
-    if [[ ! -f $1 ]]; then
+    if [[ ! -e $1$ext ]]; then
         $2
     fi
 }

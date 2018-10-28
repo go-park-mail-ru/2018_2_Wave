@@ -5,11 +5,17 @@
 # golang
 vendor/
 debug
+debug.test
 
 # generation
+generated
+_assets
 *.tmp
 *.gen.go
 *.tmp.go
+
+# runtime
+*.log
 
 # services
 nginx

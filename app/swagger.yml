@@ -1,0 +1,242 @@
+swagger: '2.0'
+info:
+  version: "2018-10-28-beta"
+  title: Wave Application
+host: localhost:9600
+basePath: /
+tags:
+  - name: "user"
+schemes:
+  - http
+paths:
+  /users:
+    post:
+      tags:
+      - user
+      summary: "Creating an account."
+      description: ""
+      operationId: signupUser
+      consumes: 
+      - "multipart/form-data"
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          description: "Key user information."
+          required: true
+          schema:
+            $ref: "#/definitions/UserCredentials"
+      responses:
+        201: 
+          description: Created
+        401:
+          description: Unauthorised
+          schema:
+            $ref: "#/definitions/ForbiddenRequst"
+        500:
+          description: Internal Server Error
+
+  /users/me:
+    get:
+      tags:
+      - user
+      summary: "My profile."
+      description: ""
+      operationId: myProfile
+      consumes: []
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/UserExtended"
+        401:
+          description: Anauthorised
+        500:
+          description: Internal Server Error
+    post:
+      tags:
+      - user
+      summary: "Update my profile."
+      description: ""
+      operationId: updateMyProfile
+      consumes: []
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        401:
+          description: Anauthorised
+        403:
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/ForbiddenRequst"
+        500:
+          description: Internal Server Error
+
+  /users/{name}:
+    get:
+      tags:
+      - user
+      summary: "User's profile."
+      description: ""
+      operationId: usersProfile
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+      - in: path
+        name: name
+        type: string
+        required: true
+        description: User name.
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/UserExtended"
+        500:
+          description: Internal Server Error
+
+  /users/leaders:
+     get:
+      tags:
+      - user
+      summary: "Leaders."
+      description: ""
+      operationId: leaders
+      consumes: 
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: body
+        in: body
+        description: Pagination params.
+        required: true
+        schema:
+          $ref: "#/definitions/Pagination"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Leaderbord"
+        500:
+          description: Internal Server Error
+
+  /session:
+    post:
+      tags:
+      - user
+      summary: "Log in into an existing account."
+      description: ""
+      operationId: loginUser
+      consumes: 
+      - "multipart/form-data"
+      produces:
+      - application/json
+      parameters:
+        - name: body
+          in: body
+          description: "User autentificators."
+          required: true
+          schema:
+            $ref: "#/definitions/UserCredentials"
+      responses:
+        200:
+          description: OK
+        401:
+          description: Anauthorised
+          schema:
+            $ref: "#/definitions/ForbiddenRequst"
+        500:
+          description: Internal Server Error
+    delete:
+      tags:
+      - user
+      summary: "Log out from a current account"
+      description: ""
+      operationId: logoutUser
+      consumes: []
+      responses:
+        200:
+          description: OK
+        500:
+          description: Internal Server Error
+
+definitions:
+  ForbiddenRequst:
+    type: object
+    properties: 
+      reason:
+        type: string
+        example: <reason>
+
+  Pagination:
+    type: object
+    required:
+      - page
+      - count
+    properties: 
+      page:
+        type: integer
+        minimum: 0
+        example: 0
+      count:
+        type: integer
+        minimum: 0
+        example: 5
+
+  UserScore:
+    type: object
+    required:
+      - username
+      - score
+    properties: 
+      username:
+        type: string
+        example: <username>
+      score: 
+        type: integer
+        example: 0
+
+  Leaderbord:
+    type: object
+    properties: 
+      users:
+        type: array
+        items:
+          $ref: "#/definitions/UserScore"
+      total:
+        type: integer
+        minimum: 0
+        example: 0
+
+  UserCredentials:
+    type: object 
+    required:
+      - "username"
+      - "password"
+    properties:
+      username:
+        type: string
+        example: florence
+      password:
+        type: string
+        example: pass123
+
+  UserExtended:
+    type: object
+    properties:
+      username:
+        type: string
+        example: florence
+      score:
+        type: integer
+        example: 21
+      avatar:
+        type: string
+        example: <avatar>
