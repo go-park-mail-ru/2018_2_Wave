@@ -15,7 +15,8 @@ import (
 
 //TODO:
 // password hashing
-// 
+// shadow db connection params
+// concurrency
 // validation
 // different regexps for username & password (set min/maxlengths!)
 // log into file
@@ -45,8 +46,12 @@ func New(dbconf_ utiles.DatabaseConfig) *DB {
 	}
 	
 	var err error
+	//postgr.db, err = sql.Open("postgres", fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
+	//postgr.dbconf.User, postgr.dbconf.Password, postgr.dbconf.Name))
+
 	postgr.db, err = sql.Open("postgres", fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
-	postgr.dbconf.User, postgr.dbconf.Password, postgr.dbconf.Name))
+	"waveapp", "surf", "wave"))
+
 	if err != nil {
 		log.Fatal(err)
 	}

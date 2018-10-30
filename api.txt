@@ -1,42 +1,44 @@
-/user/login
-POST
-{username, password}
-202 ACCEPTED
-401 UNAUTHORIZED  { причина }
-500 INTERNAL SERVER ERROR
+/users +
+    POST {username, password}
+        201 CREATED
+        401 UNAUTHORIZED  {reason}
+        500 INTERNAL SERVER ERROR
 
-/user/logout +
-POST
-200 OK
-500 INTERNAL SERVER ERROR
+/users/me +
+    GET
+        200 OK {username, avatar, score, some_private_data}
+        401 UNAUTHORIZED
+        500 INTERNAL SERVER ERROR
 
-/user/signup +
-POST
-{username, password, [avatar]}
-201 CREATED
-403 FORBIDDEN  { причина }
-500 INTERNAL SERVER ERROR
+/users/me +
+    PUT
+        200 OK
+        401 UNAUTHORIZED
+        403 FORBIDDEN  {reason}
+        500 INTERNAL SERVER ERROR
 
-/user +
-200 OK  {username, score, avatar}
-401 UNAUTHORIZED
-500 INTERNAL SERVER ERROR
+/users/:name
+    GET
+        200 OK  {username, avatar, score}
+        500 INTERNAL SERVER ERROR
 
-/img/avatars/:uid
-{uid любой, он не нужен}
-200 OK  {avatarSource}
-401 UNAUTHORIZED
-500 INTERNAL SERVER ERROR
+/users/leaders
+    GET {page, count}
+        200 OK {"users":{массив {username, score}},"total":int}
+        500 INTERNAL SERVER ERROR
 
-/user/edit + 
-POST
-{[newUsername],[curPassword],[newPassword],[avatar]}
-202 ACCEPTED
-401 UNAUTHORIZED
-403 FORBIDDEN {}
-500 INTERNAL SERVER ERROR
+/session +
+    POST {username, password}
+        200 OK
+        401 UNAUTHORIZED  {reason}
+        500 INTERNAL SERVER ERROR
 
-/users/:offset/:limit
-200 OK {"users":{массив {username, score}},"total":int}
-500 INTERNAL SERVER ERROR
+/session +
+    DELETE
+        200 OK
+        500 INTERNAL SERVER ERROR
 
+/img/me +
+        200 OK
+        401 UNAUTHORIZED
+        500 INTERNAL SERVER ERROR

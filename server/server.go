@@ -60,3 +60,7 @@ func (sv *Server) PUT(path string, handle RequestHandler) {
 func (sv *Server) HEAD(path string, handle RequestHandler) {
 	sv.router.HEAD(path, sv.wrapHandle(handle))
 }
+
+func (sv *Server) DELETE(path string, handle RequestHandler) {
+	sv.router.DELETE(path, sv.wrapHandle(handle))
+}

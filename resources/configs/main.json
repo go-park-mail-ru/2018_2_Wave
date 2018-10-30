@@ -15,8 +15,8 @@
     "routerTmpl": "./resources/templates/router.tmpl"
   },
   "database": {
-    "user": "waveapp",
-    "password": "surf",
-    "name": "wave"
+    "user": "",
+    "password": "",
+    "name": ""
   }
 }

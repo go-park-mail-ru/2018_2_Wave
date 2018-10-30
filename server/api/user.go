@@ -5,14 +5,12 @@ import (
 	"Wave/server/misc"
 	"Wave/server/types"
 	"github.com/valyala/fasthttp"
-	//"mime"
-	//"strconv"
 )
 
 
 // OnSignUp - public API
 // walhalla: {
-// 		URI: 		/user/signup,
+// 		URI: 		/users,
 // 		Method: 	POST,
 // 		Data: 		form,
 // 		Target:  	types.SignUp,
@@ -41,7 +39,7 @@ func OnSignUp(ctx *fasthttp.RequestCtx, sv *server.Server, user types.SignUp) {
 
 // OnLogIn - public API
 // walhalla: {
-// 		URI: 		/user/login,
+// 		URI: 		/session,
 // 		Method: 	POST,
 // 		Data: 		form,
 // 		Target:  	types.User,
@@ -61,7 +59,7 @@ func OnLogIn(ctx *fasthttp.RequestCtx, sv *server.Server, user types.User) {
 		return
 	} else if cookieValue != "" {
 		sessionCookie := misc.MakeSessionCookie(cookieValue)
-		ctx.SetStatusCode(fasthttp.StatusAccepted)
+		ctx.SetStatusCode(fasthttp.StatusOK)
 		misc.SetCookie(ctx, sessionCookie)
 
 		return
@@ -70,8 +68,8 @@ func OnLogIn(ctx *fasthttp.RequestCtx, sv *server.Server, user types.User) {
 
 // OnLogOut - public API
 // walhalla: {
-// 		URI: 		/user/logout,
-// 		Method: 	POST,
+// 		URI: 		/session,
+// 		Method: 	DELETE,
 // 		Auth: 		true
 // }
 func OnLogOut(ctx *fasthttp.RequestCtx, sv *server.Server) {
@@ -87,7 +85,7 @@ func OnLogOut(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 // OnProfileGet - public API
 // walhalla: {
-// 		URI: 		/user,
+// 		URI: 		/users/me,
 // 		Method: 	GET,
 // 		Auth: 		true
 // }
@@ -119,8 +117,8 @@ func OnProfileGet(ctx *fasthttp.RequestCtx, sv *server.Server) {
 
 // OnProfileEdit - public API
 // walhalla: {
-// 		URI: 		/user/edit,
-// 		Method: 	POST,
+// 		URI: 		/users/me,
+// 		Method: 	PUT,
 // 		Data: 		form,
 // 		Target:  	types.EditProfile,
 // 		Validation: true,
@@ -142,7 +140,7 @@ func OnProfileEdit(ctx *fasthttp.RequestCtx, sv *server.Server, user types.EditP
 			return
 		}
 		if isUpdated {
-			ctx.SetStatusCode(fasthttp.StatusAccepted)
+			ctx.SetStatusCode(fasthttp.StatusOK)
 
 			return
 		} else if !isUpdated{
@@ -161,7 +159,7 @@ func OnProfileEdit(ctx *fasthttp.RequestCtx, sv *server.Server, user types.EditP
 
 // OnAvatarGET - public API
 // walhalla: {
-// 		URI: 		/img/avatars/:uid,
+// 		URI: 		/img/me,
 // 		Method: 	GET,
 // 		Auth: 		true
 // }
@@ -190,15 +188,3 @@ func OnAvatarGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
 		return
 	}
 }
-
-/*
-func OnAvatarGET(ctx *fasthttp.RequestCtx, sv *server.Server) {
-	if uid, err := strconv.Atoi(ctx.UserValue("uid").(string)); err == nil {
-		sv.DB.GetAvatar(uid);
-		//ctx.SetContentType(mime.TypeByExtension("png"))
-		ctx.SetStatusCode(fasthttp.StatusOK)
-		//ctx.Write(data)
-	}
-	//ctx.SetStatusCode(fasthttp.StatusNoContent)
-}
-*/
