@@ -18,6 +18,7 @@ require (
 	github.com/go-openapi/validate v0.17.1
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
 	github.com/rogpeppe/godef v1.0.0

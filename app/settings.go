@@ -44,7 +44,7 @@ func SetupContext(ctx *walhalla.Context) {
 			panic(err)
 		}
 	}
-	{ // setup databse
+	{ // setup database
 		
 	}
 }

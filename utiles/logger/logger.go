@@ -13,7 +13,7 @@ import (
 // Log just a log
 type Log struct {
 	mu      *sync.RWMutex // mutex to protect shared members
-	entery  logrus.Entry  // entery
+	entry  	logrus.Entry  // entry
 	out     *os.File      // output file
 	bClosed *bool         // weather the log was closed
 	bAsync  bool          // async writing
@@ -30,10 +30,10 @@ type Config struct {
 
 // New - create a new Log
 func New(config Config) (log *Log, err error) {
-	entery := logrus.WithFields(logrus.Fields{
+	entry := logrus.WithFields(logrus.Fields{
 		// "": "",
 	})
-	entery.Logger.SetFormatter(&logrus.JSONFormatter{})
+	entry.Logger.SetFormatter(&logrus.JSONFormatter{})
 
 	var out *os.File
 	{ // setup output
@@ -52,13 +52,13 @@ func New(config Config) (log *Log, err error) {
 		if config.BStdOut {
 			writers = append(writers, os.Stdout)
 		}
-		entery.Logger.SetOutput(io.MultiWriter(writers...))
+		entry.Logger.SetOutput(io.MultiWriter(writers...))
 	}
 
 	return &Log{
 		bClosed: new(bool),
 		bAsync:  config.BAsync,
-		entery:  *entery,
+		entry:  *entry,
 		out:     out,
 		mu:      &sync.RWMutex{},
 	}, nil
@@ -76,7 +76,7 @@ func (log *Log) Close() {
 func (log *Log) WithFields(fields walhalla.Fields) walhalla.ILogger {
 	fds := logrus.Fields(fields)
 	return &Log{
-		entery:  *log.entery.WithFields(fds),
+		entry:  *log.entry.WithFields(fds),
 		out:     log.out,
 		mu:      log.mu,
 		bAsync:  log.bAsync,
@@ -99,9 +99,9 @@ func (log *Log) Info(args ...interface{}) {
 
 	log.mustBeValid()
 	if log.bAsync {
-		go log.entery.Infoln(args...)
+		go log.entry.Infoln(args...)
 	} else {
-		log.entery.Infoln(args...)
+		log.entry.Infoln(args...)
 	}
 }
 
@@ -111,9 +111,9 @@ func (log *Log) Infof(format string, args ...interface{}) {
 
 	log.mustBeValid()
 	if log.bAsync {
-		go log.entery.Infof(format, args...)
+		go log.entry.Infof(format, args...)
 	} else {
-		log.entery.Infof(format, args...)
+		log.entry.Infof(format, args...)
 	}
 }
 
@@ -125,9 +125,9 @@ func (log *Log) Warn(args ...interface{}) {
 
 	log.mustBeValid()
 	if log.bAsync {
-		go log.entery.Warnln(args...)
+		go log.entry.Warnln(args...)
 	} else {
-		log.entery.Warnln(args...)
+		log.entry.Warnln(args...)
 	}
 }
 
@@ -137,9 +137,9 @@ func (log *Log) Warnf(format string, args ...interface{}) {
 
 	log.mustBeValid()
 	if log.bAsync {
-		go log.entery.Warnf(format, args...)
+		go log.entry.Warnf(format, args...)
 	} else {
-		log.entery.Warnf(format, args...)
+		log.entry.Warnf(format, args...)
 	}
 }
 
@@ -151,9 +151,9 @@ func (log *Log) Error(args ...interface{}) {
 
 	log.mustBeValid()
 	if log.bAsync {
-		go log.entery.Errorln(args...)
+		go log.entry.Errorln(args...)
 	} else {
-		log.entery.Errorln(args...)
+		log.entry.Errorln(args...)
 	}
 }
 
@@ -163,8 +163,8 @@ func (log *Log) Errorf(format string, args ...interface{}) {
 
 	log.mustBeValid()
 	if log.bAsync {
-		go log.entery.Errorf(format, args...)
+		go log.entry.Errorf(format, args...)
 	} else {
-		log.entery.Errorf(format, args...)
+		log.entry.Errorf(format, args...)
 	}
 }

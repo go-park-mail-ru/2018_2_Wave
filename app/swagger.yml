@@ -1,11 +1,12 @@
 swagger: '2.0'
 info:
-  version: "2018-10-28-beta"
+  version: "2018-10-30"
   title: Wave Application
 host: localhost:9600
 basePath: /
 tags:
   - name: "user"
+  - name: "session"
 schemes:
   - http
 paths:
@@ -13,13 +14,13 @@ paths:
     post:
       tags:
       - user
-      summary: "Creating an account."
+      summary: "Create an account."
       description: ""
       operationId: signupUser
       consumes: 
       - "multipart/form-data"
       produces:
-        - application/json
+      - application/json
       parameters:
         - name: body
           in: body
@@ -31,9 +32,9 @@ paths:
         201: 
           description: Created
         401:
-          description: Unauthorised
+          description: Unauthorized
           schema:
-            $ref: "#/definitions/ForbiddenRequst"
+            $ref: "#/definitions/ForbiddenRequest"
         500:
           description: Internal Server Error
 
@@ -41,7 +42,7 @@ paths:
     get:
       tags:
       - user
-      summary: "My profile."
+      summary: "Get current user's information."
       description: ""
       operationId: myProfile
       consumes: []
@@ -53,13 +54,13 @@ paths:
           schema:
             $ref: "#/definitions/UserExtended"
         401:
-          description: Anauthorised
+          description: Unauthorized
         500:
           description: Internal Server Error
-    post:
+    put:
       tags:
       - user
-      summary: "Update my profile."
+      summary: "Update current user's profile."
       description: ""
       operationId: updateMyProfile
       consumes: []
@@ -69,11 +70,11 @@ paths:
         200:
           description: OK
         401:
-          description: Anauthorised
+          description: Unauthorized
         403:
           description: Forbidden
           schema:
-            $ref: "#/definitions/ForbiddenRequst"
+            $ref: "#/definitions/ForbiddenRequest"
         500:
           description: Internal Server Error
 
@@ -81,7 +82,7 @@ paths:
     get:
       tags:
       - user
-      summary: "User's profile."
+      summary: "Get another user's information."
       description: ""
       operationId: usersProfile
       consumes: []
@@ -92,7 +93,7 @@ paths:
         name: name
         type: string
         required: true
-        description: User name.
+        description: Target username.
       responses:
         200:
           description: OK
@@ -105,7 +106,7 @@ paths:
      get:
       tags:
       - user
-      summary: "Leaders."
+      summary: "Get all users with their scores."
       description: ""
       operationId: leaders
       consumes: 
@@ -123,14 +124,14 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/Leaderbord"
+            $ref: "#/definitions/Leaderboard"
         500:
           description: Internal Server Error
 
   /session:
     post:
       tags:
-      - user
+      - session
       summary: "Log in into an existing account."
       description: ""
       operationId: loginUser
@@ -141,7 +142,7 @@ paths:
       parameters:
         - name: body
           in: body
-          description: "User autentificators."
+          description: "User credentials."
           required: true
           schema:
             $ref: "#/definitions/UserCredentials"
@@ -149,15 +150,15 @@ paths:
         200:
           description: OK
         401:
-          description: Anauthorised
+          description: Unauthorized
           schema:
-            $ref: "#/definitions/ForbiddenRequst"
+            $ref: "#/definitions/ForbiddenRequest"
         500:
           description: Internal Server Error
     delete:
       tags:
-      - user
-      summary: "Log out from a current account"
+      - session
+      summary: "Log out from the current account."
       description: ""
       operationId: logoutUser
       consumes: []
@@ -168,7 +169,7 @@ paths:
           description: Internal Server Error
 
 definitions:
-  ForbiddenRequst:
+  ForbiddenRequest:
     type: object
     properties: 
       reason:
@@ -203,7 +204,7 @@ definitions:
         type: integer
         example: 0
 
-  Leaderbord:
+  Leaderboard:
     type: object
     properties: 
       users:
