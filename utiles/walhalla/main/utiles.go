@@ -100,7 +100,7 @@ func extractPrefixAndProjetcName(dir *os.File) (prefix, project string) {
 		for _, name := range names {
 			if name.Name() == "go.mod" {
 				var (
-					fullName   = abs + `\` + name.Name()
+					fullName   = abs + `/` + name.Name()
 					data, err1 = ioutil.ReadFile(fullName)
 					pref, err2 = filepath.Rel(abs, targetPath)
 				)
