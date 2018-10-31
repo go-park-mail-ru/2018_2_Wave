@@ -2,6 +2,8 @@ package configs
 
 import "io/ioutil"
 
+//go:generate easyjson -output_filename configs.gen.go configs.go
+
 // CORSConfig configuration
 // easyjson:json
 type CORSConfig struct {
@@ -21,6 +23,7 @@ type ServerConfig struct {
 // DatabaseConfig configuration
 // easyjson:json
 type DatabaseConfig struct {
+	User string `json:"user"`
 }
 
 // WalhallaConfig configuration

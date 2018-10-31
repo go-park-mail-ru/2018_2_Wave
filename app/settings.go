@@ -3,10 +3,10 @@ package app
 import (
 	"Wave/app/middleware"
 	"Wave/app/middlewareGlob"
-	
-	"Wave/utiles/walhalla"
-	"Wave/utiles/logger"
+
 	"Wave/utiles/configs"
+	"Wave/utiles/logger"
+	"Wave/utiles/walhalla"
 )
 
 //go:generate go run ../utiles/walhalla/main .
@@ -18,12 +18,12 @@ import (
 // }
 
 var MiddlewareGenerators = walhalla.MiddlewareGenerationFunctionMap{
-	"auth": middleware.AuthTrue, 
+	"auth":     middleware.AuthTrue,
 	"recovery": middleware.Recovery,
 }
 
 var MiddlewareGeneratorsGlobal = walhalla.GlobalMiddlewareGenerationFunctionMap{
-	"log": middlewareGlob.Logger,
+	"log":  middlewareGlob.Logger,
 	"cors": middlewareGlob.Cors,
 }
 
@@ -36,7 +36,7 @@ func SetupContext(ctx *walhalla.Context) {
 	}
 	{ // setup the logger
 		ctx.Log, err = logger.New(logger.Config{
-			File: "log.log",
+			File:    "log.log",
 			BStdOut: true,
 			BAsync:  true,
 		})
@@ -45,6 +45,6 @@ func SetupContext(ctx *walhalla.Context) {
 		}
 	}
 	{ // setup database
-		
+
 	}
 }

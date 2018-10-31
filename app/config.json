@@ -27,5 +27,7 @@
       "./resources/templates/structs/"
     ]
   },
-  "database": {}
+  "database": {
+    "user": "a"
+  }
 }

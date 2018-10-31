@@ -76,7 +76,7 @@ func walhalla(tmpl *template.Template, root *os.File) {
 		println(" -- swagger generator started")
 		defer println(" -- swagger generator stoped")
 
-		os.Mkdir(generated, os.ModeDir)
+		os.Mkdir(generated, 0755)
 		var (
 			flagTarget = prefix + generated
 			flagSpec   = prefix + swaggerFile

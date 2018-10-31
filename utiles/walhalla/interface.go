@@ -8,6 +8,7 @@ import (
 )
 
 //go:generate go-bindata -pkg assets -o _assets/assets.go templates/...
+//go:generate easyjson -output_filename main/types.gen.go main/types.go
 
 // ----------------| global middlewares
 

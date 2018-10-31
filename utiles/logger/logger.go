@@ -7,13 +7,14 @@ import (
 	"sync"
 
 	"Wave/utiles/walhalla"
+
 	"github.com/sirupsen/logrus"
 )
 
 // Log just a log
 type Log struct {
 	mu      *sync.RWMutex // mutex to protect shared members
-	entry  	logrus.Entry  // entry
+	entry   logrus.Entry  // entry
 	out     *os.File      // output file
 	bClosed *bool         // weather the log was closed
 	bAsync  bool          // async writing
@@ -58,7 +59,7 @@ func New(config Config) (log *Log, err error) {
 	return &Log{
 		bClosed: new(bool),
 		bAsync:  config.BAsync,
-		entry:  *entry,
+		entry:   *entry,
 		out:     out,
 		mu:      &sync.RWMutex{},
 	}, nil
@@ -76,7 +77,7 @@ func (log *Log) Close() {
 func (log *Log) WithFields(fields walhalla.Fields) walhalla.ILogger {
 	fds := logrus.Fields(fields)
 	return &Log{
-		entry:  *log.entry.WithFields(fds),
+		entry:   *log.entry.WithFields(fds),
 		out:     log.out,
 		mu:      log.mu,
 		bAsync:  log.bAsync,
