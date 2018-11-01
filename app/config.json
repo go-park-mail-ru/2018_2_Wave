@@ -28,6 +28,8 @@
     ]
   },
   "database": {
-    "user": "a"
+    "user": "waveapp",
+    "password": "surf",
+    "dbname": "wave"
   }
 }

@@ -12,6 +12,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
+	github.com/lib/pq v1.0.0
 	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
 	github.com/sirupsen/logrus v1.1.1
 	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793

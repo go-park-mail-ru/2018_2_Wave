@@ -1,8 +1,10 @@
-package user
+package session
 
 import (
-	"Wave/app/generated/restapi/operations/user"
-	// "Wave/app/generated/models"
+	"Wave/app/generated/restapi/operations/session"
+	"Wave/app/generated/models"
+	"Wave/app/session"
+	"Wave/app/misc"
 	"Wave/utiles/walhalla"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -11,21 +13,30 @@ import (
 // walhalla:file { model:NewModel }
 
 // walhalla:gen { auth:false }
-func LoginUser(params user.LoginUserParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	// if !model.IsSignedUp(user) {
-	// 	var (
-	// 		cookieValue   = model.LogIn(user)
-	// 		sessionCookie = misc.MakeSessionCookie(cookieValue)
-	// 	)
-	// 	ctx.SetStatusCode(fasthttp.StatusAccepted)
-	// 	misc.SetCookie(ctx, sessionCookie)
-	// } else {
-	// 	ctx.SetStatusCode(fasthttp.StatusForbidden)
-	// }
-	return middleware.NotImplemented("kek")
+func LoginUser(params session.LoginUserParams, ctx *walhalla.Context, model *Model) middleware.Responder {
+	cookie, err := model.LogIn(params.Body)
+	if err != nil {
+		return session.NewLoginUserInternalServerError()
+	} else if cookie == "" {
+		return session.NewLoginUserUnauthorized().WithPayload(&models.ForbiddenRequest{
+			Reason: "Incorrect password."
+		})
+	}
+
+	sessionCookie := misc.MakeSessionCookie(cookie)
+	misc.SetCookie(ctx, sessionCookie)
+
+	return session.NewLoginUserOK()
 }
 
-// walhalla:gen {}
-func LogoutUser(params user.LogoutUserParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	return middleware.NotImplemented("kek")
+// walhalla:gen { auth:true }
+func LogoutUser(params session.LogoutUserParams, ctx *walhalla.Context, model *Model) middleware.Responder {
+	cookie := misc.GetSessionCookie(ctx)
+	err := model.LogOut(cookie)
+	
+	if err != nil {
+		return session.NewLogoutUserInternalServerError()
+	}
+
+	return session.NewLogoutUserOK()
 }

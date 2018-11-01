@@ -7,7 +7,7 @@ import (
 )
 
 type Model struct {
-	db *sqlx.DB
+	db 		*sqlx.DB
 }
 
 func NewModel(ctx *walhalla.Context) *Model {
