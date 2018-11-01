@@ -92,7 +92,7 @@ func walhalla(tmpl *template.Template, root *os.File) {
 		go func() { io.Copy(os.Stderr, stderr) }()
 		check(cmd.Run())
 	} else {
-		println(" -- swagger files are up to data")
+		println(" -- swagger files are up to date")
 	}
 	{ // change configuration file
 		check(ioutil.WriteFile(outName, buffer.Bytes(), os.ModeExclusive))
