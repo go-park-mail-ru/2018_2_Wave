@@ -13,7 +13,7 @@ import (
 // walhalla:gen
 func MyProfile(params user.MyProfileParams, ctx *walhalla.Context, model *Model) middleware.Responder {
 	cookie := ctx.GetCookie("session")
-	profile, err := model.GetProfile(cookie)
+	profile, err := model.GetMyProfile(cookie)
 	if err != nil {
 		return user.NewMyProfileInternalServerError()
 	}
@@ -42,5 +42,10 @@ func UpdateMyProfile(params user.UpdateMyProfileParams, ctx *walhalla.Context, m
 
 // walhalla:gen
 func UsersProfile(params user.UsersProfileParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	return middleware.NotImplemented("ez")
+	profile, err := model.GetProfile(params.Name)
+	if err != nil {
+		return user.NewUsersProfileInternalServerError()
+	}
+
+	return user.NewUsersProfileOK().WithPayload(&profile)
 }

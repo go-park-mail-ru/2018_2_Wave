@@ -97,8 +97,20 @@ func (model *Model) SignUp(credentials models.UserCredentials) (cookie string, e
 	return "", nil
 }
 
-func (model *Model) GetProfile(cookie string) (profile models.UserExtended, err error) {
+func (model *Model) GetMyProfile(cookie string) (profile models.UserExtended, err error) {
 	row := model.db.QueryRow("SELECT username,avatar,score FROM userinfo JOIN session ON session.uid = userinfo.uid AND cookie=$1;", cookie)
+	err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
+
+	if err != nil {
+		return models.UserExtended{}, err
+	}
+	log.Println("get my profile successful")
+
+	return profile, nil
+}
+
+func (model *Model) GetProfile(username string) (profile models.UserExtended, err error) {
+	row := model.db.QueryRow("SELECT username,avatar,score FROM userinfo WHERE username=$1;", username)
 	err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
 
 	if err != nil {

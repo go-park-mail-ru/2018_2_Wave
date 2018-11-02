@@ -9,7 +9,6 @@ import (
 
 // walhalla:gen
 func Leaders(params user.LeadersParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	//offset = page, limit = count ?
 	leaders, err := model.GetTopUsers(int(*params.Body.Count), int(*params.Body.Page))
 	
 	if err != nil {
