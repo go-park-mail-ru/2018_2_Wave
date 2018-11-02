@@ -28,21 +28,21 @@ const (
 	CookieCol   = "cookie"
 )
 
-func (model *Model) present(tableName string, colName string, target string) (bool, error) {
+func (model *Model) present(tableName string, colName string, target string) (fl bool, err error) {
 	var exists string
 	model.db.Select(&exists, "SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "')")
 
-	fl, errParse := strconv.ParseBool(exists)
-	if errParse != nil {
-		return false, errParse
+	fl, err = strconv.ParseBool(exists)
+	if err != nil {
+		return false, err
 	}
 
 	return fl, nil
 }
 
-func (model *Model) LogIn(credentials &models.UserCredentials) (cookie string, err error) {
+func (model *Model) LogIn(credentials models.UserCredentials) (cookie string, err error) {
 	if isPresent, problem := model.present(UserInfoTable, UsernameCol, *credentials.Username); isPresent && problem == nil {
-		var psswd string
+		var psswd []byte
 		row := model.db.QueryRowx("SELECT password FROM userinfo WHERE username=$1", *credentials.Username)
 		err := row.Scan(&psswd)
 
@@ -50,7 +50,7 @@ func (model *Model) LogIn(credentials &models.UserCredentials) (cookie string, e
 			return "", err
 		}
 
-		if psswd == *credentials.Password {
+		if misc.PasswordsMatched(psswd, *credentials.Password) {
 			cookie := misc.GenerateCookie()
 			model.db.MustExec("INSERT INTO session(uid, cookie) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2);", *credentials.Username, cookie)
 
