@@ -8,9 +8,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-// walhalla:file { model:NewModel }
-
-// walhalla:gen { mdw:[] }
+// walhalla:gen
 func SignupUser(params user.SignupUserParams, ctx *walhalla.Context, model *Model) middleware.Responder {
 	cookie, err := model.SignUp(*params.Body)
 	if err != nil {

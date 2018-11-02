@@ -7,9 +7,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-// walhalla:file { model:NewModel }
-
-// walhalla:gen {}
+// walhalla:gen
 func Leaders(params user.LeadersParams, ctx *walhalla.Context, model *Model) middleware.Responder {
 	//offset = page, limit = count ?
 	leaders, err := model.GetTopUsers(int(*params.Body.Count), int(*params.Body.Page))
