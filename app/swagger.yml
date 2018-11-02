@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  version: "0.0.3"
+  version: "0.0.4"
   title: Wave Application
 host: localhost:9600
 basePath: /
@@ -18,9 +18,9 @@ paths:
       description: ""
       operationId: signupUser
       consumes: 
-      - "multipart/form-data"
+        - "multipart/form-data"
       produces:
-      - application/json
+        - application/json
       parameters:
         - name: body
           in: body
@@ -62,7 +62,8 @@ paths:
       summary: "Update current user's profile."
       description: ""
       operationId: updateMyProfile
-      consumes: []
+      consumes:
+        - "multipart/form-data"
       produces:
         - application/json
       parameters:
@@ -115,9 +116,9 @@ paths:
       description: ""
       operationId: leaders
       consumes: 
-      - application/json
+        - application/json
       produces:
-      - application/json
+        - application/json
       parameters:
       - name: body
         in: body
@@ -141,9 +142,9 @@ paths:
       description: ""
       operationId: loginUser
       consumes: 
-      - "multipart/form-data"
+        - "multipart/form-data"
       produces:
-      - application/json
+        - application/json
       parameters:
         - name: body
           in: body
