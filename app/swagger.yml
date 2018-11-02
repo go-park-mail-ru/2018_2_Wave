@@ -66,6 +66,13 @@ paths:
       consumes: []
       produces:
         - application/json
+      parameters:
+        - name: body
+          in: body
+          description: "New user information."
+          required: true
+          schema:
+            $ref: "#/definitions/UserEdit"
       responses:
         200:
           description: OK
@@ -239,5 +246,18 @@ definitions:
         type: integer
         example: 21
       avatar:
+        type: string
+        example: <avatar>
+
+  UserEdit:
+    type: object
+    properties:
+      newUsername:
+        type: string
+        example: florence
+      newPassword:
+        type: string
+        example: 21
+      newAvatar:
         type: string
         example: <avatar>
