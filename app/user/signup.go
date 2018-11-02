@@ -2,7 +2,7 @@ package user
 
 import (
 	"Wave/app/generated/restapi/operations/user"
-	// "Wave/app/generated/models"
+	"Wave/app/generated/models"
 	"Wave/utiles/walhalla"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -12,15 +12,15 @@ import (
 
 // walhalla:gen { mdw:[] }
 func SignupUser(params user.SignupUserParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	//if !model.IsSignedUp(user.AsUser()) {
-	//	var (
-	//		cookieValue   = model.SignUp(user)
-	//		sessionCookie = misc.MakeSessionCookie(cookieValue)
-	//	)
-	//	ctx.SetStatusCode(fasthttp.StatusCreated)
-	//	misc.SetCookie(ctx, sessionCookie)
-	//} else {
-	//	ctx.SetStatusCode(fasthttp.StatusForbidden)
-	//}
-	return middleware.NotImplemented("kek")
+	cookie, err := model.SignUp(*params.Body)
+	if err != nil {
+		return user.NewSignupUserInternalServerError()
+	}
+	if cookie == "" {
+		return user.NewSignupUserUnauthorized().WithPayload(&models.ForbiddenRequest{
+			Reason: "Username already in use.",
+		})
+	}
+
+	return user.NewSignupUserCreated()
 }
