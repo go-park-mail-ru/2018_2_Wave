@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/jmoiron/sqlx"
 )
 
 //go:generate go-bindata -pkg assets -o _assets/assets.go templates/...
@@ -66,42 +65,4 @@ type ILogger interface {
 
 	Error(args ...interface{})
 	Errorf(format string, args ...interface{})
-}
-
-// Context - operation context
-type Context struct {
-	Log         ILogger
-	DB          *sqlx.DB
-	Config      interface{}
-	request     *http.Request
-	outCookies  []*http.Cookie
-}
-
-func (ctx *Context) Copy() Context {
-	var (
-		cpy    = *ctx
-		length = len(ctx.outCookies)
-	)
-	cpy.outCookies = make([]*http.Cookie, length)
-	copy(cpy.outCookies, ctx.outCookies)
-	return cpy
-}
-
-func (ctx *Context) SetCookie(c *http.Cookie) {
-	ctx.outCookies = append(ctx.outCookies, c)
-}
-
-func (ctx *Context) GetCookie(name string) string {
-	if cookie, err := ctx.request.Cookie(name); err != nil && cookie != nil {
-		return cookie.Value
-	}
-	return ""
-}
-
-func GetAllOutCookies(ctx *Context) []*http.Cookie {
-	return ctx.outCookies
-}
-
-func SetRequest(ctx *Context, r *http.Request) {
-	ctx.request = r
 }

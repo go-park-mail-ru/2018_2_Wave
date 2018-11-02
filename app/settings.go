@@ -8,12 +8,11 @@ import (
 	"Wave/utiles/logger"
 	"Wave/utiles/walhalla"
 
-	_ "github.com/lib/pq"
-	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // psql driver
 )
 
 //go:generate go run ../utiles/walhalla/main .
-//go:generate go run ../utiles/configs/main .
+//go:generate go run ../utiles/configs/main config.json
 
 // walhalla:app {
 // 	globalMiddlewares  : [ cors, log ],
@@ -31,30 +30,26 @@ var MiddlewareGeneratorsGlobal = walhalla.GlobalMiddlewareGenerationFunctionMap{
 }
 
 func SetupContext(ctx *walhalla.Context) {
-	var err error
-	{ // read a configuratoin file
-		Conf := new(configs.MainConfig)
-		Conf.ReadFromFile("config.json")
-		ctx.Config = Conf
+	var (
+		err error
+		conf *configs.MainConfig
+	)
+	{ // read a configuratoin file 
+		conf = new(configs.MainConfig)
+		conf.ReadFromFile("config.json")
+		ctx.Config = conf
 	}
 	{ // setup the logger
 		ctx.Log, err = logger.New(logger.Config{
-			File:    "log.log",
+			File:    conf.Server.Log,
 			BStdOut: true,
-			BAsync:  true,
 		})
 		if err != nil {
 			panic(err)
 		}
 	}
 	{ // setup database
-		//connStr := fmt.Sprintf("user=%s dbname=%s sslmode=disable", ctx.Config.database.user, ctx.Config.database.dbname)
-		conStr := "user=waveapp password=surf dbname=wave sslmode=disable"
-		ctx.DB, err = sqlx.Connect("postgres", conStr)
-
-		if err != nil {
-			ctx.Log.Error(err)
-		}
+		ctx.InitDatabase(conf.Database)
 		ctx.Log.Info("connection to postgres succesfully established")
 	}
 }

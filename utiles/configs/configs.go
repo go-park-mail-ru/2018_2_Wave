@@ -1,6 +1,9 @@
 package configs
 
-import "io/ioutil"
+import (
+	"Wave/utiles/walhalla"
+	"io/ioutil"
+)
 
 //go:generate easyjson -output_filename configs.gen.go configs.go
 
@@ -20,28 +23,12 @@ type ServerConfig struct {
 	Log  string `json:"log"`
 }
 
-// DatabaseConfig configuration
-// easyjson:json
-type DatabaseConfig struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
-	DBName   string `json:"dbname"`
-}
-
-// WalhallaConfig configuration
-// easyjson:json
-type WalhallaConfig struct {
-	MainTmpl   string   `json:"mainTmpl"`
-	OtherTmpls []string `json:"otherTmpls"`
-}
-
 // MainConfig ...
 // easyjson:json
 type MainConfig struct {
-	CORS     CORSConfig     `json:"cors"`
-	Server   ServerConfig   `json:"server"`
-	Walhalla WalhallaConfig `json:"walhalla"`
-	Database DatabaseConfig `json:"database"`
+	CORS     CORSConfig              `json:"cors"`
+	Server   ServerConfig            `json:"server"`
+	Database walhalla.DatabaseConfig `json:"database"`
 }
 
 //-----------------|

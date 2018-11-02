@@ -14,7 +14,7 @@ type cookieResponder struct {
 
 func (cr cookieResponder) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 	cr.Responder.WriteResponse(rw, producer)
-	for _, c := range GetAllOutCookies(cr.ctx) {
+	for _, c := range cr.ctx.outCookies {
 		http.SetCookie(rw, c)
 	}
 }
