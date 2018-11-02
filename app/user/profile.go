@@ -11,34 +11,36 @@ import (
 
 // walhalla:file { model:NewModel }
 
-// walhalla:gen {}
+// walhalla:gen { auth:true }
 func MyProfile(params user.MyProfileParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	// cookie := misc.GetSessionCookie(ctx)
-	// if profile, ok := model.GetProfile(cookie); ok {
-	// 	//ctx.Write(Must(profile.MarshalJSON()))
-	// 	ctx.SetStatusCode(fasthttp.StatusOK)
-	// 	return
-	// }
-	// ctx.SetStatusCode(fasthttp.StatusForbidden)
-	return user.NewMyProfileOK().WithPayload(&models.UserExtended{
-		Avatar:   "https://i.ytimg.com/vi/nc-zywmhB78/hqdefault.jpg",
-		Score:    228,
-		Username: "Hang",
-	})
+	cookie := misc.GetSessionCookie(ctx) //!
+	profile, err := model.GetProfile(cookie)
+	if err != nil {
+		return user.NewMyProfileInternalServerError()
+	}
+
+	return user.NewMyProfileOK().WithPayload(&profile)
 }
 
-// walhalla:gen {}
+// walhalla:gen { auth:true }
 func UpdateMyProfile(params user.UpdateMyProfileParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	// cookie := misc.GetSessionCookie(ctx)
-	// model.UpdateProfile(cookie, user)
-	// ctx.SetStatusCode(fasthttp.StatusAccepted)
-	return middleware.NotImplemented("kek")
+	cookie := misc.GetSessionCookie(ctx) //!
+
+	isUpdated, err := model.UpdateProfile(*params.Body, cookie)
+		if err != nil {
+			return user.NewUpdateMyProfileInternalServerError()
+		}
+		if isUpdated {
+			return user.NewUpdateMyProfileOK()
+		}
+		if !isUpdated {
+			return user.NewUpdateMyProfileForbidden().WithPayload(&models.ForbiddenRequest{
+				Reason: "Bad update parameters.",
+			})
+		}
 }
 
 // walhalla:gen {}
 func UsersProfile(params user.UsersProfileParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	// cookie := misc.GetSessionCookie(ctx)
-	// model.UpdateProfile(cookie, user)
-	// ctx.SetStatusCode(fasthttp.StatusAccepted)
-	return middleware.NotImplemented("kek")
+	
 }
