@@ -3,7 +3,6 @@ package session
 import (
 	"Wave/app/generated/restapi/operations/session"
 	"Wave/app/generated/models"
-	"Wave/app/session"
 	"Wave/app/misc"
 	"Wave/utiles/walhalla"
 
@@ -14,17 +13,18 @@ import (
 
 // walhalla:gen { auth:false }
 func LoginUser(params session.LoginUserParams, ctx *walhalla.Context, model *Model) middleware.Responder {
-	cookie, err := model.LogIn(params.Body)
+	cookie, err := model.LogIn(*params.Body) //!
+	
 	if err != nil {
 		return session.NewLoginUserInternalServerError()
 	} else if cookie == "" {
 		return session.NewLoginUserUnauthorized().WithPayload(&models.ForbiddenRequest{
-			Reason: "Incorrect password."
+			Reason: "Incorrect password.",
 		})
 	}
 
 	sessionCookie := misc.MakeSessionCookie(cookie)
-	misc.SetCookie(ctx, sessionCookie)
+	misc.SetCookie(ctx, sessionCookie) //!
 
 	return session.NewLoginUserOK()
 }
@@ -32,7 +32,7 @@ func LoginUser(params session.LoginUserParams, ctx *walhalla.Context, model *Mod
 // walhalla:gen { auth:true }
 func LogoutUser(params session.LogoutUserParams, ctx *walhalla.Context, model *Model) middleware.Responder {
 	cookie := misc.GetSessionCookie(ctx)
-	err := model.LogOut(cookie)
+	err := model.LogOut(cookie) //!
 	
 	if err != nil {
 		return session.NewLogoutUserInternalServerError()
