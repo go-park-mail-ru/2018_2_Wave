@@ -2,14 +2,14 @@
 package restapi
 
 {{$Project     := .Project    }}
-{{$PackageName := .PackageName}}
+{{$Application := .Application}}
 
 import (
-								"{{$Project}}/utiles/walhalla"
-    code 						"{{$Project}}/{{$PackageName}}"
-								"{{$Project}}/{{$PackageName}}/generated/restapi/operations"
-    {{range .Subcategories}}	"{{$Project}}/{{$PackageName}}/generated/restapi/operations/{{.}}"	
-	code{{.}}					"{{$Project}}/{{$PackageName}}/{{.}}"
+													"{{$Project}}/utiles/walhalla"
+    									code		"{{$Application}}"
+													"{{$Application}}/generated/restapi/operations"
+    {{range .Subcategories}}						"{{$Application}}/generated/restapi/operations/{{.}}" 	
+	{{end}} {{range .ImplSubcategories}} code{{.}}	"{{$Application}}/{{.}}" 
 	{{end}}
 	
 	"crypto/tls"
@@ -42,8 +42,8 @@ func configureAPI(api *operations.{{.API}}) http.Handler {
 		code.SetupContext(&ctx)
 	{{end}}
 
-    {{range .Operations}} api.{{.Handler}} = {{.Subcategory}}.{{.Function}}( handler{{.OperationID}}(ctx) )
-    {{end}}
+    {{range .Operations}} {{if .Implemented}} api.{{.Handler}} = {{.Subcategory}}.{{.Function}}( handler{{.OperationID}}(ctx) )				
+	{{end}} {{end}}
 	
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares), ctx)
 }
@@ -87,29 +87,32 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // ----------------| Handlers
 
 {{range .FuncSettings}}
-func handler{{.Name}} ( ctx walhalla.Context ) {{.Subcategory}}.{{.Function}} {
-	{{$Subcategory := .Subcategory}}
-	{{$Package     := .Package    }}
+func handler{{.Name}} ( inCtx walhalla.Context ) {{.Subcategory}}.{{.Function}} {
+	return func(param {{.Subcategory}}.{{.Parametr}}) middleware.Responder {
+		{{$Subcategory := .Subcategory}}
+		{{$Package     := .Package    }}
 
-	paramPtr := new({{.Subcategory}}.{{.Parametr}})
-	next := func(*http.Request) middleware.Responder {
-		{{if eq .Model ""}} return code{{$Package}}.{{.Name}}(*paramPtr, &ctx )
-		{{else           }} return code{{$Package}}.{{.Name}}(*paramPtr, &ctx, code{{$Package}}.{{.Model}}(&ctx) )
-		{{end}}
-	}
+		ctx := inCtx.Copy()
+		walhalla.SetRequest(&ctx, param.HTTPRequest)
 
-	{{range .Middlewares}} 
-	{
-		gen, ok := code.MiddlewareGenerators["{{.}}"]
-		if !ok {
-			panic(fmt.Errorf("Unexpected middleware: {{.}}"))
+		next := func(*http.Request) middleware.Responder {
+			{{if eq .Model ""}} return code{{$Package}}.{{.Name}}(param, &ctx )
+			{{else           }} return code{{$Package}}.{{.Name}}(param, &ctx, code{{$Package}}.{{.Model}}(&ctx) )
+			{{end}}
 		}
 
-		next = gen(next, &ctx)
-	} {{end}}
+		{{range .Middlewares}} 
+		{
+			gen, ok := code.MiddlewareGenerators["{{.}}"]
+			if !ok {
+				panic(fmt.Errorf("Unexpected middleware: {{.}}"))
+			}
 
-	return func(param {{.Subcategory}}.{{.Parametr}}) middleware.Responder {
-		*paramPtr = param
+			next = gen(next, &ctx)
+		} {{end}}
+
+		next = walhalla.CookieMiddleware(next, &ctx)
+
 		return next(param.HTTPRequest)
 	}
 }

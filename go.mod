@@ -2,6 +2,7 @@ module Wave
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
+	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/go-openapi/errors v0.17.0
 	github.com/go-openapi/loads v0.17.0
 	github.com/go-openapi/runtime v0.17.2

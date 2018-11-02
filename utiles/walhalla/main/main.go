@@ -34,7 +34,7 @@ func main() {
 		wg.Add(1)
 		go func(pack string) {
 			defer wg.Done()
-			walhalla(template, extractDir(pack))
+			walhalla(template, pack)
 		}(pack)
 	}
 	wg.Wait()

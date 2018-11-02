@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  version: "2018-10-30"
+  version: "0.0.3"
   title: Wave Application
 host: localhost:9600
 basePath: /
@@ -37,7 +37,6 @@ paths:
             $ref: "#/definitions/ForbiddenRequest"
         500:
           description: Internal Server Error
-
   /users/me:
     get:
       tags:
@@ -84,7 +83,6 @@ paths:
             $ref: "#/definitions/ForbiddenRequest"
         500:
           description: Internal Server Error
-
   /users/{name}:
     get:
       tags:

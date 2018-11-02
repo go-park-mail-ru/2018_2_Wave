@@ -8,10 +8,8 @@ import (
 	"Wave/utiles/logger"
 	"Wave/utiles/walhalla"
 
-	"log"
-	//"database/sql"
 	_ "github.com/lib/pq"
-	"github.com/jmoiron/sqlx"
+	// "github.com/jmoiron/sqlx"
 )
 
 //go:generate go run ../utiles/walhalla/main .
@@ -49,15 +47,15 @@ func SetupContext(ctx *walhalla.Context) {
 			panic(err)
 		}
 	}
-	{ // setup database
-		//connStr := fmt.Sprintf("user=%s dbname=%s sslmode=disable", ctx.Config.database.user, ctx.Config.database.dbname)
-		conStr := "user=waveapp password=surf dbname=wave sslmode=disable"
-		ctx.DB, err = sqlx.Connect("postgres", conStr)
+	// { // setup database
+	// 	//connStr := fmt.Sprintf("user=%s dbname=%s sslmode=disable", ctx.Config.database.user, ctx.Config.database.dbname)
+	// 	conStr := "user=waveapp password=surf dbname=wave sslmode=disable"
+	// 	ctx.DB, err = sqlx.Connect("postgres", conStr)
 
-		if err != nil {
-			log.Fatal(err)
-		}
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
 
-		log.Println("connection to postgres succesfully established")
-	}
+	// 	log.Println("connection to postgres succesfully established")
+	// }
 }

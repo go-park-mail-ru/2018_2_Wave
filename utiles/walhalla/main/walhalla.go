@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"Wave/utiles/walhalla/swagger"
@@ -18,8 +18,11 @@ const (
 	restip      = generated + "restapi/"
 )
 
-func getOperations(root *os.File) swagger.ParsedData {
-	data, err := ioutil.ReadFile(root.Name() + `/` + swaggerFile)
+func getOperations(root string) swagger.ParsedData {
+	var (
+		confPath  = path.Join(root, swaggerFile)
+		data, err = ioutil.ReadFile(confPath)
+	)
 	check(err)
 	return swagger.ParceSwaggerYaml(data)
 }
@@ -36,35 +39,38 @@ func makeConfigureFileName(title string) string {
 	return restip + `configure_` + strings.Join(tokens, `_`) + `.go`
 }
 
-func walhalla(tmpl *template.Template, root *os.File) {
+func walhalla(tmpl *template.Template, root string) {
 	var (
 		// version
-		versionFileName = `./` + generated + "walhalla.version"
+		versionFileName = path.Join(root, generated, "walhalla.version")
 		versionBytes, _ = ioutil.ReadFile(versionFileName)
 		version         = string(versionBytes)
 
-		// files
+		// enviroment
 		swagger         = getOperations(root)
-		files           = extractFileNames(root, validateSubcategories(swagger.Subcategories))
 		outName         = makeConfigureFileName(swagger.Info.Title)
-		prefix, project = extractPrefixAndProjetcName(root)
+		prefix, project = extractPrefixAndProjectName(root)
 
 		// misc
 		buffer = &bytes.Buffer{}
 		stat   = &statistics{
-			Operations:    swagger.Operations,
-			Info:          swagger.Info,
+			Operations:    makeOperations(swagger.Operations),
 			API:           swagger.API,
-			Subcategories: swagger.Subcategories,
 			Project:       project,
+			Application:   path.Join(project, prefix),
+			Subcategories: swagger.Subcategories,
 		}
 	)
 	{ // api version
-		println(versionFileName, `|`, stat.Info.Version, `|`)
+		println(versionFileName, `|`, swagger.Info.Version, `|`)
 	}
-	{ // parse files
-		for _, file := range files {
-			parseFile(file, stat)
+	{ // pars packages
+		for _, sb := range append(swagger.Subcategories, "") {
+			var (
+				path       = path.Join(root, sb)
+				operations = swagger.Sub2Operation[sb]
+			)
+			parsePackage(path, sb, stat, operations)
 		}
 		stat.build()
 	}
@@ -72,7 +78,7 @@ func walhalla(tmpl *template.Template, root *os.File) {
 		check(tmpl.Execute(buffer, stat))
 	}
 	// call swagger
-	if version != stat.Info.Version {
+	if version != swagger.Info.Version {
 		println(" -- swagger generator started")
 		defer println(" -- swagger generator stoped")
 
@@ -83,13 +89,10 @@ func walhalla(tmpl *template.Template, root *os.File) {
 			appDepth   = strings.Count(prefix, `/`)
 			dir        = strings.Repeat(`../`, appDepth) + `.`
 			cmd        = exec.Command("swagger", "generate", "server", "--target", flagTarget, "--spec", flagSpec)
-			stdout, _  = cmd.StdoutPipe()
-			stderr, _  = cmd.StderrPipe()
 		)
 		cmd.Dir = dir
-
-		go func() { io.Copy(os.Stdout, stdout) }()
-		go func() { io.Copy(os.Stderr, stderr) }()
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
 		check(cmd.Run())
 	} else {
 		println(" -- swagger files are up to date")
@@ -100,10 +103,11 @@ func walhalla(tmpl *template.Template, root *os.File) {
 	{ // write version file
 		file, err := os.Create(versionFileName)
 		check(err)
-		_, err = file.WriteString(stat.Info.Version)
-		check(err)
+		file.WriteString(swagger.Info.Version)
 	}
-	{ // format
-		check(exec.Command("go", "fmt", `./`+restip).Run())
+	{ // format generated file
+		cmd := exec.Command("go", "fmt", `./`+restip)
+		cmd.Stderr = os.Stderr
+		cmd.Run()
 	}
 }

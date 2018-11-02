@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-
 	"Wave/utiles/walhalla/swagger"
+
 	"github.com/asaskevich/govalidator"
 )
 
@@ -11,54 +10,79 @@ import (
 
 // easyjson:json
 type statistics struct {
-	PackageName string
-
-	Project    string
-	API        string
-	Info       swagger.Info
-	Operations []swagger.Operation
+	Project     string
+	Application string
+	API         string
+	Operations  []operation
 
 	Subcategories     []string
+	ImplSubcategories []string
 	FuncSettings      []funcSettings
 	GlobalMiddlewares []string
 	BMiddlewares      bool
 
-	appSettings  appSettings
-	fileSettings *fileSettings
+	buildContext buildContext
+}
+
+type operation struct {
+	swagger.Operation
+	Implemented bool
+}
+
+func makeOperations(ops []swagger.Operation) (res []operation) {
+	for _, op := range ops {
+		res = append(res, operation{
+			Operation:   op,
+			Implemented: false,
+		})
+	}
+	return res
+}
+
+// ------| settings
+
+func (st *statistics) pushSettings(fs funcSettings) {
+	st.buildContext.pushFuncRule(fs)
+}
+
+func (st *statistics) popSettings() {
+	st.buildContext.popFuncRule()
+}
+
+func (st *statistics) addFunction(fs funcSettings) {
+	{
+		st.buildContext.pushFuncRule(fs)
+		fs = st.buildContext.buildFuncRule()
+		st.buildContext.popFuncRule()
+	}
+	st.FuncSettings = append(st.FuncSettings, fs)
+	{
+		for i, op := range st.Operations {
+			if op.OperationID != fs.Name {
+				continue
+			}
+			st.Operations[i].Implemented = true
+		}
+	}
+}
+
+func (st *statistics) setAppSettings(as appSettings) {
+	st.GlobalMiddlewares = append(as.GlobalMiddlewares, st.GlobalMiddlewares...)
+	st.pushSettings(as.ExtractFuncSettings())
+}
+
+// ------| packages
+
+func (st *statistics) setPackageActive(pack string) {
+	if pack == "" {
+		return
+	}
+	st.ImplSubcategories = append(st.ImplSubcategories, pack)
 }
 
 // ------|
 
-func (st *statistics) setFileSettings(fileSettings *fileSettings) {
-	st.fileSettings = fileSettings
-}
-
-func (st *statistics) setAppSettings(appSettings *appSettings) {
-	st.appSettings = *appSettings
-}
-
-func (st *statistics) beginFileParsing() {
-	st.fileSettings = nil
-}
-
-func (st *statistics) addFunction(fs funcSettings) {
-	if fs.Model == `` && st.fileSettings != nil {
-		fs.Model = st.fileSettings.Model
-	}
-	if fs.Model == `-` {
-		fs.Model = ``
-	}
-	st.FuncSettings = append(st.FuncSettings, fs)
-}
-
 func (st *statistics) build() {
-	{ // remove an empty subcategory
-		for i, sub := range st.Subcategories {
-			if sub == "" {
-				st.Subcategories = append(st.Subcategories[:i], st.Subcategories[i+1:]...)
-			}
-		}
-	}
 	{ // set default package for operations with empty subcategories
 		for i, op := range st.Operations {
 			if op.Subcategory == "" {
@@ -66,9 +90,6 @@ func (st *statistics) build() {
 			}
 			st.Operations[i] = op
 		}
-	}
-	{ // set global middlewares
-		st.GlobalMiddlewares = st.appSettings.GlobalMiddlewares
 	}
 	{ // function settings
 		ID2Cat := map[string]string{}   // operationID -> subcategory
@@ -81,22 +102,17 @@ func (st *statistics) build() {
 		}
 
 		for i, fs := range st.FuncSettings {
-			{ // set Subcategory && Function && Parametr
-				if _, ok := ID2Cat[fs.Name]; !ok {
-					check(fmt.Errorf("Unexpected handler %s", fs.Name))
-				} else {
-					fs.Subcategory = ID2Cat[fs.Name]
-					fs.Function = ID2Func[fs.Name]
-					fs.Parametr = ID2Param[fs.Name]
-					fs.Package = fs.Subcategory
+			{ // set Subcategory, Function, Parametr
+				fs.Subcategory = ID2Cat[fs.Name]
+				fs.Function = ID2Func[fs.Name]
+				fs.Parametr = ID2Param[fs.Name]
+				fs.Package = fs.Subcategory
 
-					if fs.Package == "operations" {
-						fs.Package = ""
-					}
+				if fs.Package == "operations" {
+					fs.Package = ""
 				}
 			}
 			{ // middlewares
-				fs.Middlewares = append(fs.Middlewares, st.appSettings.OperationMiddlewars...)
 				if fs.Auth == "true" {
 					fs.Middlewares = append(fs.Middlewares, "auth")
 				}
@@ -111,9 +127,36 @@ func (st *statistics) build() {
 			st.FuncSettings[i] = fs
 		}
 	}
+	{
+		st.BMiddlewares = st.BMiddlewares || len(st.GlobalMiddlewares) > 0
+	}
 }
 
-// ----------------| settings
+// ----------------| buildContext
+
+type buildContext struct {
+	funcRuleStack []funcSettings
+}
+
+// ------|
+
+func (bc *buildContext) pushFuncRule(fs funcSettings) {
+	bc.funcRuleStack = append(bc.funcRuleStack, fs)
+}
+
+func (bc *buildContext) popFuncRule() {
+	bc.funcRuleStack = bc.funcRuleStack[:len(bc.funcRuleStack)-1]
+}
+
+func (bc *buildContext) buildFuncRule() funcSettings {
+	res := funcSettings{}
+	for _, fs := range bc.funcRuleStack {
+		fs.Override(&res)
+	}
+	return res
+}
+
+// ----------------| appSettings
 
 // easyjson:json
 type appSettings struct {
@@ -123,26 +166,18 @@ type appSettings struct {
 
 // ------|
 
-func (fs *appSettings) Validate() error {
-	_, err := govalidator.ValidateStruct(fs)
+func (as *appSettings) Validate() error {
+	_, err := govalidator.ValidateStruct(as)
 	return err
 }
 
-// ----------------| settings
-
-// easyjson:json
-type fileSettings struct {
-	Model string `json:"model"`
+func (as *appSettings) ExtractFuncSettings() funcSettings {
+	return funcSettings{
+		Middlewares: as.OperationMiddlewars,
+	}
 }
 
-// ------|
-
-func (fs *fileSettings) Validate() error {
-	_, err := govalidator.ValidateStruct(fs)
-	return err
-}
-
-// ----------------| settings
+// ----------------| appSettings
 
 // easyjson:json
 type funcSettings struct {
@@ -157,9 +192,26 @@ type funcSettings struct {
 	Middlewares []string `json:"mdw"`
 }
 
+func override(target *string, src string) {
+	if src != "" {
+		*target = src
+	}
+}
+
 // ------|
 
 func (fs *funcSettings) Validate() error {
 	_, err := govalidator.ValidateStruct(fs)
 	return err
+}
+
+func (fs *funcSettings) Override(target *funcSettings) {
+	override(&target.Name, fs.Name)
+	override(&target.Auth, fs.Auth)
+	override(&target.Model, fs.Model)
+	override(&target.Package, fs.Package)
+	override(&target.Parametr, fs.Parametr)
+	override(&target.Function, fs.Function)
+	override(&target.Subcategory, fs.Subcategory)
+	target.Middlewares = append(target.Middlewares, fs.Middlewares...)
 }

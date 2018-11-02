@@ -9,11 +9,23 @@ func parseFileComment(doc *ast.CommentGroup, stat *statistics) {
 		rules    = extractRules(doc, fileTag)
 		json     = upgardeToJSON(rules)
 		bytes    = []byte(json)
-		settings = &fileSettings{}
+		settings = funcSettings{}
 	)
 	check(settings.UnmarshalJSON(bytes))
 	check(settings.Validate())
-	stat.setFileSettings(settings)
+	stat.pushSettings(settings)
+}
+
+func parsePackComment(doc *ast.CommentGroup, stat *statistics) {
+	var (
+		rules    = extractRules(doc, packTag)
+		json     = upgardeToJSON(rules)
+		bytes    = []byte(json)
+		settings = funcSettings{}
+	)
+	check(settings.UnmarshalJSON(bytes))
+	check(settings.Validate())
+	stat.pushSettings(settings)
 }
 
 func parseAppComment(doc *ast.CommentGroup, stat *statistics) {
@@ -21,7 +33,7 @@ func parseAppComment(doc *ast.CommentGroup, stat *statistics) {
 		rules    = extractRules(doc, appTag)
 		json     = upgardeToJSON(rules)
 		bytes    = []byte(json)
-		settings = &appSettings{}
+		settings = appSettings{}
 	)
 	check(settings.UnmarshalJSON(bytes))
 	check(settings.Validate())

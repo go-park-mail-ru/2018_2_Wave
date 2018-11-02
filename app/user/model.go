@@ -55,30 +55,23 @@ func validateCredentials(target string) bool {
 
 func (model *Model) GetTopUsers(limit int, offset int) (board *models.Leaderboard, err error) {
 	row := model.db.QueryRowx("SELECT COUNT(*) FROM userinfo")
-	err = row.Scan(&board.Total)
-
-	if err != nil {
-		return models.Leaderboard{}, err
+	if err := row.Scan(&board.Total); err != nil {
+		return nil, err
 	}
 
 	rows, err := model.db.Query("SELECT username,score FROM userinfo ORDER BY score DESC LIMIT $1 OFFSET $2;", limit, offset)
-
 	if err != nil {
-		return models.Leaderboard{}, err
+		return nil, err
 	}
-
-	temp := models.UserScore{}
 
 	for rows.Next() {
-		err = rows.Scan(&temp.Username, &temp.Score)
-
-		if err != nil {
-			return *models.Leaderboard{}, err
+		temp := &models.UserScore{}
+		if err = rows.Scan(&temp.Username, &temp.Score); err != nil {
+			return nil, err
 		}
 
-		board.Users = append(*board.Users, temp)
+		board.Users = append(board.Users, temp)
 	}
-
 	return board, nil
 }
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/ast"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -19,18 +18,6 @@ func check(err error) {
 
 //--------------------| package
 
-func extractDir(name string) *os.File {
-	dir, err := os.Open(name)
-	check(err)
-
-	stat, err := dir.Stat()
-	check(err)
-	if !stat.IsDir() {
-		check(fmt.Errorf("%s isn't a directory", name))
-	}
-	return dir
-}
-
 func validateSubcategories(subcategories []string) []string {
 	for _, subcategory := range subcategories {
 		if subcategory == "" {
@@ -40,41 +27,13 @@ func validateSubcategories(subcategories []string) []string {
 	return append(subcategories, "")
 }
 
-func extractFileNamesInternal(dir *os.File) (names []string) {
-	infos, err := dir.Readdir(-1)
-	check(err)
-
-	rootName := dir.Name() + `/`
-	for _, info := range infos {
-		name := info.Name()
-		if info.IsDir() {
-			continue
-		}
-		if len(name) >= 3 && name[len(name)-3:] != ".go" ||
-			len(name) >= 7 && name[len(name)-7:] == ".gen.go" ||
-			len(name) >= 7 && name[len(name)-7:] == ".tmp.go" {
-			continue
-		}
-		names = append(names, rootName+info.Name())
+func isValidFileName(name string) bool {
+	if len(name) >= 3 && name[len(name)-3:] != ".go" ||
+		len(name) >= 7 && name[len(name)-7:] == ".gen.go" ||
+		len(name) >= 7 && name[len(name)-7:] == ".tmp.go" {
+		return false
 	}
-	return names
-}
-
-func extractFileNames(dir *os.File, subcategories []string) (names []string) {
-	for _, subcategory := range subcategories {
-		internal, err := os.Open(dir.Name() + `/` + subcategory)
-		if err != nil {
-			continue
-		}
-
-		st, err := dir.Stat()
-		if check(err); !st.IsDir() {
-			check(fmt.Errorf("%s isn't a directory", dir.Name()))
-		}
-
-		names = append(names, extractFileNamesInternal(internal)...)
-	}
-	return names
+	return true
 }
 
 func extractProjectName(data []byte) string {
@@ -84,9 +43,34 @@ func extractProjectName(data []byte) string {
 	return str[bgn+1 : end]
 }
 
-func extractPrefixAndProjetcName(dir *os.File) (prefix, project string) {
+func extractFiles(packageName string) (files []string, err error) {
+	items, err := ioutil.ReadDir(packageName)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range items {
+		var (
+			name     = file.Name()
+			fullName = packageName + `/` + name
+		)
+		if file.IsDir() || !isValidFileName(name) {
+			continue
+		}
+		// place settings file first
+		if file.Name() == `settings.go` {
+			tmp := []string{fullName}
+			files = append(tmp, files...)
+		} else {
+			files = append(files, fullName)
+		}
+	}
+	return files, nil
+}
+
+func extractPrefixAndProjectName(dir string) (prefix, project string) {
 	var (
-		abs, err   = filepath.Abs(dir.Name())
+		abs, err   = filepath.Abs(dir)
 		targetPath = abs
 	)
 	check(err)
@@ -100,7 +84,7 @@ func extractPrefixAndProjetcName(dir *os.File) (prefix, project string) {
 		for _, name := range names {
 			if name.Name() == "go.mod" {
 				var (
-					fullName   = abs + `/` + name.Name()
+					fullName   = abs + `\` + name.Name()
 					data, err1 = ioutil.ReadFile(fullName)
 					pref, err2 = filepath.Rel(abs, targetPath)
 				)
@@ -176,6 +160,7 @@ func upgardeToJSON(rule string) (json string) {
 const (
 	anchor  = "walhalla:gen"
 	fileTag = "walhalla:file"
+	packTag = "walhalla:pack"
 	appTag  = "walhalla:app"
 )
 
@@ -187,6 +172,7 @@ func isTarget(doc *ast.CommentGroup, tag string) bool {
 }
 func isGenerationTarget(doc *ast.CommentGroup) bool { return isTarget(doc, anchor) }
 func isFileTarget(doc *ast.CommentGroup) bool       { return isTarget(doc, fileTag) }
+func isPackTarget(doc *ast.CommentGroup) bool       { return isTarget(doc, packTag) }
 func isAppTarget(doc *ast.CommentGroup) bool        { return isTarget(doc, appTag) }
 
 func extractRules(doc *ast.CommentGroup, tag string) string {

@@ -11,7 +11,6 @@ func parseFunction(f *ast.FuncDecl, stat *statistics) {
 		bytes    = []byte(json)
 		settings = funcSettings{
 			Name: f.Name.Name,
-			Auth: "true",
 		}
 	)
 	check(settings.UnmarshalJSON(bytes))
