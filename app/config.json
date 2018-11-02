@@ -19,17 +19,11 @@
     "port": ":9600",
     "log": "srv.log"
   },
-  "walhalla": {
-    "mainTmpl": "./resources/templates/walhalla.tmpl",
-    "otherTmpls": [
-      "./resources/templates/",
-      "./resources/templates/handles/",
-      "./resources/templates/structs/"
-    ]
-  },
   "database": {
-    "user": "waveapp",
-    "password": "surf",
-    "dbname": "wave"
+    "Host": "127.0.0.1",
+    "Port": "5432",
+    "User": "waveapp",
+    "Password": "surf",
+    "DBName": "wave"
   }
 }

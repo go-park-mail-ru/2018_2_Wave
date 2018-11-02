@@ -1,0 +1,14 @@
+Issues:
+
+1. port not read from config
++ 2. db params not from config
+3. in cmd/w-a-s/main.go a huge part of code with handlers setting is being overwritten
++ 4. как устанавливать и брать куки сессии (get session cookie and make session cookie ругается на ctx)
++ 5. в файлах models.go в /user и /sessions правильно ли выставлены * перед моделями и полями структур (вроде оно не ругается, но напрягло, что в моделях, например, UserCredentials содержит поле не string, a *string)
++ 7. log.->logger 
+8. дублирование функции present в model.go
++ 9. http handling
+10. encryption passwords
+11. validation
+12. auth middleware - наполнить логикой и включить где необходимо
+13. дописать get user :name
