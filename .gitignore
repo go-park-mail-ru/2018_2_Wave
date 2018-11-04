@@ -1,0 +1,17 @@
+# common
+.vscode
+.build
+
+# golang
+vendor/
+debug
+
+# generation
+*.tmp
+*.gen.go
+*.tmp.go
+
+# service
+nginx/
+service_bot/
+start_bot.sh
