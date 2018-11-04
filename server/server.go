@@ -7,17 +7,17 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func Start(path string) {
 	conf := config.Configure(path)
 
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
-	originsOk := handlers.AllowedOrigins([]string{"http://localhost:3000"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
-
+	/*
+		headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+		originsOk := handlers.AllowedOrigins([]string{"http://localhost:3000"})
+		methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	*/
 	r := mux.NewRouter()
 
 	db := database.New(conf.DC)
@@ -35,5 +35,5 @@ func Start(path string) {
 	r.HandleFunc("/session", API.LoginHandler).Methods("POST")
 	r.HandleFunc("/session", API.LogoutHandler).Methods("DELETE")
 
-	log.Fatal(http.ListenAndServe(conf.SC.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
+	log.Fatal(http.ListenAndServe(conf.SC.Port, r))
 }

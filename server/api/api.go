@@ -20,7 +20,7 @@ type Handler struct {
 }
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3000")
+	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
 
@@ -30,6 +30,10 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) RegisterHandler(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	user := models.UserCredentials{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
@@ -66,6 +70,10 @@ func (h *Handler) RegisterHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMeHandler(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	cookie := misc.GetSessionCookie(r)
 	profile, err := h.DB.GetMyProfile(cookie)
 
@@ -83,6 +91,10 @@ func (h *Handler) GetMeHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) EditMeHandler(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	cookie := misc.GetSessionCookie(r)
 	editUser := models.UserEdit{
 		NewUsername: r.FormValue("newUsername"),
@@ -116,6 +128,10 @@ func (h *Handler) EditMeHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetUserHandler(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	vars := mux.Vars(r)
 	profile, err := h.DB.GetProfile(vars["name"])
 
@@ -139,6 +155,10 @@ func (h *Handler) GetUserHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetLeadersHandler(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	//vars := mux.Vars(r)
 	//leaders, err := h.DB.GetTopUsers(strconv.ParseInt(vars["count"]), strconv.ParseInt(vars["page"])
 	pagination := models.Pagination{
@@ -164,6 +184,10 @@ func (h *Handler) GetLeadersHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LoginHandler(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	user := models.UserCredentials{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
@@ -202,6 +226,10 @@ func (h *Handler) LoginHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LogoutHandler(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	cookie := misc.GetSessionCookie(r)
 	fmt.Println(cookie)
 
