@@ -33,7 +33,7 @@ func Start(path string) {
 	r.HandleFunc("/users/{name}", API.GetUserHandler).Methods("GET")
 	r.HandleFunc("/users/leaders", API.GetLeadersHandler).Methods("GET")
 	r.HandleFunc("/session", API.LoginHandler).Methods("POST")
-	r.HandleFunc("/session", API.LogoutHandler).Methods("DELETE")
+	r.HandleFunc("/session", API.LogoutHandler).Methods("PUT")
 
 	log.Fatal(http.ListenAndServe(conf.SC.Port, r))
 }
