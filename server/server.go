@@ -26,6 +26,7 @@ func Start(path string) {
 		DB: *db,
 	}
 
+	r.HandleFunc("/", API.SlashHandler).Methods("GET")
 	r.HandleFunc("/users", API.RegisterHandler).Methods("POST")
 	r.HandleFunc("/users/me", API.GetMeHandler).Methods("GET")
 	r.HandleFunc("/users/me", API.EditMeHandler).Methods("PUT")
