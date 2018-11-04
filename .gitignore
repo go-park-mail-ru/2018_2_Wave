@@ -1,0 +1,15 @@
+# common
+.vscode
+.build
+
+# golang
+vendor
+debug
+
+# service
+nginx/
+service_bot/
+start_bot.sh
+
+# binaries
+wave-serv
