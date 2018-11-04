@@ -1,0 +1,11 @@
+{
+    "server": {  
+        "host": "http://localhost",
+        "port": ":9600"
+    },
+    "database": {
+        "user": "waveapp",
+        "password": "surf",
+        "dbname": "wave"
+    }
+}

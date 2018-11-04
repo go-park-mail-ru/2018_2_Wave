@@ -1,0 +1,5 @@
+1. cors (если на основе гориллы -- то норм)
+2. validation
+3. logger
+4. middlewares (auth)
+5. websockets

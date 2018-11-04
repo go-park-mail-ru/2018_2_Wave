@@ -1,13 +1,12 @@
 package main
 
 import (
-	"test_module/server"
+	"Wave/server"
 )
 
 func main() {
-	srv := server.Server{}
-	srv.Init()
-	srv.Get("/gg", srv.StaticServer)
-	srv.Get("/wp/:path", srv.StaticServer)
-	srv.Start(":8080")
+	confPath := "./conf.json"
+	srv := server.Init(confPath)
+
+	server.Start(srv)
 }
