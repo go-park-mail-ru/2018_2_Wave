@@ -23,6 +23,7 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	rw.WriteHeader(http.StatusOK)
 
@@ -33,6 +34,7 @@ func (h *Handler) RegisterHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	user := models.UserCredentials{
 		Username: r.FormValue("username"),
@@ -73,6 +75,7 @@ func (h *Handler) GetMeHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	cookie := misc.GetSessionCookie(r)
 	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
@@ -106,6 +109,7 @@ func (h *Handler) EditMeHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	cookie := misc.GetSessionCookie(r)
 	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
@@ -155,6 +159,7 @@ func (h *Handler) GetUserHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	vars := mux.Vars(r)
 	profile, err := h.DB.GetProfile(vars["name"])
@@ -182,6 +187,7 @@ func (h *Handler) GetLeadersHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	//vars := mux.Vars(r)
 	//leaders, err := h.DB.GetTopUsers(strconv.ParseInt(vars["count"]), strconv.ParseInt(vars["page"])
@@ -211,6 +217,7 @@ func (h *Handler) LoginHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	user := models.UserCredentials{
 		Username: r.FormValue("username"),
@@ -253,6 +260,7 @@ func (h *Handler) LogoutHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	cookie := misc.GetSessionCookie(r)
 	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
