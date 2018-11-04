@@ -2,7 +2,7 @@
 CREATE TABLE userinfo (
     uid         BIGSERIAL       PRIMARY KEY,
     username    TEXT            NOT NULL,
-    password    BYTEA           NOT NULL,
+    password    VARCHAR(60)     NOT NULL,
     score       INT             DEFAULT 0, 
     avatar      BYTEA           DEFAULT '/some/path'
 );

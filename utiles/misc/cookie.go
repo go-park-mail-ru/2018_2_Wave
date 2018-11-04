@@ -30,9 +30,9 @@ func MakeSessionCookie(value string) *http.Cookie {
 func GetSessionCookie(r *http.Request) string {
 	session, err := r.Cookie(sessionCookieName)
 	if err != nil && session != nil {
-		return session.Value
+		return ""
 	}
-	return ""
+	return session.Value
 }
 
 func SetCookie(w http.ResponseWriter, cookie *http.Cookie) {
