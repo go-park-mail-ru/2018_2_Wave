@@ -22,6 +22,7 @@ type Handler struct {
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3000")
 	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
 
 	rw.WriteHeader(http.StatusOK)
 
