@@ -29,11 +29,11 @@ func Start(path string) {
 	r.HandleFunc("/", API.SlashHandler).Methods("GET")
 	r.HandleFunc("/users", API.RegisterHandler).Methods("POST")
 	r.HandleFunc("/users/me", API.GetMeHandler).Methods("GET")
-	r.HandleFunc("/users/me", API.EditMeHandler).Methods("PUT")
+	r.HandleFunc("/users/me", API.EditMeHandler).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/users/{name}", API.GetUserHandler).Methods("GET")
 	r.HandleFunc("/users/leaders", API.GetLeadersHandler).Methods("GET")
 	r.HandleFunc("/session", API.LoginHandler).Methods("POST")
-	r.HandleFunc("/session", API.LogoutHandler).Methods("PUT")
+	r.HandleFunc("/session", API.LogoutHandler).Methods("DELETE", "OPTIONS")
 
 	log.Fatal(http.ListenAndServe(conf.SC.Port, r))
 }
