@@ -7,27 +7,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
-func Init(path string) http.Server {
+func Start(path string) {
 	conf := config.Configure(path)
 
-	r := SetMuxAPI(conf)
-	server := http.Server{
-		Addr:    conf.SC.Port,
-		Handler: r,
-	}
-
-	return server
-}
-
-func Start(server http.Server) error {
-	log.Println("starting server at", server.Addr)
-	return server.ListenAndServe()
-}
-
-func SetMuxAPI(conf config.Configuration) *mux.Router {
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	originsOk := handlers.AllowedOrigins([]string{"http://localhost:3000"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	r := mux.NewRouter()
 
@@ -45,5 +34,5 @@ func SetMuxAPI(conf config.Configuration) *mux.Router {
 	r.HandleFunc("/session", API.LoginHandler).Methods("POST")
 	r.HandleFunc("/session", API.LogoutHandler).Methods("DELETE")
 
-	return r
+	log.Fatal(http.ListenAndServe(conf.SC.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
