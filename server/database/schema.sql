@@ -1,9 +1,12 @@
+DROP TABLE IF EXISTS session;
+DROP TABLE IF EXISTS userinfo;
+
 -- User Tables Block
 CREATE TABLE userinfo (
     uid         BIGSERIAL       PRIMARY KEY,
     username    TEXT            NOT NULL,
     password    VARCHAR(60)     NOT NULL,
-    score       INT             DEFAULT 0, 
+    score       INT             DEFAULT 0,
     avatar      BYTEA           DEFAULT '/some/path'
 );
 
