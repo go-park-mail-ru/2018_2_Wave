@@ -3,8 +3,8 @@ package server
 import (
 	"Wave/server/api"
 	"Wave/server/database"
+	mw "Wave/server/middleware"
 	"Wave/utiles/config"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -13,14 +13,6 @@ import (
 
 func Start(path string) {
 	conf := config.Configure(path)
-
-	fmt.Println(conf.CC.Methods[3])
-
-	/*
-		headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
-		originsOk := handlers.AllowedOrigins([]string{"http://localhost:3000"})
-		methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
-	*/
 	r := mux.NewRouter()
 
 	db := database.New(conf.DC)
@@ -29,16 +21,17 @@ func Start(path string) {
 		DB: *db,
 	}
 
-	r.HandleFunc("/", API.SlashHandler).Methods("GET")
-	r.HandleFunc("/users", API.RegisterHandler).Methods("POST")
-	r.HandleFunc("/users/me", API.GetMeHandler).Methods("GET")
-	r.HandleFunc("/users/me", API.EditMeHandler).Methods("PUT")
-	r.HandleFunc("/users/me", API.OptEditMeHandler).Methods("OPTIONS")
-	r.HandleFunc("/users/{name}", API.GetUserHandler).Methods("GET")
-	r.HandleFunc("/users/leaders", API.GetLeadersHandler).Methods("GET")
-	r.HandleFunc("/session", API.LoginHandler).Methods("POST")
-	r.HandleFunc("/session", API.LogoutHandler).Methods("DELETE")
-	r.HandleFunc("/session", API.OptLogoutHandler).Methods("OPTIONS")
+	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.CORS(conf.CC))).Methods("GET")
+	r.HandleFunc("/users", API.RegisterPOSTHandler).Methods("POST")
+	r.HandleFunc("/users/me", API.MeGETHandler).Methods("GET")
+	r.HandleFunc("/users/me", API.EditMePUTHandler).Methods("PUT")
+	r.HandleFunc("/users/{name}", API.UserGETHandler).Methods("GET")
+	r.HandleFunc("/users/leaders", API.LeadersGETHandler).Methods("GET")
+	r.HandleFunc("/session", API.LoginPOSTHandler).Methods("POST")
+	r.HandleFunc("/session", API.LogoutDELETEHandler).Methods("DELETE")
+
+	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.Options(), mw.CORS(conf.CC))).Methods("OPTIONS")
+	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.Options(), mw.CORS(conf.CC))).Methods("OPTIONS")
 
 	log.Fatal(http.ListenAndServe(conf.SC.Port, r))
 }
