@@ -8,11 +8,15 @@
         "dbname": "wave"
     },
     "cors": {
-        "hosts": [
+        "origins": [
             "*",
             "https://localhost:3000",
             "https://sample-txtuvraxsd.now.sh/"
         ],
+        "headers": [
+            "Content-type"
+        ],
+        "credentials" : "true",
         "methods": [
             "GET",
             "POST",
