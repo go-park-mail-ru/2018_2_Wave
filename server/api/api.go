@@ -20,22 +20,12 @@ type Handler struct {
 }
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
 	rw.WriteHeader(http.StatusOK)
 
 	return
 }
 
-func (h *Handler) RegisterHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
+func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	user := models.UserCredentials{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
@@ -71,12 +61,7 @@ func (h *Handler) RegisterHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) GetMeHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
+func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
 		fr := models.ForbiddenRequest{
@@ -105,12 +90,7 @@ func (h *Handler) GetMeHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) EditMeHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
+func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
 		fr := models.ForbiddenRequest{
@@ -155,12 +135,7 @@ func (h *Handler) EditMeHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) GetUserHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
+func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	profile, err := h.DB.GetProfile(vars["name"])
 
@@ -183,12 +158,7 @@ func (h *Handler) GetUserHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) GetLeadersHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
+func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	//leaders, err := h.DB.GetTopUsers(strconv.ParseInt(vars["count"]), strconv.ParseInt(vars["page"])
 	pagination := models.Pagination{
@@ -213,12 +183,7 @@ func (h *Handler) GetLeadersHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) LoginHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
+func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	user := models.UserCredentials{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
@@ -256,12 +221,7 @@ func (h *Handler) LoginHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) LogoutHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
+func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
 		fr := models.ForbiddenRequest{
@@ -288,22 +248,8 @@ func (h *Handler) LogoutHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) OptEditMeHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	rw.WriteHeader(http.StatusOK)
-
-	return
+func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
-func (h *Handler) OptLogoutHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	rw.WriteHeader(http.StatusOK)
-
-	return
+func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 }
