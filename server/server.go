@@ -30,8 +30,8 @@ func Start(path string) {
 	r.HandleFunc("/session", API.LoginPOSTHandler).Methods("POST")
 	r.HandleFunc("/session", API.LogoutDELETEHandler).Methods("DELETE")
 
-	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.Options(), mw.CORS(conf.CC))).Methods("OPTIONS")
-	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.Options(), mw.CORS(conf.CC))).Methods("OPTIONS")
+	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
+	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
 
 	log.Fatal(http.ListenAndServe(conf.SC.Port, r))
 }

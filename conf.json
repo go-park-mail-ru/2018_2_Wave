@@ -10,7 +10,7 @@
     "cors": {
         "origins": [
             "*",
-            "https://localhost:3000",
+            "http://localhost:3000",
             "https://sample-txtuvraxsd.now.sh/"
         ],
         "headers": [
