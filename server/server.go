@@ -4,6 +4,7 @@ import (
 	"Wave/server/api"
 	"Wave/server/database"
 	"Wave/utiles/config"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -12,6 +13,8 @@ import (
 
 func Start(path string) {
 	conf := config.Configure(path)
+
+	fmt.Println(conf.CC.Methods[3])
 
 	/*
 		headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})

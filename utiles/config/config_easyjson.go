@@ -206,6 +206,8 @@ func easyjson6615c02eDecodeWaveUtilesConfig2(in *jlexer.Lexer, out *Configuratio
 			(out.SC).UnmarshalEasyJSON(in)
 		case "database":
 			(out.DC).UnmarshalEasyJSON(in)
+		case "cors":
+			(out.CC).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -240,6 +242,16 @@ func easyjson6615c02eEncodeWaveUtilesConfig2(out *jwriter.Writer, in Configurati
 		}
 		(in.DC).MarshalEasyJSON(out)
 	}
+	{
+		const prefix string = ",\"cors\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(in.CC).MarshalEasyJSON(out)
+	}
 	out.RawByte('}')
 }
 
@@ -265,4 +277,151 @@ func (v *Configuration) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Configuration) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6615c02eDecodeWaveUtilesConfig2(l, v)
+}
+func easyjson6615c02eDecodeWaveUtilesConfig3(in *jlexer.Lexer, out *CORSConfiguration) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "hosts":
+			if in.IsNull() {
+				in.Skip()
+				out.Hosts = nil
+			} else {
+				in.Delim('[')
+				if out.Hosts == nil {
+					if !in.IsDelim(']') {
+						out.Hosts = make([]string, 0, 4)
+					} else {
+						out.Hosts = []string{}
+					}
+				} else {
+					out.Hosts = (out.Hosts)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v1 string
+					v1 = string(in.String())
+					out.Hosts = append(out.Hosts, v1)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "methods":
+			if in.IsNull() {
+				in.Skip()
+				out.Methods = nil
+			} else {
+				in.Delim('[')
+				if out.Methods == nil {
+					if !in.IsDelim(']') {
+						out.Methods = make([]string, 0, 4)
+					} else {
+						out.Methods = []string{}
+					}
+				} else {
+					out.Methods = (out.Methods)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v2 string
+					v2 = string(in.String())
+					out.Methods = append(out.Methods, v2)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson6615c02eEncodeWaveUtilesConfig3(out *jwriter.Writer, in CORSConfiguration) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"hosts\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Hosts == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v3, v4 := range in.Hosts {
+				if v3 > 0 {
+					out.RawByte(',')
+				}
+				out.String(string(v4))
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"methods\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Methods == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.Methods {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				out.String(string(v6))
+			}
+			out.RawByte(']')
+		}
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v CORSConfiguration) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson6615c02eEncodeWaveUtilesConfig3(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v CORSConfiguration) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson6615c02eEncodeWaveUtilesConfig3(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *CORSConfiguration) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson6615c02eDecodeWaveUtilesConfig3(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *CORSConfiguration) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson6615c02eDecodeWaveUtilesConfig3(l, v)
 }
