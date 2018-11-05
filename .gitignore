@@ -1,6 +1,6 @@
 # common
-.vscode
-.build
+.vscode/
+.build/
 
 # golang
 vendor
@@ -10,6 +10,7 @@ debug
 nginx/
 service_bot/
 start_bot.sh
+logs/
 
 # binaries
 wave-serv
