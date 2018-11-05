@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 )
 
 func Start(path string) {
@@ -30,8 +31,8 @@ func Start(path string) {
 	r.HandleFunc("/session", mw.Chain(API.LoginPOSTHandler, mw.CORS(conf.CC))).Methods("POST")
 	r.HandleFunc("/session", mw.Chain(API.LogoutDELETEHandler, mw.CORS(conf.CC))).Methods("DELETE")
 
-	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.Options(), mw.CORS(conf.CC))).Methods("OPTIONS")
-	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.Options(), mw.CORS(conf.CC))).Methods("OPTIONS")
+	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
+	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
 
-	log.Fatal(http.ListenAndServe(conf.SC.Port, r))
+	log.Fatal(http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r)))
 }
