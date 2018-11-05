@@ -26,8 +26,10 @@ type DatabaseConfiguration struct {
 
 // easyjson:json
 type CORSConfiguration struct {
-	Hosts   []string `json:"hosts"`
-	Methods []string `json:"methods"`
+	Origins     []string `json:"origins"`
+	Headers     []string `json:"headers"`
+	Credentials string   `json:"credentials"`
+	Methods     []string `json:"methods"`
 }
 
 func Configure(path string) Configuration {
