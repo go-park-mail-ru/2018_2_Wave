@@ -297,29 +297,54 @@ func easyjson6615c02eDecodeWaveUtilesConfig3(in *jlexer.Lexer, out *CORSConfigur
 			continue
 		}
 		switch key {
-		case "hosts":
+		case "origins":
 			if in.IsNull() {
 				in.Skip()
-				out.Hosts = nil
+				out.Origins = nil
 			} else {
 				in.Delim('[')
-				if out.Hosts == nil {
+				if out.Origins == nil {
 					if !in.IsDelim(']') {
-						out.Hosts = make([]string, 0, 4)
+						out.Origins = make([]string, 0, 4)
 					} else {
-						out.Hosts = []string{}
+						out.Origins = []string{}
 					}
 				} else {
-					out.Hosts = (out.Hosts)[:0]
+					out.Origins = (out.Origins)[:0]
 				}
 				for !in.IsDelim(']') {
 					var v1 string
 					v1 = string(in.String())
-					out.Hosts = append(out.Hosts, v1)
+					out.Origins = append(out.Origins, v1)
 					in.WantComma()
 				}
 				in.Delim(']')
 			}
+		case "headers":
+			if in.IsNull() {
+				in.Skip()
+				out.Headers = nil
+			} else {
+				in.Delim('[')
+				if out.Headers == nil {
+					if !in.IsDelim(']') {
+						out.Headers = make([]string, 0, 4)
+					} else {
+						out.Headers = []string{}
+					}
+				} else {
+					out.Headers = (out.Headers)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v2 string
+					v2 = string(in.String())
+					out.Headers = append(out.Headers, v2)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "credentials":
+			out.Credentials = string(in.String())
 		case "methods":
 			if in.IsNull() {
 				in.Skip()
@@ -336,9 +361,9 @@ func easyjson6615c02eDecodeWaveUtilesConfig3(in *jlexer.Lexer, out *CORSConfigur
 					out.Methods = (out.Methods)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v2 string
-					v2 = string(in.String())
-					out.Methods = append(out.Methods, v2)
+					var v3 string
+					v3 = string(in.String())
+					out.Methods = append(out.Methods, v3)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -358,25 +383,56 @@ func easyjson6615c02eEncodeWaveUtilesConfig3(out *jwriter.Writer, in CORSConfigu
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"hosts\":"
+		const prefix string = ",\"origins\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		if in.Hosts == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		if in.Origins == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v3, v4 := range in.Hosts {
-				if v3 > 0 {
+			for v4, v5 := range in.Origins {
+				if v4 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v4))
+				out.String(string(v5))
 			}
 			out.RawByte(']')
 		}
+	}
+	{
+		const prefix string = ",\"headers\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Headers == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v6, v7 := range in.Headers {
+				if v6 > 0 {
+					out.RawByte(',')
+				}
+				out.String(string(v7))
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"credentials\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Credentials))
 	}
 	{
 		const prefix string = ",\"methods\":"
@@ -390,11 +446,11 @@ func easyjson6615c02eEncodeWaveUtilesConfig3(out *jwriter.Writer, in CORSConfigu
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v5, v6 := range in.Methods {
-				if v5 > 0 {
+			for v8, v9 := range in.Methods {
+				if v8 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v6))
+				out.String(string(v9))
 			}
 			out.RawByte(']')
 		}
