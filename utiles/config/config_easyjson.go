@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson6615c02eDecodeWaveResourcesConfig(in *jlexer.Lexer, out *ServerConfiguration) {
+func easyjson6615c02eDecodeWaveUtilesConfig(in *jlexer.Lexer, out *ServerConfiguration) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -50,7 +50,7 @@ func easyjson6615c02eDecodeWaveResourcesConfig(in *jlexer.Lexer, out *ServerConf
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeWaveResourcesConfig(out *jwriter.Writer, in ServerConfiguration) {
+func easyjson6615c02eEncodeWaveUtilesConfig(out *jwriter.Writer, in ServerConfiguration) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -80,27 +80,27 @@ func easyjson6615c02eEncodeWaveResourcesConfig(out *jwriter.Writer, in ServerCon
 // MarshalJSON supports json.Marshaler interface
 func (v ServerConfiguration) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6615c02eEncodeWaveResourcesConfig(&w, v)
+	easyjson6615c02eEncodeWaveUtilesConfig(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v ServerConfiguration) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeWaveResourcesConfig(w, v)
+	easyjson6615c02eEncodeWaveUtilesConfig(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *ServerConfiguration) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeWaveResourcesConfig(&r, v)
+	easyjson6615c02eDecodeWaveUtilesConfig(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *ServerConfiguration) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeWaveResourcesConfig(l, v)
+	easyjson6615c02eDecodeWaveUtilesConfig(l, v)
 }
-func easyjson6615c02eDecodeWaveResourcesConfig1(in *jlexer.Lexer, out *DatabaseConfiguration) {
+func easyjson6615c02eDecodeWaveUtilesConfig1(in *jlexer.Lexer, out *DatabaseConfiguration) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -121,8 +121,6 @@ func easyjson6615c02eDecodeWaveResourcesConfig1(in *jlexer.Lexer, out *DatabaseC
 		switch key {
 		case "user":
 			out.User = string(in.String())
-		case "password":
-			out.Password = string(in.String())
 		case "dbname":
 			out.DBName = string(in.String())
 		default:
@@ -135,7 +133,7 @@ func easyjson6615c02eDecodeWaveResourcesConfig1(in *jlexer.Lexer, out *DatabaseC
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeWaveResourcesConfig1(out *jwriter.Writer, in DatabaseConfiguration) {
+func easyjson6615c02eEncodeWaveUtilesConfig1(out *jwriter.Writer, in DatabaseConfiguration) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -148,16 +146,6 @@ func easyjson6615c02eEncodeWaveResourcesConfig1(out *jwriter.Writer, in Database
 			out.RawString(prefix)
 		}
 		out.String(string(in.User))
-	}
-	{
-		const prefix string = ",\"password\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Password))
 	}
 	{
 		const prefix string = ",\"dbname\":"
@@ -175,27 +163,27 @@ func easyjson6615c02eEncodeWaveResourcesConfig1(out *jwriter.Writer, in Database
 // MarshalJSON supports json.Marshaler interface
 func (v DatabaseConfiguration) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6615c02eEncodeWaveResourcesConfig1(&w, v)
+	easyjson6615c02eEncodeWaveUtilesConfig1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v DatabaseConfiguration) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeWaveResourcesConfig1(w, v)
+	easyjson6615c02eEncodeWaveUtilesConfig1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *DatabaseConfiguration) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeWaveResourcesConfig1(&r, v)
+	easyjson6615c02eDecodeWaveUtilesConfig1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *DatabaseConfiguration) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeWaveResourcesConfig1(l, v)
+	easyjson6615c02eDecodeWaveUtilesConfig1(l, v)
 }
-func easyjson6615c02eDecodeWaveResourcesConfig2(in *jlexer.Lexer, out *Configuration) {
+func easyjson6615c02eDecodeWaveUtilesConfig2(in *jlexer.Lexer, out *Configuration) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -228,7 +216,7 @@ func easyjson6615c02eDecodeWaveResourcesConfig2(in *jlexer.Lexer, out *Configura
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeWaveResourcesConfig2(out *jwriter.Writer, in Configuration) {
+func easyjson6615c02eEncodeWaveUtilesConfig2(out *jwriter.Writer, in Configuration) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -258,23 +246,23 @@ func easyjson6615c02eEncodeWaveResourcesConfig2(out *jwriter.Writer, in Configur
 // MarshalJSON supports json.Marshaler interface
 func (v Configuration) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6615c02eEncodeWaveResourcesConfig2(&w, v)
+	easyjson6615c02eEncodeWaveUtilesConfig2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Configuration) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeWaveResourcesConfig2(w, v)
+	easyjson6615c02eEncodeWaveUtilesConfig2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Configuration) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeWaveResourcesConfig2(&r, v)
+	easyjson6615c02eDecodeWaveUtilesConfig2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Configuration) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeWaveResourcesConfig2(l, v)
+	easyjson6615c02eDecodeWaveUtilesConfig2(l, v)
 }

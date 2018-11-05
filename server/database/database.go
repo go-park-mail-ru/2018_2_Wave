@@ -6,6 +6,7 @@ import (
 	"Wave/utiles/models"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 
 	"github.com/jmoiron/sqlx"
@@ -23,7 +24,7 @@ func New(dbconf_ config.DatabaseConfiguration) *DatabaseModel {
 	}
 
 	var err error
-	postgr.Database, err = sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname='%s' sslmode=disable", postgr.DBconf.User, postgr.DBconf.Password, postgr.DBconf.DBName))
+	postgr.Database, err = sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname='%s' sslmode=disable", postgr.DBconf.User, os.Getenv("WAVE_DB_PASSWORD"), postgr.DBconf.DBName))
 	if err != nil {
 		log.Fatalln(err)
 	}

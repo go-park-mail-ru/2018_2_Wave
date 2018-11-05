@@ -19,9 +19,8 @@ type ServerConfiguration struct {
 
 // easyjson:json
 type DatabaseConfiguration struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
-	DBName   string `json:"dbname"`
+	User   string `json:"user"`
+	DBName string `json:"dbname"`
 }
 
 func Configure(path string) Configuration {
