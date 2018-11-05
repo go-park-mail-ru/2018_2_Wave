@@ -9,15 +9,6 @@ import (
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
 
-func Options() Middleware {
-	return func(hf http.HandlerFunc) http.HandlerFunc {
-		return func(rw http.ResponseWriter, r *http.Request) {
-			rw.WriteHeader(http.StatusOK)
-			hf(rw, r)
-		}
-	}
-}
-
 func CORS(CC config.CORSConfiguration) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
@@ -34,6 +25,25 @@ func CORS(CC config.CORSConfiguration) Middleware {
 		}
 	}
 }
+
+func Options() Middleware {
+	return func(hf http.HandlerFunc) http.HandlerFunc {
+		return func(rw http.ResponseWriter, r *http.Request) {
+			rw.WriteHeader(http.StatusOK)
+			hf(rw, r)
+		}
+	}
+}
+
+func Recovery() Middleware {
+	return func(hf http.HandlerFunc) http.HandlerFunc {
+		return func(rw http.ResponseWriter, r *http.Request) {
+			
+			hf(rw, r)
+		}
+	}
+}
+
 
 func Chain(hf http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
 	for _, m := range middlewares {
