@@ -1,6 +1,7 @@
 package misc
 
 import (
+	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -28,6 +29,7 @@ func MakeSessionCookie(value string) *http.Cookie {
 func GetSessionCookie(r *http.Request) string {
 	session, err := r.Cookie(sessionCookieName)
 	if err != nil && session != nil {
+		log.Println("hey from misc")
 		return ""
 	}
 	return session.Value

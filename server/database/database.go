@@ -188,14 +188,14 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 	changedP := false
 	changedA := false
 
-	if profile.NewUsername != "" {
-		isPresent, problem := model.present(UserInfoTable, UsernameCol, profile.NewUsername)
+	if profile.Username != "" {
+		isPresent, problem := model.present(UserInfoTable, UsernameCol, profile.Username)
 		if problem != nil {
 			return false, problem
 		}
 		if !isPresent {
-			if validateCredentials(profile.NewUsername) {
-				model.Database.MustExec("UPDATE userinfo SET username=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON session.uid = userinfo.uid WHERE cookie=$2);", profile.NewUsername, cookie)
+			if validateCredentials(profile.Username) {
+				model.Database.MustExec("UPDATE userinfo SET username=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON session.uid = userinfo.uid WHERE cookie=$2);", profile.Username, cookie)
 				log.Println("update profile successful: username changed")
 
 				changedU = true
@@ -212,9 +212,9 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 		}
 	}
 
-	if profile.NewPassword != "" {
-		if validateCredentials(profile.NewPassword) {
-			hashedPsswd := misc.GeneratePasswordHash(profile.NewPassword)
+	if profile.Password != "" {
+		if validateCredentials(profile.Password) {
+			hashedPsswd := misc.GeneratePasswordHash(profile.Password)
 			model.Database.MustExec("UPDATE userinfo SET password=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON session.uid = userinfo.uid WHERE cookie=$2);", hashedPsswd, cookie)
 			log.Println("update profile successful: password changed")
 
@@ -225,14 +225,14 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			changedP = false
 		}
 	}
-
-	if profile.NewAvatar != "" {
-		model.Database.MustExec("UPDATE userinfo SET avatar=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON userinfo.uid = session.uid WHERE cookie=$2);", profile.NewAvatar, cookie)
+	/*
+	if profile.Avatar != "" {
+		model.Database.MustExec("UPDATE userinfo SET avatar=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON userinfo.uid = session.uid WHERE cookie=$2);", profile.Avatar, cookie)
 		log.Println("update profile successful: avatar changed")
 
 		changedA = true
 	}
-
+	*/
 	if changedU || changedP || changedA {
 		return true, nil
 	}

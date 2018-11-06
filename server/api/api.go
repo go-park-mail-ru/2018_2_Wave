@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	"strconv"
+	//"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -83,9 +83,9 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 
 	editUser := models.UserEdit{
-		NewUsername: r.FormValue("newUsername"),
-		NewPassword: r.FormValue("newPassword"),
-		NewAvatar:   r.FormValue("newAvatar"),
+		Username: r.FormValue("newUsername"),
+		Password: r.FormValue("newPassword"),
+		//Avatar:   r.FormValue("newAvatar"),
 	}
 
 	isUpdated, err := h.DB.UpdateProfile(editUser, cookie)
@@ -139,6 +139,7 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	//leaders, err := h.DB.GetTopUsers(strconv.ParseInt(vars["count"]), strconv.ParseInt(vars["page"])
+	/*
 	pagination := models.Pagination{
 		Page:  r.FormValue("page"),
 		Count: r.FormValue("count"),
@@ -159,6 +160,7 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(rw, string(payload))
 
 	return
+	*/
 }
 
 func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
