@@ -21,7 +21,7 @@ func logfileExists() bool {
 			panic(err)
 		}
 		return true
-	} else if !os.IsNotExist(err) { //ахуенна
+	} else if !os.IsNotExist(err) {
 		return true
 	}
 

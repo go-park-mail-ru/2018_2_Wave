@@ -4,6 +4,7 @@ import (
 	"Wave/utiles/config"
 	"Wave/utiles/models"
 	"Wave/utiles/cors"
+	lg "Wave/utiles/logger"
 	"log"
 
 	//"Wave/utiles/misc"
@@ -14,6 +15,7 @@ import (
 )
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
+type WaveLogger lg.Logger
 
 func CORS(CC config.CORSConfiguration) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
@@ -41,7 +43,7 @@ func Options() Middleware {
 	}
 }
 
-func Auth() Middleware {
+func (wl *WaveLogger) Auth() Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			c, err := r.Cookie("session")
