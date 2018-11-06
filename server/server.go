@@ -5,7 +5,6 @@ import (
 	"Wave/server/database"
 	mw "Wave/server/middleware"
 	"Wave/utiles/config"
-	//"log"
 	"net/http"
 
 	"github.com/gorilla/mux"

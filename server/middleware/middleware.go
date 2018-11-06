@@ -3,10 +3,12 @@ package middleware
 import (
 	"Wave/utiles/config"
 	"Wave/utiles/models"
+	"Wave/utiles/cors"
 	"log"
 
 	//"Wave/utiles/misc"
 	//"log"
+	"strings"
 	"fmt"
 	"net/http"
 )
@@ -16,7 +18,7 @@ type Middleware func(http.HandlerFunc) http.HandlerFunc
 func CORS(CC config.CORSConfiguration) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
-			/*	originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
+			originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
 				if originToSet == "" {
 					rw.WriteHeader(http.StatusForbidden)
 					hf(rw, r)
@@ -26,9 +28,7 @@ func CORS(CC config.CORSConfiguration) Middleware {
 				rw.Header().Set("Access-Control-Allow-Credentials", CC.Credentials)
 				rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
 				hf(rw, r)
-			}*/
-			hf(rw, r)
-		}
+			}
 	}
 }
 
