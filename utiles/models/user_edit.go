@@ -2,7 +2,7 @@ package models
 
 // easyjson:json
 type UserEdit struct {
-	NewUsername string `json:"newUsername"`
-	NewPassword string `json:"newPassword"`
-	NewAvatar   string `json:"newAvatar"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Avatar   []byte `json:"avatar"`
 }

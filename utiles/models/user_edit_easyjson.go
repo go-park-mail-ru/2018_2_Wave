@@ -36,12 +36,17 @@ func easyjson97eb660eDecodeWaveUtilesModels(in *jlexer.Lexer, out *UserEdit) {
 			continue
 		}
 		switch key {
-		case "newUsername":
-			out.NewUsername = string(in.String())
-		case "newPassword":
-			out.NewPassword = string(in.String())
-		case "newAvatar":
-			out.NewAvatar = string(in.String())
+		case "username":
+			out.Username = string(in.String())
+		case "password":
+			out.Password = string(in.String())
+		case "avatar":
+			if in.IsNull() {
+				in.Skip()
+				out.Avatar = nil
+			} else {
+				out.Avatar = in.Bytes()
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -57,34 +62,34 @@ func easyjson97eb660eEncodeWaveUtilesModels(out *jwriter.Writer, in UserEdit) {
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"newUsername\":"
+		const prefix string = ",\"username\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.NewUsername))
+		out.String(string(in.Username))
 	}
 	{
-		const prefix string = ",\"newPassword\":"
+		const prefix string = ",\"password\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.NewPassword))
+		out.String(string(in.Password))
 	}
 	{
-		const prefix string = ",\"newAvatar\":"
+		const prefix string = ",\"avatar\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.NewAvatar))
+		out.Base64Bytes(in.Avatar)
 	}
 	out.RawByte('}')
 }

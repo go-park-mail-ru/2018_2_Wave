@@ -63,18 +63,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
-	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
-		fr := models.ForbiddenRequest{
-			Reason: "You are not logged in.",
-		}
-
-		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintln(rw, string(payload))
-
-		return
-	}
-
+	
 	profile, err := h.DB.GetMyProfile(cookie)
 
 	if err != nil {
@@ -92,17 +81,6 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
-	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
-		fr := models.ForbiddenRequest{
-			Reason: "You are not logged in.",
-		}
-
-		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(rw, string(payload))
-
-		return
-	}
 
 	editUser := models.UserEdit{
 		NewUsername: r.FormValue("newUsername"),
@@ -223,17 +201,7 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
-	if isLogged, errLog := h.DB.IsLoggedIn(cookie); !isLogged || errLog != nil {
-		fr := models.ForbiddenRequest{
-			Reason: "You are not logged in.",
-		}
-
-		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintln(rw, string(payload))
-
-		return
-	}
+	
 	fmt.Println(cookie)
 
 	if err := h.DB.LogOut(cookie); err != nil {

@@ -121,23 +121,6 @@ func (model *DatabaseModel) LogOut(cookie string) error {
 	return nil
 }
 
-func (model *DatabaseModel) IsLoggedIn(cookie string) (bool, error) {
-	foundCookie := true
-	if isPresent, problem := model.present(SessionTable, CookieCol, cookie); !isPresent && problem == nil {
-		log.Println("is logged in check failed: no such cookie found, returns: false")
-		foundCookie = false
-
-		return foundCookie, nil
-	} else if isPresent && problem == nil {
-		log.Println("is logged in check successful: cookie found, returns: true")
-	} else if problem != nil {
-
-		return false, problem
-	}
-
-	return foundCookie, nil
-}
-
 /****************************** user block ******************************/
 
 func (model *DatabaseModel) SignUp(credentials models.UserCredentials) (cookie string, err error) {

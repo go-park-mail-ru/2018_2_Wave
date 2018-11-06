@@ -12,8 +12,6 @@ const (
 	sessionCookieName     = "session"
 )
 
-// ----------------|
-
 func GenerateCookie() string {
 	return RandString(cookieStringLenght)
 }
@@ -38,8 +36,6 @@ func GetSessionCookie(r *http.Request) string {
 func SetCookie(w http.ResponseWriter, cookie *http.Cookie) {
 	http.SetCookie(w, cookie)
 }
-
-// ----------------|
 
 func RandString(n int) string {
 	const (
