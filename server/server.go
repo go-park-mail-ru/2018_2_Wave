@@ -36,5 +36,7 @@ func Start(path string) {
 	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
 	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
 
+	r.HandleFunc("/conn/lobby", mw.Chain(API.LobbyHandler, mw.WebSocketHeadersCheck())).Methods("GET")
+
 	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }

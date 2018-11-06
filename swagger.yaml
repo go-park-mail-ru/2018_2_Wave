@@ -7,6 +7,7 @@ basePath: /
 tags:
   - name: "user"
   - name: "session"
+  - name: "websocket"
 schemes:
   - http
 paths:
@@ -172,6 +173,8 @@ paths:
           description: OK
         500:
           description: Internal Server Error
+  
+  /conn/lobby:
 
 definitions:
   ForbiddenRequest:

@@ -15,7 +15,6 @@ import (
 )
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
-type Wavelog *lg.Logger
 
 func CORS(CC config.CORSConfiguration) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
@@ -23,7 +22,8 @@ func CORS(CC config.CORSConfiguration) Middleware {
 			originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
 				if originToSet == "" {
 					rw.WriteHeader(http.StatusForbidden)
-					hf(rw, r)
+					//hf(rw, r)
+					return
 				}
 				rw.Header().Set("Access-Control-Allow-Origin", originToSet)
 				rw.Header().Set("Access-Control-Allow-Headers", strings.Join(CC.Headers, ", "))
@@ -60,6 +60,17 @@ func Auth() Middleware {
 			}
 			log.Println("Your cookie value is : " + c.Value)
 			hf(rw, r)
+		}
+	}
+}
+
+func WebSocketHeadersCheck() Middleware {
+	return func(hf http.HandlerFunc) http.HandlerFunc {
+		return func(rw http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Connection") == "Upgrade" && r.Header.Get("Upgrade") == "websocket" && r.Header.Get("Sec-Websocket-Version") == "13" {
+				hf(rw, r)
+			}
+			rw.WriteHeader(http.StatusExpectationFailed)
 		}
 	}
 }

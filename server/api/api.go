@@ -11,6 +11,7 @@ import (
 	//"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 
 	_ "github.com/lib/pq"
 )
@@ -222,4 +223,26 @@ func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
+}
+
+/************************* websocket block ************************************/
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
+	_, err := upgrader.Upgrade(rw, r, nil)
+		if err != nil {
+			log.Fatal(err)
+	}
+
+	go func(client *websocket.Conn){
+
+	}(ws)
+	return
 }
