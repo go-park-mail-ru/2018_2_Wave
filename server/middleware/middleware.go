@@ -15,7 +15,7 @@ import (
 )
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
-type WaveLogger lg.Logger
+type Wavelog lg.Logger
 
 func CORS(CC config.CORSConfiguration) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
@@ -43,13 +43,13 @@ func Options() Middleware {
 	}
 }
 
-func (wl *WaveLogger) Auth() Middleware {
+func (Wl *Wavelog) Auth() Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			c, err := r.Cookie("session")
 			if err != nil {
 				fr := models.ForbiddenRequest{
-					Reason: "Not authorized, bitch!",
+					Reason: "Not authorized.",
 				}
 		
 				payload, _ := fr.MarshalJSON()

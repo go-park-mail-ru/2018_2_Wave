@@ -28,11 +28,11 @@ func logfileExists() bool {
 	return false
 }
 
-func Construct() Logger {
+func Construct() *Logger {
 	if !logfileExists() {
 		log.Println("Caution: logger output file missing, no logging utility set.")
 
-		return Logger{}
+		return &Logger{}
 	}
 
 	rawJSON := []byte(`{
@@ -62,8 +62,5 @@ func Construct() Logger {
 		panic(err)
 	}
 
-	//defer l.Sugar.Sync()
-	sugarredLogger.Sugar.Infow("gofuck tou",
-		"source", "logger.go")
-	return sugarredLogger
+	return &sugarredLogger
 }

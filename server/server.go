@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/handlers"
 )
 
-func Start(path string, wavelog lg.Logger) {
+func Start(path string) {
 	conf := config.Configure(path)
 	r := mux.NewRouter()
 
@@ -22,7 +22,9 @@ func Start(path string, wavelog lg.Logger) {
 		DB: *db,
 	}
 
-	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.wavelog.Auth())).Methods("GET") /*
+	Curlog := lg.Construct()
+
+	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Wavelog.(Curlog).Auth())).Methods("GET") /*
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC))).Methods("POST")
 	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.CORS(conf.CC), mw.Auth())).Methods("GET")
 	r.HandleFunc("/users/me", mw.Chain(API.EditMePUTHandler, mw.CORS(conf.CC), mw.Auth())).Methods("PUT")
