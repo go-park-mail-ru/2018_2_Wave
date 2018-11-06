@@ -5,7 +5,7 @@ import (
 	"Wave/server/database"
 	mw "Wave/server/middleware"
 	"Wave/utiles/config"
-	"log"
+	//"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -34,5 +34,5 @@ func Start(path string) {
 	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
 	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
 
-	log.Fatal(http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r)))
+	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }

@@ -26,7 +26,8 @@ func New(dbconf_ config.DatabaseConfiguration) *DatabaseModel {
 	var err error
 	postgr.Database, err = sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname='%s' sslmode=disable", postgr.DBconf.User, os.Getenv("WAVE_DB_PASSWORD"), postgr.DBconf.DBName))
 	if err != nil {
-		log.Fatalln(err)
+		//log.Fatalln(err)
+		panic(err)
 	}
 	log.Println("postgres connection established")
 
@@ -47,13 +48,15 @@ func (model *DatabaseModel) present(tableName string, colName string, target str
 	err = row.Scan(&exists)
 
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		panic(err)
 		return false, err
 	}
 
 	fl, err = strconv.ParseBool(exists)
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		panic(err)
 		return false, err
 	}
 
@@ -85,7 +88,8 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 		err := row.Scan(&psswd)
 
 		if err != nil {
-			log.Fatal(err)
+			//log.Fatal(err)
+			panic(err)
 			return "", err
 		}
 
@@ -102,7 +106,8 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 			return "", nil
 		}
 	} else {
-		log.Fatal(problem)
+		//log.Fatal(problem)
+		panic(problem)
 	}
 
 	return "", nil
@@ -163,7 +168,8 @@ func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExte
 	err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
 
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		panic(err)
 		return models.UserExtended{}, err
 	}
 	log.Println("get my profile successful")

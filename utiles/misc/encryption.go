@@ -10,7 +10,8 @@ func GeneratePasswordHash(psswd string) []byte {
 	hash, err := bcrypt.GenerateFromPassword([]byte(psswd), bcrypt.MinCost)
 
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		panic(err)
 		return []byte{}
 	}
 
