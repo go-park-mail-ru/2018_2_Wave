@@ -15,7 +15,7 @@ import (
 )
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
-type Wavelog lg.Logger
+type Wavelog *lg.Logger
 
 func CORS(CC config.CORSConfiguration) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
@@ -43,7 +43,7 @@ func Options() Middleware {
 	}
 }
 
-func (Wl *Wavelog) Auth() Middleware {
+func Auth() Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			c, err := r.Cookie("session")

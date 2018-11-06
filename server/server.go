@@ -5,7 +5,7 @@ import (
 	"Wave/server/database"
 	mw "Wave/server/middleware"
 	"Wave/utiles/config"
-	lg "Wave/utiles/logger"
+	//lg "Wave/utiles/logger"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -22,9 +22,9 @@ func Start(path string) {
 		DB: *db,
 	}
 
-	Curlog := lg.Construct()
+	//Curlog := lg.Construct()
 
-	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Wavelog.Auth())).Methods("GET") /*
+	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth())).Methods("GET")
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC))).Methods("POST")
 	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.CORS(conf.CC), mw.Auth())).Methods("GET")
 	r.HandleFunc("/users/me", mw.Chain(API.EditMePUTHandler, mw.CORS(conf.CC), mw.Auth())).Methods("PUT")
@@ -35,6 +35,6 @@ func Start(path string) {
 
 	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
 	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
-*/
+
 	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }

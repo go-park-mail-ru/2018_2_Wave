@@ -7,5 +7,5 @@ import (
 func main() {
 	confPath := "./conf.json"
 	server.Start(confPath)
-	Wavelog.Sugar.Sync()
+	//Wavelog.Sugar.Sync()
 }
