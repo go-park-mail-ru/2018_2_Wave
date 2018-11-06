@@ -35,16 +35,6 @@ func Options() Middleware {
 	}
 }
 
-func Recovery() Middleware {
-	return func(hf http.HandlerFunc) http.HandlerFunc {
-		return func(rw http.ResponseWriter, r *http.Request) {
-			
-			hf(rw, r)
-		}
-	}
-}
-
-
 func Chain(hf http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
 	for _, m := range middlewares {
 		hf = m(hf)
