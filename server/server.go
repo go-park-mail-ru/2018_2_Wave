@@ -24,7 +24,7 @@ func Start(path string) {
 
 	Curlog := lg.Construct()
 
-	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Wavelog.(Curlog).Auth())).Methods("GET") /*
+	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Wavelog.Auth())).Methods("GET") /*
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC))).Methods("POST")
 	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.CORS(conf.CC), mw.Auth())).Methods("GET")
 	r.HandleFunc("/users/me", mw.Chain(API.EditMePUTHandler, mw.CORS(conf.CC), mw.Auth())).Methods("PUT")
