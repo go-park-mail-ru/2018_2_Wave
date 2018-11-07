@@ -36,7 +36,7 @@ func easyjson39e7a5b4DecodeWaveUtilesModels(in *jlexer.Lexer, out *Leaders) {
 			continue
 		}
 		switch key {
-		case "Users":
+		case "users":
 			if in.IsNull() {
 				in.Skip()
 				out.Users = nil
@@ -53,13 +53,13 @@ func easyjson39e7a5b4DecodeWaveUtilesModels(in *jlexer.Lexer, out *Leaders) {
 				}
 				for !in.IsDelim(']') {
 					var v1 UserScore
-					easyjson39e7a5b4DecodeWaveUtilesModels1(in, &v1)
+					(v1).UnmarshalEasyJSON(in)
 					out.Users = append(out.Users, v1)
 					in.WantComma()
 				}
 				in.Delim(']')
 			}
-		case "Total":
+		case "total":
 			out.Total = int(in.Int())
 		default:
 			in.SkipRecursive()
@@ -76,7 +76,7 @@ func easyjson39e7a5b4EncodeWaveUtilesModels(out *jwriter.Writer, in Leaders) {
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"Users\":"
+		const prefix string = ",\"users\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -91,13 +91,13 @@ func easyjson39e7a5b4EncodeWaveUtilesModels(out *jwriter.Writer, in Leaders) {
 				if v2 > 0 {
 					out.RawByte(',')
 				}
-				easyjson39e7a5b4EncodeWaveUtilesModels1(out, v3)
+				(v3).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
 	}
 	{
-		const prefix string = ",\"Total\":"
+		const prefix string = ",\"total\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -131,63 +131,4 @@ func (v *Leaders) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Leaders) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson39e7a5b4DecodeWaveUtilesModels(l, v)
-}
-func easyjson39e7a5b4DecodeWaveUtilesModels1(in *jlexer.Lexer, out *UserScore) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "username":
-			out.Username = string(in.String())
-		case "score":
-			out.Score = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson39e7a5b4EncodeWaveUtilesModels1(out *jwriter.Writer, in UserScore) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"username\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Username))
-	}
-	{
-		const prefix string = ",\"score\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Score))
-	}
-	out.RawByte('}')
 }

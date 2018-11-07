@@ -39,15 +39,15 @@ func OptionsPreflight(CC config.CORSConfiguration) Middleware {
 		return func(rw http.ResponseWriter, r *http.Request) {
 				originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
 				if originToSet == "" {
-					rw.WriteHeader(http.StatusForbidden)
+					rw.WriteHeader(http.StatusTeapot)
 
 					return
 				}
-				rw.WriteHeader(http.StatusOK)
 				rw.Header().Set("Access-Control-Allow-Origin", originToSet)
 				rw.Header().Set("Access-Control-Allow-Headers", strings.Join(CC.Headers, ", "))
 				rw.Header().Set("Access-Control-Allow-Credentials", CC.Credentials)
 				rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
+				rw.WriteHeader(http.StatusOK)
 				//hf(rw, r)
 
 				return

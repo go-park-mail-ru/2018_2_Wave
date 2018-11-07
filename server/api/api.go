@@ -9,7 +9,8 @@ import (
 	"net/http"
 	"reflect"
 	//"strconv"
-	//"time"
+	"time"
+	//"encoding/json"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -236,15 +237,81 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+const (
+	waitTime = 15 * time.Second
+)
+
+//action_uid uniqely generated on the front
+//action_id : 
+// 1 - add user to the room
+// 2 - remove user from the room
+// 3 - start
+// 4 - rollback
+
+type lobbyReq struct {
+	actionID 	string `json:"action_id"`
+	actionUID 	string `json:"action_uid"`
+	username 	string `json:"username"`
+}
+
+type lobbyRespGenereic struct {
+	actionUID string `json:"action_id"`
+	status 	 string `json:"status"`
+}
+
 func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(rw, r, nil)
 		if err != nil {
 			log.Fatal(err)
-	}
+		}
 
 	lobby := []string{}
 
 	go func(client *websocket.Conn, lb []string){
+		ticker := time.NewTicker(waitTime)
+		defer func() {
+			ticker.Stop()
+			client.Close()
+		}()
+		for {
+					in := lobbyReq{}
+			
+					err := client.ReadJSON(&in)
+					if err != nil {
+						break
+					}
+			
+					fmt.Printf("Got message: %#v\n", in)
+
+					out := lobbyRespGenereic{}
+
+					switch in.actionID {
+						case "1": 
+							if in.username == "" {
+								break //?
+							}
+							out.actionUID = in.actionUID
+							lb = append(lb, in.username)
+							out.status = "success" 
+						case "2":
+							if in.username == "" {
+								break //?
+							}
+							out.actionUID = in.actionUID
+							lb = append(lb, in.username)
+							//sort.String(lb)
+							out.status = "success"
+
+						case "3":
+						case "4":
+					}
+
+					if err = client.WriteJSON(out); err != nil {
+						panic(err)
+					}
+
+					<-ticker.C
+		}
 	}(ws, lobby)
 	return
 }
