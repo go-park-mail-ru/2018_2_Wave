@@ -315,7 +315,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 		}
 	}
 	
-	if profile.Avatar != "" {
+	if len(profile.Avatar) != 0 {
 		model.Database.MustExec("UPDATE userinfo SET avatar=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON userinfo.uid = session.uid WHERE cookie=$2);", profile.Avatar, cookie)
 		
 		model.LG.Sugar.Infow("update profile succeded, avatar updated",
@@ -365,5 +365,6 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 
 		board.Users = append(board.Users, temp)
 	}
+	
 	return board, nil
 }
