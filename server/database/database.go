@@ -6,10 +6,8 @@ import (
 	"Wave/utiles/models"
 	lg "Wave/utiles/logger"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -58,26 +56,31 @@ func (model *DatabaseModel) present(tableName string, colName string, target str
 
 	if err != nil {
 
-		model.LG.Sugar.Panicw("QueryRowx failed",
+		model.LG.Sugar.Infow("Scan failed",
 							   "source", "database.go",
 							   "who", "present",)
 
-		panic(err)
-		//return false, err
+		return false, err
 	}
 
 	fl, err = strconv.ParseBool(exists)
+
 	if err != nil {
 		
-		model.LG.Sugar.Panicw("strconv.ParseBool failed",
+		model.LG.Sugar.Infow("strconv.ParseBool failed",
 							   "source", "database.go",
 							   "who", "present",)
 
-		panic(err)
-		//return false, err
+		return false, err
 	}
 
-	log.Println(fl)
+
+	/*
+	model.LG.Sugar.Infow("function succeded",
+							   "source", "database.go",
+							   "who", "present",)
+	*/
+
 	return fl, nil
 }
 
@@ -98,10 +101,6 @@ func validateCredentials(target string) bool {
 
 /****************************** session block ******************************/
 
-func (model *DatabaseModel) Logtest() {
-	model.LG.Sugar.Infow("time", time.Now())
-}
-
 func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
 	if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 		var psswd string
@@ -109,8 +108,10 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 		err := row.Scan(&psswd)
 
 		if err != nil {
-			//log.Fatal(err)
-			panic(err)
+			model.LG.Sugar.Panicw("Scan failed",
+							   "source", "database.go",
+							   "who", "LogIn",)
+   
 			return "", err
 		}
 
@@ -118,26 +119,48 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 			cookie := misc.GenerateCookie()
 			model.Database.MustExec("INSERT INTO session(uid, cookie) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2);", credentials.Username, cookie)
 
-			log.Println("login successful: cookie set")
+			model.LG.Sugar.Infow("login succeded, cookie set",
+							   "source", "database.go",
+							   "who", "LogIn",)
 
 			return cookie, nil
 		} else {
-			log.Println("login failed: wrong password")
+			model.LG.Sugar.Infow("login failed, wrong password",
+							   "source", "database.go",
+							   "who", "LogIn",)
 
 			return "", nil
 		}
-	} else {
-		//log.Fatal(problem)
-		panic(problem)
+	} else if !isPresent && problem == nil {
+		
+		model.LG.Sugar.Infow("login failed, no such user",
+							   "source", "database.go",
+							   "who", "LogIn",)
+
+		return "", nil
+
+	} else if problem != nil {
+
+		model.LG.Sugar.Infow("present failed",
+							   "source", "database.go",
+							   "who", "LogIn",)
+
+		return "", problem 
 	}
+
+	model.LG.Sugar.Infow("login failed, no such user",
+							   "source", "database.go",
+							   "who", "LogIn",)
 
 	return "", nil
 }
 
 func (model *DatabaseModel) LogOut(cookie string) error {
-	log.Println(cookie)
 	model.Database.QueryRowx("DELETE FROM session WHERE cookie=$1;", cookie)
-	log.Println("logout successful")
+	
+	model.LG.Sugar.Infow("logout succeded",
+							   "source", "database.go",
+							   "who", "LogOut",)
 
 	return nil
 }
@@ -145,22 +168,28 @@ func (model *DatabaseModel) LogOut(cookie string) error {
 /****************************** user block ******************************/
 
 func (model *DatabaseModel) SignUp(credentials models.UserCredentials) (cookie string, err error) {
-	log.Println(credentials.Username)
 	if validateCredentials(credentials.Username) && validateCredentials(credentials.Password) {
 		if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
-			log.Println("signup failed: user already exists")
+			model.LG.Sugar.Infow("signup failed, user already exists",
+							   "source", "database.go",
+							   "who", "SignUp",)
 
 			return "", nil
-		} else if !isPresent && problem == nil {
+		} else if problem != nil {
+			model.LG.Sugar.Infow("signup succeded",
+							   "source", "database.go",
+							   "who", "SignUp",)
+			return "", problem
+		} else if !isPresent {
 			cookie := misc.GenerateCookie()
 			hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
 			model.Database.MustExec("INSERT INTO userinfo(username,password) VALUES($1, $2)", credentials.Username, hashedPsswd)
 			model.Database.MustExec("INSERT INTO session(uid, cookie) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2)", credentials.Username, cookie)
-			log.Println("signup successful")
+			model.LG.Sugar.Infow("signup succeded",
+							   "source", "database.go",
+							   "who", "SignUp",)
 
 			return cookie, nil
-		} else if problem != nil {
-			return "", problem
 		}
 	}
 
@@ -172,11 +201,17 @@ func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExte
 	err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
 
 	if err != nil {
-		//log.Fatal(err)
-		panic(err)
+
+		model.LG.Sugar.Infow("getmyprofile failed, scan error",
+							   "source", "database.go",
+							   "who", "GetMyProfile",)
+
 		return models.UserExtended{}, err
 	}
-	log.Println("get my profile successful")
+
+	model.LG.Sugar.Infow("getmyprofile succeded",
+							   "source", "database.go",
+							   "who", "GetMyProfile",)
 
 	return profile, nil
 }
@@ -187,17 +222,32 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 		err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
 
 		if err != nil {
+
+			model.LG.Sugar.Infow("getprofile failed, scan error",
+							   "source", "database.go",
+							   "who", "GetProfile",)
+
 			return models.UserExtended{}, err
 		}
-		log.Println("get profile successful")
+		
+		model.LG.Sugar.Infow("getprofile succeded, scan error",
+							   "source", "database.go",
+							   "who", "GetProfile",)
 
 		return profile, nil
 	} else if problem != nil {
-		log.Println(problem)
+		
+		model.LG.Sugar.Infow("present failed",
+							   "source", "database.go",
+							   "who", "GetProfile",)
 
 		return models.UserExtended{}, err
 	} else if !isPresent {
-		log.Println("user doesn't exist")
+		
+		model.LG.Sugar.Infow("getprofile failed, user doesn't exist",
+								"source", "database.go",
+								"who", "GetProfile",)
+
 		return models.UserExtended{}, nil
 	}
 
@@ -212,22 +262,34 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 	if profile.Username != "" {
 		isPresent, problem := model.present(UserInfoTable, UsernameCol, profile.Username)
 		if problem != nil {
+			model.LG.Sugar.Infow("present failed",
+								"source", "database.go",
+								"who", "UpdateProfile",)
+
 			return false, problem
 		}
 		if !isPresent {
 			if validateCredentials(profile.Username) {
 				model.Database.MustExec("UPDATE userinfo SET username=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON session.uid = userinfo.uid WHERE cookie=$2);", profile.Username, cookie)
-				log.Println("update profile successful: username changed")
+				
+				model.LG.Sugar.Infow("update profile succeded, username updated",
+										"source", "database.go",
+										"who", "UpdateProfile",)
 
 				changedU = true
 			} else {
-				log.Println("update profile failed: bad username")
+
+				model.LG.Sugar.Infow("update profile failed, invalid username",
+										"source", "database.go",
+										"who", "UpdateProfile",)
 
 				changedU = false
 			}
 		}
 		if isPresent {
-			log.Println("update profile fail: username already in use")
+			model.LG.Sugar.Infow("update profile failed, username already in use",
+										"source", "database.go",
+										"who", "UpdateProfile",)
 
 			changedU = false
 		}
@@ -237,11 +299,17 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 		if validateCredentials(profile.Password) {
 			hashedPsswd := misc.GeneratePasswordHash(profile.Password)
 			model.Database.MustExec("UPDATE userinfo SET password=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON session.uid = userinfo.uid WHERE cookie=$2);", hashedPsswd, cookie)
-			log.Println("update profile successful: password changed")
+			
+			model.LG.Sugar.Infow("update profile succeded, password updated",
+										"source", "database.go",
+										"who", "UpdateProfile",)
 
 			changedP = true
 		} else {
-			log.Println("update profile failed: bad password")
+			
+			model.LG.Sugar.Infow("update profile failed, invalid password",
+										"source", "database.go",
+										"who", "UpdateProfile",)
 
 			changedP = false
 		}

@@ -23,8 +23,6 @@ type Handler struct {
 }
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
-	
- 	h.DB.Logtest()
 	rw.WriteHeader(http.StatusOK)
 
 	return
@@ -36,17 +34,14 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		Password: r.FormValue("password"),
 	}
 
-	log.Println(user.Username)
-	log.Println(user.Password)
-
 	cookie, err := h.DB.SignUp(user)
-	log.Println(cookie)
 
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
+
 	if cookie == "" {
 		fr := models.ForbiddenRequest{
 			Reason: "Username already in use.",
@@ -174,11 +169,7 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		Password: r.FormValue("password"),
 	}
 
-	log.Println(user.Username)
-	log.Println(user.Password)
-
 	cookie, err := h.DB.LogIn(user)
-	log.Println(cookie)
 
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
