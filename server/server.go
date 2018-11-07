@@ -24,9 +24,9 @@ func Start(path string) {
 
 	//Wavelog := lg.Construct()
 
-	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth())).Methods("GET")
+	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("GET")
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC))).Methods("POST")
-	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.CORS(conf.CC), mw.Auth())).Methods("GET")
+	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("GET")
 	r.HandleFunc("/users/me", mw.Chain(API.EditMePUTHandler, mw.CORS(conf.CC), mw.Auth())).Methods("PUT")
 	r.HandleFunc("/users/{name}", mw.Chain(API.UserGETHandler, mw.CORS(conf.CC))).Methods("GET")
 	r.HandleFunc("/users/leaders", mw.Chain(API.LeadersGETHandler, mw.CORS(conf.CC))).Methods("GET")
@@ -36,7 +36,7 @@ func Start(path string) {
 	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.OptionsPreflight(conf.CC))).Methods("OPTIONS")
 	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.OptionsPreflight(conf.CC))).Methods("OPTIONS")
 
-	r.HandleFunc("/conn/lobby", mw.Chain(API.LobbyHandler, mw.WebSocketHeadersCheck())).Methods("GET")
+	r.HandleFunc("/conn/lobby", mw.Chain(API.LobbyHandler, mw.CORS(conf.CC), mw.WebSocketHeadersCheck())).Methods("GET")
 
 	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }

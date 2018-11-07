@@ -259,6 +259,15 @@ type lobbyRespGenereic struct {
 	status 	 string `json:"status"`
 }
 
+func contains(sl []string, str string) bool {
+    for _, cur := range sl {
+        if str == cur {
+            return true
+        }
+    }
+    return false
+}
+
 func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(rw, r, nil)
 		if err != nil {
@@ -273,9 +282,9 @@ func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
 			ticker.Stop()
 			client.Close()
 		}()
-		for {
+			for {
 					in := lobbyReq{}
-			
+				
 					err := client.ReadJSON(&in)
 					if err != nil {
 						break
@@ -288,26 +297,50 @@ func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
 					switch in.actionID {
 						case "1": 
 							if in.username == "" {
-								break //?
+								break
 							}
 							out.actionUID = in.actionUID
 							lb = append(lb, in.username)
 							out.status = "success" 
+
+							if err = client.WriteJSON(out); err != nil {
+								break
+							}
+		
 						case "2":
 							if in.username == "" {
-								break //?
+								break
 							}
 							out.actionUID = in.actionUID
-							lb = append(lb, in.username)
-							//sort.String(lb)
-							out.status = "success"
-
+							if contains(lb, in.username) {
+								for _, cur := range lb {
+									if cur == in.username {
+										cur = ""
+									}
+								}
+								out.status = "success"
+								if err = client.WriteJSON(out); err != nil {
+									break
+								}
+							} else {
+								out.status = "failure"
+								if err = client.WriteJSON(out); err != nil {
+									break
+								}			
+							}
 						case "3":
+							out.actionUID = in.actionUID
+							out.status = "success"
+							if err = client.WriteJSON(out); err != nil {
+								break
+							}		
+							
 						case "4":
-					}
-
-					if err = client.WriteJSON(out); err != nil {
-						panic(err)
+							out.actionUID = in.actionUID
+							out.status = "success"
+							if err = client.WriteJSON(out); err != nil {
+								break
+							}		
 					}
 
 					<-ticker.C

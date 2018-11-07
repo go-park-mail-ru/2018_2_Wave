@@ -22,13 +22,14 @@ func CORS(CC config.CORSConfiguration) Middleware {
 				originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
 				if originToSet == "" {
 					rw.WriteHeader(http.StatusForbidden)
-
+					log.Println("yeah")
 					return
 				}
 				rw.Header().Set("Access-Control-Allow-Origin", originToSet)
 				rw.Header().Set("Access-Control-Allow-Headers", strings.Join(CC.Headers, ", "))
 				rw.Header().Set("Access-Control-Allow-Credentials", CC.Credentials)
 				rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
+				//log.Println("yeah")
 				hf(rw, r)
 			}
 	}
@@ -39,7 +40,11 @@ func OptionsPreflight(CC config.CORSConfiguration) Middleware {
 		return func(rw http.ResponseWriter, r *http.Request) {
 				originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
 				if originToSet == "" {
-					rw.WriteHeader(http.StatusTeapot)
+					rw.Header().Set("Access-Control-Allow-Origin", originToSet)
+					rw.Header().Set("Access-Control-Allow-Headers", strings.Join(CC.Headers, ", "))
+					rw.Header().Set("Access-Control-Allow-Credentials", CC.Credentials)
+					rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
+					rw.WriteHeader(http.StatusForbidden)
 
 					return
 				}
