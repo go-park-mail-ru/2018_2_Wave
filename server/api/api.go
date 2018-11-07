@@ -2,7 +2,7 @@ package api
 
 import (
 	psql "Wave/server/database"
-	//lg "Wave/utiles/logger"
+	lg "Wave/utiles/logger"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"reflect"
 	"time"
+	"strconv"
 	
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -19,7 +20,7 @@ import (
 
 type Handler struct {
 	DB psql.DatabaseModel
-	//LG *lg.Logger
+	LG *lg.Logger
 }
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
@@ -37,7 +38,12 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie, err := h.DB.SignUp(user)
 
 	if err != nil {
+
 		rw.WriteHeader(http.StatusInternalServerError)
+
+		h.LG.Sugar.Infow("/users failed",
+		"source", "api.go",
+		"who", "RegisterPOSTHandler",)
 
 		return
 	}
@@ -51,12 +57,20 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(rw, string(payload))
 
+		h.LG.Sugar.Infow("/users failed, username already in use.",
+		"source", "api.go",
+		"who", "RegisterPOSTHandler",)
+
 		return
 	}
 
 	sessionCookie := misc.MakeSessionCookie(cookie)
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusOK)
+
+	h.LG.Sugar.Infow("/users succeded",
+		"source", "api.go",
+		"who", "RegisterPOSTHandler",)
 
 	return
 }
@@ -69,12 +83,20 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 
+		h.LG.Sugar.Infow("/users/me failed",
+		"source", "api.go",
+		"who", "MeGETHandler",)
+
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
 	payload, _ := profile.MarshalJSON()
 	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/users/me succeded",
+		"source", "api.go",
+		"who", "MeGETHandler",)
 
 	return
 }
@@ -93,6 +115,10 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 
+		h.LG.Sugar.Infow("/users/me failed",
+		"source", "api.go",
+		"who", "EditMePUTHandler",)
+
 		return
 	}
 
@@ -104,6 +130,10 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(rw, string(payload))
+
+		h.LG.Sugar.Infow("/users/me failed, incorrect password",
+		"source", "api.go",
+		"who", "EditMePUTHandler",)
 
 		return
 	}
@@ -120,11 +150,19 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 
+		h.LG.Sugar.Infow("/users/{name} failed",
+		"source", "api.go",
+		"who", "UserGETHandler",)
+
 		return
 	}
 
 	if reflect.DeepEqual(models.UserExtended{}, profile) {
 		rw.WriteHeader(http.StatusNotFound)
+
+		h.LG.Sugar.Infow("/users/{name} failed",
+		"source", "api.go",
+		"who", "UserGETHandler",)
 
 		return
 	}
@@ -133,13 +171,17 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 	payload, _ := profile.MarshalJSON()
 	fmt.Fprintln(rw, string(payload))
 
+	h.LG.Sugar.Infow("/users/{name} succeded",
+		"source", "api.go",
+		"who", "UserGETHandler",)
+
 	return
 }
 
 func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	//leaders, err := h.DB.GetTopUsers(strconv.ParseInt(vars["count"]), strconv.ParseInt(vars["page"])
-	/*
+	
 	pagination := models.Pagination{
 		Page:  r.FormValue("page"),
 		Count: r.FormValue("count"),
@@ -152,6 +194,10 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	if err != nil || reflect.DeepEqual(models.Leaders{}, leaders) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
+		h.LG.Sugar.Infow("/users/leaders failed",
+		"source", "api.go",
+		"who", "LeadersGETHandler",)
+
 		return
 	}
 
@@ -159,8 +205,11 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	payload, _ := leaders.MarshalJSON()
 	fmt.Fprintln(rw, string(payload))
 
+	h.LG.Sugar.Infow("/users/leaders succeded",
+	"source", "api.go",
+	"who", "LeadersGETHandler",)
+
 	return
-	*/
 }
 
 func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
@@ -173,6 +222,10 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
+
+		h.LG.Sugar.Infow("/session failed",
+		"source", "api.go",
+		"who", "LoginPOSTHandler",)
 
 		return
 	}
@@ -187,12 +240,20 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(rw, string(payload))
 
+		h.LG.Sugar.Infow("/session failed, incorrect password",
+		"source", "api.go",
+		"who", "LoginPOSTHandler",)
+
 		return
 	}
 
 	sessionCookie := misc.MakeSessionCookie(cookie)
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusOK)
+
+	h.LG.Sugar.Infow("/session succeded",
+		"source", "api.go",
+		"who", "LoginPOSTHandler",)
 
 	return
 }
@@ -205,19 +266,37 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	if err := h.DB.LogOut(cookie); err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 
+		h.LG.Sugar.Infow("/session failed",
+		"source", "api.go",
+		"who", "LogoutDELETEHandler",)
+
 		return
 	}
 
 	http.SetCookie(rw, misc.MakeSessionCookie(""))
 	rw.WriteHeader(http.StatusOK)
 
+	h.LG.Sugar.Infow("/session succedede",
+		"source", "api.go",
+		"who", "LogoutDELETEHandler",)
+
 	return
 }
 
 func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
+
+	h.LG.Sugar.Infow("/users/me succeded",
+		"source", "api.go",
+		"who", "EditMeOPTHandler",)
+
 }
 
 func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
+
+	h.LG.Sugar.Infow("/session succeded",
+		"source", "api.go",
+		"who", "LogoutOPTHandler",)
+
 }
 
 /************************* websocket block ************************************/
