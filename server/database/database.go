@@ -314,14 +314,17 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			changedP = false
 		}
 	}
-	/*
+	
 	if profile.Avatar != "" {
 		model.Database.MustExec("UPDATE userinfo SET avatar=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON userinfo.uid = session.uid WHERE cookie=$2);", profile.Avatar, cookie)
-		log.Println("update profile successful: avatar changed")
+		
+		model.LG.Sugar.Infow("update profile succeded, avatar updated",
+										"source", "database.go",
+										"who", "UpdateProfile",)
 
 		changedA = true
 	}
-	*/
+	
 	if changedU || changedP || changedA {
 		return true, nil
 	}
@@ -332,17 +335,31 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Leaders, err error) {
 	row := model.Database.QueryRowx("SELECT COUNT(*) FROM userinfo")
 	if err := row.Scan(&board.Total); err != nil {
+
+		model.LG.Sugar.Infow("scan failed",
+								"source", "database.go",
+								"who", "GetTopUsers",)
+
 		return models.Leaders{}, err
 	}
 
-	rows, err := model.Database.Query("SELECT username,score FROM userinfo ORDER BY score DESC LIMIT $1 OFFSET $2;", limit, offset)
+	rows, err := model.Database.Queryx("SELECT username,score FROM userinfo ORDER BY score DESC LIMIT $1 OFFSET $2;", limit, offset)
 	if err != nil {
+		model.LG.Sugar.Infow("queryx failed",
+								"source", "database.go",
+								"who", "GetTopUsers",)
+
 		return models.Leaders{}, err
 	}
 
 	for rows.Next() {
 		temp := models.UserScore{}
 		if err = rows.Scan(&temp.Username, &temp.Score); err != nil {
+
+			model.LG.Sugar.Infow("scan failed",
+								"source", "database.go",
+								"who", "GetTopUsers",)
+
 			return models.Leaders{}, err
 		}
 
