@@ -30,11 +30,15 @@ func New(dbconf_ config.DatabaseConfiguration, lg_ *lg.Logger) *DatabaseModel {
 	var err error
 	postgr.Database, err = sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname='%s' sslmode=disable", postgr.DBconf.User, os.Getenv("WAVE_DB_PASSWORD"), postgr.DBconf.DBName))
 	if err != nil {
-		//log.Fatalln(err)
+		postgr.LG.Sugar.Panicw("PostgreSQL connection establishment failed",
+							   "source", "database.go",
+							   "who", "New",)
 		panic(err)
 	}
-	postgr.LG.Sugar.Infow("happened form new")
-	log.Println("postgres connection established")
+	
+	postgr.LG.Sugar.Infow("PostgreSQL connection establishment succeded",
+							   "source", "database.go",
+							   "who", "New",)
 
 	return postgr
 }
@@ -53,16 +57,24 @@ func (model *DatabaseModel) present(tableName string, colName string, target str
 	err = row.Scan(&exists)
 
 	if err != nil {
-		//log.Fatal(err)
+
+		model.LG.Sugar.Panicw("QueryRowx failed",
+							   "source", "database.go",
+							   "who", "present",)
+
 		panic(err)
-		return false, err
+		//return false, err
 	}
 
 	fl, err = strconv.ParseBool(exists)
 	if err != nil {
-		//log.Fatal(err)
+		
+		model.LG.Sugar.Panicw("strconv.ParseBool failed",
+							   "source", "database.go",
+							   "who", "present",)
+
 		panic(err)
-		return false, err
+		//return false, err
 	}
 
 	log.Println(fl)
