@@ -62,8 +62,8 @@ func OptionsPreflight(CC config.CORSConfiguration) Middleware {
 func Auth() Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
-			_, err := r.Cookie("session")
-			if err != nil {
+			cookie, err := r.Cookie("session")
+			if err != nil || cookie.Value == "" {
 				fr := models.ForbiddenRequest{
 					Reason: "Not authorized.",
 				}

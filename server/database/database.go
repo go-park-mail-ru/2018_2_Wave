@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -32,6 +33,7 @@ func New(dbconf_ config.DatabaseConfiguration, lg_ *lg.Logger) *DatabaseModel {
 		//log.Fatalln(err)
 		panic(err)
 	}
+	postgr.LG.Sugar.Infow("happened form new")
 	log.Println("postgres connection established")
 
 	return postgr
@@ -84,8 +86,11 @@ func validateCredentials(target string) bool {
 
 /****************************** session block ******************************/
 
+func (model *DatabaseModel) Logtest() {
+	model.LG.Sugar.Infow("time", time.Now())
+}
+
 func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
-	model.LG.Sugar.Infow("hey FROM LOGIIIIN")
 	if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 		var psswd string
 		row := model.Database.QueryRowx("SELECT password FROM userinfo WHERE username=$1", credentials.Username)

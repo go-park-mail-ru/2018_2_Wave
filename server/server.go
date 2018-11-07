@@ -22,7 +22,6 @@ func Start(path string) {
 
 	API := &api.Handler{
 		DB: *db,
-		//LG: curlog,
 	}
 
 	//r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("GET")

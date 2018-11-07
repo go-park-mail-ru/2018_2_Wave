@@ -25,12 +25,9 @@ type Handler struct {
 }
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
-	user := models.UserCredentials{
-		Username: "ebana",
-		Password: "pizdec",
-	}
-	cookie, _ := h.DB.LogIn(user)
-	log.Println(cookie)
+	
+ 	h.DB.Logtest()
+
 	rw.WriteHeader(http.StatusOK)
 
 	return
