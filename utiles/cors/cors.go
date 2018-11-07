@@ -6,5 +6,6 @@ func SetOrigin(origin string, allowedOrigins []string) string {
 			return s
 		}
 	}
+
 	return ""
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	psql "Wave/server/database"
+	lg "Wave/utiles/logger"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 
 type Handler struct {
 	DB psql.DatabaseModel
+	LG *lg.Logger
 }
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {

@@ -5,7 +5,7 @@ import (
 	"Wave/server/database"
 	mw "Wave/server/middleware"
 	"Wave/utiles/config"
-	//lg "Wave/utiles/logger"
+	lg "Wave/utiles/logger"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -18,11 +18,12 @@ func Start(path string) {
 
 	db := database.New(conf.DC)
 
+	curlg := lg.Construct()
+
 	API := &api.Handler{
 		DB: *db,
+		LG: curlg,
 	}
-
-	//Wavelog := lg.Construct()
 
 	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("GET")
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC))).Methods("POST")

@@ -5,7 +5,7 @@ import (
 	"Wave/utiles/models"
 	"Wave/utiles/cors"
 	//lg "Wave/utiles/logger"
-	"log"
+	//"log"
 
 	//"Wave/utiles/misc"
 	//"log"
@@ -62,7 +62,7 @@ func OptionsPreflight(CC config.CORSConfiguration) Middleware {
 func Auth() Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
-			c, err := r.Cookie("session")
+			_, err := r.Cookie("session")
 			if err != nil {
 				fr := models.ForbiddenRequest{
 					Reason: "Not authorized.",

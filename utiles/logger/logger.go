@@ -47,7 +47,6 @@ func Construct() *Logger {
 	}
   }`)
 
-	//"initialFields": {"source": "undefined"},
 	var cfg zap.Config
 	var err error
 	var sugarredLogger Logger
