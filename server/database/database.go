@@ -104,7 +104,10 @@ func validateCredentials(target string) bool {
 func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
 	if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 		var psswd string
-		row := model.Database.QueryRowx("SELECT password FROM userinfo WHERE username=$1", credentials.Username)
+		row := model.Database.QueryRowx(`
+			SELECT password
+			FROM userinfo
+			WHERE username=$1`, credentials.Username)
 		err := row.Scan(&psswd)
 
 		if err != nil {
@@ -117,7 +120,12 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 
 		if misc.PasswordsMatched(psswd, credentials.Password) {
 			cookie := misc.GenerateCookie()
-			model.Database.MustExec("INSERT INTO session(uid, cookie) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2);", credentials.Username, cookie)
+			model.Database.MustExec(`
+				INSERT INTO session(uid, cookie)
+				VALUES(
+					(SELECT uid FROM userinfo WHERE username=$1),
+					$2
+				);`, credentials.Username, cookie)
 
 			model.LG.Sugar.Infow("login succeded, cookie set",
 							   "source", "database.go",
@@ -365,6 +373,6 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 
 		board.Users = append(board.Users, temp)
 	}
-	
+
 	return board, nil
 }
