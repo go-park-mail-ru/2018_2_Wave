@@ -9,10 +9,8 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	//"strconv"
 	"time"
-	//"encoding/json"
-
+	
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 
@@ -27,7 +25,6 @@ type Handler struct {
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 	
  	h.DB.Logtest()
-
 	rw.WriteHeader(http.StatusOK)
 
 	return
