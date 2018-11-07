@@ -22,7 +22,7 @@ func Start(path string) {
 		DB: *db,
 	}
 
-	//Curlog := lg.Construct()
+	//Wavelog := lg.Construct()
 
 	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth())).Methods("GET")
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC))).Methods("POST")
@@ -33,8 +33,8 @@ func Start(path string) {
 	r.HandleFunc("/session", mw.Chain(API.LoginPOSTHandler, mw.CORS(conf.CC))).Methods("POST")
 	r.HandleFunc("/session", mw.Chain(API.LogoutDELETEHandler, mw.CORS(conf.CC), mw.Auth())).Methods("DELETE")
 
-	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
-	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.CORS(conf.CC), mw.Options())).Methods("OPTIONS")
+	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.OptionsPreflight(conf.CC))).Methods("OPTIONS")
+	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.OptionsPreflight(conf.CC))).Methods("OPTIONS")
 
 	r.HandleFunc("/conn/lobby", mw.Chain(API.LobbyHandler, mw.WebSocketHeadersCheck())).Methods("GET")
 

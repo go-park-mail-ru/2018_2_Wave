@@ -4,7 +4,7 @@ import (
 	"Wave/utiles/config"
 	"Wave/utiles/models"
 	"Wave/utiles/cors"
-	lg "Wave/utiles/logger"
+	//lg "Wave/utiles/logger"
 	"log"
 
 	//"Wave/utiles/misc"
@@ -19,10 +19,10 @@ type Middleware func(http.HandlerFunc) http.HandlerFunc
 func CORS(CC config.CORSConfiguration) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
-			originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
+				originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
 				if originToSet == "" {
 					rw.WriteHeader(http.StatusForbidden)
-					//hf(rw, r)
+
 					return
 				}
 				rw.Header().Set("Access-Control-Allow-Origin", originToSet)
@@ -34,11 +34,23 @@ func CORS(CC config.CORSConfiguration) Middleware {
 	}
 }
 
-func Options() Middleware {
+func OptionsPreflight(CC config.CORSConfiguration) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
-			rw.WriteHeader(http.StatusOK)
-			hf(rw, r)
+				originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
+				if originToSet == "" {
+					rw.WriteHeader(http.StatusForbidden)
+
+					return
+				}
+				rw.WriteHeader(http.StatusOK)
+				rw.Header().Set("Access-Control-Allow-Origin", originToSet)
+				rw.Header().Set("Access-Control-Allow-Headers", strings.Join(CC.Headers, ", "))
+				rw.Header().Set("Access-Control-Allow-Credentials", CC.Credentials)
+				rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
+				//hf(rw, r)
+
+				return
 		}
 	}
 }

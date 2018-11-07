@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"reflect"
 	//"strconv"
+	//"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -236,13 +237,14 @@ var upgrader = websocket.Upgrader{
 }
 
 func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
-	_, err := upgrader.Upgrade(rw, r, nil)
+	ws, err := upgrader.Upgrade(rw, r, nil)
 		if err != nil {
 			log.Fatal(err)
 	}
 
-	go func(client *websocket.Conn){
+	lobby := []string{}
 
-	}(ws)
+	go func(client *websocket.Conn, lb []string){
+	}(ws, lobby)
 	return
 }
