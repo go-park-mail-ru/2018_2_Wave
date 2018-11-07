@@ -2,7 +2,7 @@ package api
 
 import (
 	psql "Wave/server/database"
-	lg "Wave/utiles/logger"
+	//lg "Wave/utiles/logger"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
 	"fmt"
@@ -21,10 +21,16 @@ import (
 
 type Handler struct {
 	DB psql.DatabaseModel
-	LG *lg.Logger
+	//LG *lg.Logger
 }
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
+	user := models.UserCredentials{
+		Username: "ebana",
+		Password: "pizdec",
+	}
+	cookie, _ := h.DB.LogIn(user)
+	log.Println(cookie)
 	rw.WriteHeader(http.StatusOK)
 
 	return

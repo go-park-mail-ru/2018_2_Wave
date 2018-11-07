@@ -4,6 +4,7 @@ import (
 	"Wave/utiles/config"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
+	lg "Wave/utiles/logger"
 	"fmt"
 	"log"
 	"os"
@@ -16,11 +17,13 @@ import (
 type DatabaseModel struct {
 	DBconf   config.DatabaseConfiguration
 	Database *sqlx.DB
+	LG		 *lg.Logger
 }
 
-func New(dbconf_ config.DatabaseConfiguration) *DatabaseModel {
+func New(dbconf_ config.DatabaseConfiguration, lg_ *lg.Logger) *DatabaseModel {
 	postgr := &DatabaseModel{
 		DBconf: dbconf_,
+		LG: lg_,
 	}
 
 	var err error
@@ -82,6 +85,7 @@ func validateCredentials(target string) bool {
 /****************************** session block ******************************/
 
 func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
+	model.LG.Sugar.Infow("hey FROM LOGIIIIN")
 	if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 		var psswd string
 		row := model.Database.QueryRowx("SELECT password FROM userinfo WHERE username=$1", credentials.Username)

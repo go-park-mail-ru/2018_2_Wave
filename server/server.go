@@ -16,16 +16,17 @@ func Start(path string) {
 	conf := config.Configure(path)
 	r := mux.NewRouter()
 
-	db := database.New(conf.DC)
+	curlog := lg.Construct()
+	db := database.New(conf.DC, curlog)
 
-	curlg := lg.Construct()
 
 	API := &api.Handler{
 		DB: *db,
-		LG: curlg,
+		//LG: curlog,
 	}
 
-	r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("GET")
+	//r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("GET")
+	r.HandleFunc("/", mw.Chain(API.SlashHandler)).Methods("GET")
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC))).Methods("POST")
 	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("GET")
 	r.HandleFunc("/users/me", mw.Chain(API.EditMePUTHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("PUT")
