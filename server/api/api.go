@@ -30,11 +30,11 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
     file, _, err := r.FormFile("avatar")
     if err != nil {
 
-		h.LG.Sugar.Infow("upload failed, not able to read from FormFile",
+		h.LG.Sugar.Infow("upload failed, not able to read from FormFile, default avatar set",
 		"source", "api.go",
 		"who", "uploadHandler",)
 
-        return false, ""
+        return true, "/img/avatars/default"
 	}
 
 	prefix := "/img/avatars/"

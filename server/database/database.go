@@ -211,8 +211,6 @@ func (model *DatabaseModel) LogOut(cookie string) error {
 /****************************** user block ******************************/
 
 func (model *DatabaseModel) SignUp(credentials models.UserEdit) (cookie string, err error) {
-	
-
 	if validateCredentials(credentials.Username) && validateCredentials(credentials.Password) {
 		if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 			model.LG.Sugar.Infow(
