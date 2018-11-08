@@ -11,9 +11,12 @@ import (
 	"reflect"
 	"time"
 	"strconv"
+	"os"
+	"io"
 	
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/segmentio/ksuid"
 
 	_ "github.com/lib/pq"
 )
@@ -23,6 +26,61 @@ type Handler struct {
 	LG *lg.Logger
 }
 
+func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
+    file, _, err := r.FormFile("avatar")
+    if err != nil {
+
+		h.LG.Sugar.Infow("upload failed, not able to read from FormFile",
+		"source", "api.go",
+		"who", "uploadHandler",)
+
+        return false, ""
+	}
+
+	prefix := "/img/avatars/"
+	hash := ksuid.New()
+	fileName := hash.String()
+	
+	createPath := "." + prefix + fileName
+	log.Println(fileName)
+	path = prefix + fileName
+
+    out, err := os.Create(createPath)
+    if err != nil {
+	   
+		h.LG.Sugar.Infow("upload failed, file couldn't be created",
+		"source", "api.go",
+		"who", "uploadHandler",)
+
+		file.Close()
+		out.Close()
+
+        return false, ""
+    }
+
+    _, err = io.Copy(out, file)
+    if err != nil {
+
+        h.LG.Sugar.Infow("upload failed, couldn't copy data",
+		"source", "api.go",
+		"who", "uploadHandler",)
+
+		file.Close()
+		out.Close()
+
+		return false, ""
+    }
+
+	h.LG.Sugar.Infow("upload succeded",
+		"source", "api.go",
+		"who", "uploadHandler",)
+
+	file.Close()
+	out.Close()
+
+	return true, path
+}
+
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 
@@ -30,9 +88,29 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
-	user := models.UserCredentials{
+	user := models.UserEdit{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
+	}
+
+	ok, avatarPath := h.uploadHandler(r)
+
+	if ok && avatarPath != "" {
+		user.Avatar = avatarPath
+	} else {
+		fr := models.ForbiddenRequest{
+			Reason: "Bad avatar.",
+		}
+
+		payload, _ := fr.MarshalJSON()
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(rw, string(payload))
+
+		h.LG.Sugar.Infow("/users failed, bad avatar.",
+		"source", "api.go",
+		"who", "RegisterPOSTHandler",)
+
+		return
 	}
 
 	cookie, err := h.DB.SignUp(user)
@@ -276,7 +354,7 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	http.SetCookie(rw, misc.MakeSessionCookie(""))
 	rw.WriteHeader(http.StatusOK)
 
-	h.LG.Sugar.Infow("/session succedede",
+	h.LG.Sugar.Infow("/session succeded",
 		"source", "api.go",
 		"who", "LogoutDELETEHandler",)
 

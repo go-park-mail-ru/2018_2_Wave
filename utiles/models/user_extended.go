@@ -4,5 +4,5 @@ package models
 type UserExtended struct {
 	Username string `json:"username"`
 	Score    string `json:"score"`
-	Avatar   []byte `json:"avatar"`
+	Avatar   string `json:"avatar"`
 }

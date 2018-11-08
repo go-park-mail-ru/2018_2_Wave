@@ -41,12 +41,7 @@ func easyjsonD3c7afbdDecodeWaveUtilesModels(in *jlexer.Lexer, out *UserExtended)
 		case "score":
 			out.Score = string(in.String())
 		case "avatar":
-			if in.IsNull() {
-				in.Skip()
-				out.Avatar = nil
-			} else {
-				out.Avatar = in.Bytes()
-			}
+			out.Avatar = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -89,7 +84,7 @@ func easyjsonD3c7afbdEncodeWaveUtilesModels(out *jwriter.Writer, in UserExtended
 		} else {
 			out.RawString(prefix)
 		}
-		out.Base64Bytes(in.Avatar)
+		out.String(string(in.Avatar))
 	}
 	out.RawByte('}')
 }

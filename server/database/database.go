@@ -210,7 +210,9 @@ func (model *DatabaseModel) LogOut(cookie string) error {
 
 /****************************** user block ******************************/
 
-func (model *DatabaseModel) SignUp(credentials models.UserCredentials) (cookie string, err error) {
+func (model *DatabaseModel) SignUp(credentials models.UserEdit) (cookie string, err error) {
+	
+
 	if validateCredentials(credentials.Username) && validateCredentials(credentials.Password) {
 		if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 			model.LG.Sugar.Infow(
@@ -231,9 +233,9 @@ func (model *DatabaseModel) SignUp(credentials models.UserCredentials) (cookie s
 			hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
 
 			model.Database.MustExec(`
-				INSERT INTO userinfo(username,password)
-				VALUES($1, $2)
-			`, credentials.Username, hashedPsswd)
+				INSERT INTO userinfo(username,password,avatar)
+				VALUES($1, $2, $3)
+			`, credentials.Username, hashedPsswd, credentials.Avatar)
 
 			model.Database.MustExec(`
 				INSERT INTO session(uid, cookie)
@@ -307,7 +309,7 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 		}
 
 		model.LG.Sugar.Infow(
-			"getprofile succeded, scan error",
+			"getprofile succeded",
 			"source", "database.go",
 			"who", "GetProfile",
 		)
