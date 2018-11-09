@@ -374,8 +374,6 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
-	
-	fmt.Println(cookie)
 
 	if err := h.DB.LogOut(cookie); err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
