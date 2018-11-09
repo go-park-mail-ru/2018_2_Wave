@@ -187,14 +187,14 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
 	}
-/*
+
 	ok, avatarPath := h.uploadHandler(r)
 
 	if ok && avatarPath != "" {
 		editUser.Avatar = avatarPath
 	} else {
 		fr := models.ForbiddenRequest{
-			Reason: "Bad avatar.",
+			Reason: "Update didn't happend, bad avatar.",
 		}
 
 		payload, _ := fr.MarshalJSON()
@@ -207,7 +207,7 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-*/
+
 	isUpdated, err := h.DB.UpdateProfile(editUser, cookie)
 
 	if err != nil {
@@ -226,24 +226,21 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-
 	if !isUpdated {
 		fr := models.ForbiddenRequest{
-			Reason: "Incorrect password.",
+			Reason: "Nothing happened actually.",
 		}
 
 		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusForbidden)
+		rw.WriteHeader(http.StatusOK)
 		fmt.Fprintln(rw, string(payload))
 
-		h.LG.Sugar.Infow("/users/me failed, incorrect password",
+		h.LG.Sugar.Infow("/users/me succeded, nothing changed",
 		"source", "api.go",
 		"who", "EditMePUTHandler",)
 
 		return
 	}
-	*/
 
 	if isUpdated {
 		rw.WriteHeader(http.StatusOK)

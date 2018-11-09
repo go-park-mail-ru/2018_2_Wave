@@ -428,7 +428,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			changedP = false
 		}
 	}
-/*
+
 	if profile.Avatar != "/img/avatars/default" {
 		model.Database.MustExec(`
 			UPDATE userinfo
@@ -449,7 +449,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 
 		changedA = true
 	}
-*/
+
 	if changedU || changedP || changedA {
 		return true, nil
 	}
