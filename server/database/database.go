@@ -213,18 +213,22 @@ func (model *DatabaseModel) LogOut(cookie string) error {
 func (model *DatabaseModel) SignUp(credentials models.UserEdit) (cookie string, err error) {
 	if validateCredentials(credentials.Username) && validateCredentials(credentials.Password) {
 		if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
+			
 			model.LG.Sugar.Infow(
 				"signup failed, user already exists",
 				"source", "database.go",
 				"who", "SignUp",
 			)
+
 			return "", nil
 		} else if problem != nil {
+
 			model.LG.Sugar.Infow(
 				"signup succeded",
 				"source", "database.go",
 				"who", "SignUp",
 			)
+
 			return "", problem
 		} else if !isPresent {
 			cookie := misc.GenerateCookie()
@@ -424,8 +428,8 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			changedP = false
 		}
 	}
-
-	if len(profile.Avatar) != 0 {
+/*
+	if profile.Avatar != "/img/avatars/default" {
 		model.Database.MustExec(`
 			UPDATE userinfo
 			SET avatar=$1
@@ -445,7 +449,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 
 		changedA = true
 	}
-
+*/
 	if changedU || changedP || changedA {
 		return true, nil
 	}

@@ -28,7 +28,8 @@ type Handler struct {
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
     file, _, err := r.FormFile("avatar")
-    if err != nil {
+	
+	if err != nil {
 
 		h.LG.Sugar.Infow("upload failed, not able to read from FormFile, default avatar set",
 		"source", "api.go",
@@ -185,13 +186,38 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 	editUser := models.UserEdit{
 		Username: r.FormValue("newUsername"),
 		Password: r.FormValue("newPassword"),
-		//Avatar:   r.FormValue("newAvatar"),
 	}
+/*
+	ok, avatarPath := h.uploadHandler(r)
 
+	if ok && avatarPath != "" {
+		editUser.Avatar = avatarPath
+	} else {
+		fr := models.ForbiddenRequest{
+			Reason: "Bad avatar.",
+		}
+
+		payload, _ := fr.MarshalJSON()
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(rw, string(payload))
+
+		h.LG.Sugar.Infow("/users/me failed, bad avatar.",
+		"source", "api.go",
+		"who", "EditMePUTHandler",)
+
+		return
+	}
+*/
 	isUpdated, err := h.DB.UpdateProfile(editUser, cookie)
 
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
+		fr := models.ForbiddenRequest{
+			Reason: "Update didn't happend, something went wrong.",
+		}
+
+		payload, _ := fr.MarshalJSON()
+		rw.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me failed",
 		"source", "api.go",
@@ -199,6 +225,8 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	/*
 
 	if !isUpdated {
 		fr := models.ForbiddenRequest{
@@ -210,6 +238,17 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me failed, incorrect password",
+		"source", "api.go",
+		"who", "EditMePUTHandler",)
+
+		return
+	}
+	*/
+
+	if isUpdated {
+		rw.WriteHeader(http.StatusOK)
+
+		h.LG.Sugar.Infow("/users/me succeded, user proofile updated",
 		"source", "api.go",
 		"who", "EditMePUTHandler",)
 
