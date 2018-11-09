@@ -184,8 +184,8 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 
 	editUser := models.UserEdit{
-		Username: r.FormValue("newUsername"),
-		Password: r.FormValue("newPassword"),
+		Username: r.FormValue("username"),
+		Password: r.FormValue("password"),
 	}
 /*
 	ok, avatarPath := h.uploadHandler(r)
