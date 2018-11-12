@@ -20,7 +20,7 @@ func CORS(CC config.CORSConfiguration, curlog *lg.Logger) Middleware {
 			if originToSet == "" {
 				rw.WriteHeader(http.StatusForbidden)
 
-				curlog.Sugar.Errorw(
+				curlog.Sugar.Infow(
 					"CORS failed",
 					"source", "middleware.go",
 					"who", "CORS",
@@ -55,7 +55,7 @@ func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger) Middleware
 				rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
 				rw.WriteHeader(http.StatusForbidden)
 
-				curlog.Sugar.Errorw(
+				curlog.Sugar.Infow(
 					"preflight failed",
 					"source", "middleware.go",
 					"who", "OptionsPreflight",
@@ -95,7 +95,7 @@ func Auth(curlog *lg.Logger) Middleware {
 				rw.WriteHeader(http.StatusUnauthorized)
 				fmt.Fprintln(rw, string(payload))
 
-				curlog.Sugar.Errorw(
+				curlog.Sugar.Infow(
 					"auth check failed",
 					"source", "middleware.go",
 					"who", "Auth",
@@ -128,7 +128,7 @@ func WebSocketHeadersCheck(curlog *lg.Logger) Middleware {
 			}
 			rw.WriteHeader(http.StatusExpectationFailed)
 
-			curlog.Sugar.Errorw("websocket headers check failed",
+			curlog.Sugar.Infow("websocket headers check failed",
 				"source", "middleware.go",
 				"who", "WebSocketHeadersCheck")
 
