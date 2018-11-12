@@ -7,7 +7,7 @@ CREATE TABLE userinfo (
     username    TEXT            NOT NULL,
     password    VARCHAR(60)     NOT NULL,
     score       INT             DEFAULT 0,
-    avatar      TEXT            DEFAULT '/img/default.jpg'
+    avatar      TEXT            DEFAULT '/img/default'
 );
 
 CREATE TABLE session (
