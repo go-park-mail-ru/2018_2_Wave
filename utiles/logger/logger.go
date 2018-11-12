@@ -2,7 +2,6 @@ package logger
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 
 	"go.uber.org/zap"
@@ -12,13 +11,18 @@ type Logger struct {
 	Sugar *zap.SugaredLogger
 }
 
-const path = "./logs/wavelog"
+const (
+	path    = "./logs/"
+	logFile = "wavelog"
+)
 
 func logfileExists() bool {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		_, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND, 0777)
+		os.Mkdir(path, 0755)
+		_, err := os.OpenFile(path+logFile, os.O_CREATE|os.O_APPEND, 0777)
 		if err != nil {
-			panic(err)
+			//panic(err)
+			return false
 		}
 		return true
 	} else if !os.IsNotExist(err) {
@@ -30,8 +34,7 @@ func logfileExists() bool {
 
 func Construct() *Logger {
 	if !logfileExists() {
-		log.Println("Caution: logger output file missing, no logging utility set.")
-
+		//log.Println("Caution: logger output file missing, no logging utility set.")
 		return &Logger{}
 	}
 
@@ -52,13 +55,15 @@ func Construct() *Logger {
 	var sugarredLogger Logger
 
 	if err := json.Unmarshal(rawJSON, &cfg); err != nil {
-		panic(err)
+		//panic(err)
+		return &Logger{}
 	}
 
 	basicLogger, err := cfg.Build()
 	sugarredLogger.Sugar = basicLogger.Sugar()
 	if err != nil {
-		panic(err)
+		//panic(err)
+		return &Logger{}
 	}
 
 	return &sugarredLogger
