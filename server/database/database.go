@@ -2,9 +2,9 @@ package database
 
 import (
 	"Wave/utiles/config"
+	lg "Wave/utiles/logger"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
-	lg "Wave/utiles/logger"
 	"fmt"
 	"log"
 	"os"
@@ -18,13 +18,13 @@ import (
 type DatabaseModel struct {
 	DBconf   config.DatabaseConfiguration
 	Database *sqlx.DB
-	LG		 *lg.Logger
+	LG       *lg.Logger
 }
 
 func New(dbconf_ config.DatabaseConfiguration, lg_ *lg.Logger) *DatabaseModel {
 	postgr := &DatabaseModel{
 		DBconf: dbconf_,
-		LG: lg_,
+		LG:     lg_,
 	}
 
 	var err error
@@ -235,12 +235,12 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 		}
 	}
 	/*
-	if profile.Avatar != "" {
-		model.Database.MustExec("UPDATE userinfo SET avatar=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON userinfo.uid = session.uid WHERE cookie=$2);", profile.Avatar, cookie)
-		log.Println("update profile successful: avatar changed")
+		if profile.Avatar != "" {
+			model.Database.MustExec("UPDATE userinfo SET avatar=$1 WHERE userinfo.uid = (SELECT session.uid from session JOIN userinfo ON userinfo.uid = session.uid WHERE cookie=$2);", profile.Avatar, cookie)
+			log.Println("update profile successful: avatar changed")
 
-		changedA = true
-	}
+			changedA = true
+		}
 	*/
 	if changedU || changedP || changedA {
 		return true, nil
