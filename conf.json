@@ -3,10 +3,6 @@
         "host": "http://localhost",
         "port": ":9600"
     },
-    "database": {
-        "user": "waveapp",
-        "dbname": "wave"
-    },
     "cors": {
         "origins": [
             "*",
