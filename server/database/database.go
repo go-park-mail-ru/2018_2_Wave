@@ -1,11 +1,9 @@
 package database
 
 import (
-	"Wave/utiles/config"
 	lg "Wave/utiles/logger"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -14,25 +12,22 @@ import (
 )
 
 type DatabaseModel struct {
-	DBconf   config.DatabaseConfiguration
 	Database *sqlx.DB
 	LG       *lg.Logger
 }
 
-func New(dbconf_ config.DatabaseConfiguration, lg_ *lg.Logger) *DatabaseModel {
+func New(lg_ *lg.Logger) *DatabaseModel {
 	postgr := &DatabaseModel{
-		DBconf: dbconf_,
 		LG:     lg_,
 	}
 
 	var err error
 
-	postgr.Database, err = sqlx.Connect("postgres", fmt.Sprintf(
-		"user=%s password=%s dbname='%s' sslmode=disable",
-		postgr.DBconf.User,
-		os.Getenv("WAVE_DB_PASSWORD"),
-		postgr.DBconf.DBName),
-	)
+	dbuser := os.Getenv("WAVE_DB_USER")
+	dbpassword := os.Getenv("WAVE_DB_PASSWORD")
+	dbname := os.Getenv("WAVE_DB_NAME")
+	
+	postgr.Database, err = sqlx.Connect("postgres", "user=" + dbuser + " password=" + dbpassword + " dbname='" + dbname + "' " + "sslmode=disable")
 
 	if err != nil {
 		postgr.LG.Sugar.Panicw(
@@ -89,27 +84,11 @@ func (model *DatabaseModel) present(tableName string, colName string, target str
 		return false, err
 	}
 
-	/*
-		model.LG.Sugar.Infow("function succeded",
-								   "source", "database.go",
-								   "who", "present",)
-	*/
-
 	return fl, nil
 }
 
 func validateCredentials(target string) bool {
-	/*
-		// http://regexlib.com/REDetails.aspx?regexp_id=2298
-		reg, _ := regexp.Compile("^([a-zA-Z])[a-zA-Z_-]*[\\w_-]*[\\S]$|^([a-zA-Z])[0-9_-]*[\\S]$|^[a-zA-Z]*[\\S]$")
 
-		if reg.MatchString(target) {
-			return true
-		}
-		log.Println("bad username or/and password")
-
-		return false
-	*/
 	return true
 }
 

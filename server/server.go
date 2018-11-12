@@ -14,16 +14,16 @@ import (
 
 func Start(path string) {
 	conf := config.Configure(path)
-	r := mux.NewRouter()
-
 	curlog := lg.Construct()
-	db := database.New(conf.DC, curlog)
+
+	db := database.New(curlog)
 
 	API := &api.Handler{
 		DB: *db,
 		LG: curlog,
 	}
 
+	r := mux.NewRouter()
 	r.HandleFunc("/", mw.Chain(API.SlashHandler)).Methods("GET")
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC, curlog))).Methods("POST")
 	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.Auth(curlog), mw.CORS(conf.CC, curlog))).Methods("GET")
@@ -38,7 +38,5 @@ func Start(path string) {
 
 	r.HandleFunc("/conn/lobby", mw.Chain(API.LobbyHandler, mw.WebSocketHeadersCheck(curlog), mw.CORS(conf.CC, curlog))).Methods("GET")
  
-
-	
 	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }
