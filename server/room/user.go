@@ -1,6 +1,8 @@
 package room
 
 import (
+	"io"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -54,7 +56,7 @@ func (u *User) Listen() error {
 
 		// read a message
 		err := u.Conn.ReadJSON(m)
-		if websocket.IsUnexpectedCloseError(err) {
+		if err == io.ErrClosedPipe {
 			u.removeFromAllRooms()
 			if u.bClosed {
 				return nil

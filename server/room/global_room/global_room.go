@@ -48,7 +48,7 @@ func (gr *GlobalRoom) GetNextRoomID() room.RoomID {
 
 // ----------------| handlers
 
-func (gr *GlobalRoom) OnGetLobbyList(u room.IUser, im room.IInMessage) {
+func (gr *GlobalRoom) OnGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type LobbyListItem struct {
 		ID       room.RoomID
 		RoomType room.RoomType
@@ -60,48 +60,62 @@ func (gr *GlobalRoom) OnGetLobbyList(u room.IUser, im room.IInMessage) {
 			RoomType: r.GetType(),
 		})
 	}
-	gr.SendMessageTo(u, room.StatusOK, data)
+
+	return room.RouteResponce{
+		Status: room.StatusOK,
+	}.WithStruct(data)
 }
 
-func (gr *GlobalRoom) OnLobbyCreate(u room.IUser, im room.IInMessage) {
+func (gr *GlobalRoom) OnLobbyCreate(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type CreateLobby struct {
 		RoomType room.RoomType
 	}
 	cmd := &CreateLobby{}
 	if im.ToStruct(cmd) != nil {
-		gr.SendMessageTo(u, room.StatusError, "Wrong input")
-		return
+		return room.RouteResponce{
+			Status: room.StatusError,
+		}.WithStruct("Wrong input")
 	}
 
 	if factory, ok := type2Factory[cmd.RoomType]; !ok {
-		gr.SendMessageTo(u, room.StatusError, "Unknown room type")
-		return
+		return room.RouteResponce{
+			Status: room.StatusError,
+		}.WithStruct("Unknown room type")
 	} else {
 		r := factory(gr.GetNextRoomID(), gr.Step)
 		if r == nil {
-			gr.SendMessageTo(u, room.StatusError, "Internal error")
-			return
+			return room.RouteResponce{
+				Status: room.StatusError,
+			}.WithStruct("Internal error")
 		}
 		go r.Run()
 		u.AddToRoom(r)
+
+		return room.RouteResponce{
+			Status: room.StatusOK,
+		}.WithStruct(r.GetID())
 	}
 }
 
-func (gr *GlobalRoom) OnLobbyDelete(u room.IUser, im room.IInMessage) {
+func (gr *GlobalRoom) OnLobbyDelete(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type DeleteLobby struct {
 		RoomID room.RoomID
 	}
 	cmd := DeleteLobby{}
 	if im.ToStruct(cmd) != nil {
-		gr.SendMessageTo(u, room.StatusError, "Wrong input")
-		return
+		return room.RouteResponce{
+			Status: room.StatusError,
+		}.WithStruct("Wrong input")
 	}
 
-	if r, ok := gr.internalRooms[cmd.RoomID]; !ok {
-		gr.SendMessageTo(u, room.StatusError, "Wrong id")
-		return
-	} else {
+	if r, ok := gr.internalRooms[cmd.RoomID]; ok {
 		r.Stop()
 		delete(gr.internalRooms, cmd.RoomID)
+		return &room.RouteResponce{
+			Status: room.StatusOK,
+		}
 	}
+	return room.RouteResponce{
+		Status: room.StatusError,
+	}.WithStruct("Wrong id")
 }

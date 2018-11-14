@@ -51,3 +51,14 @@ func (om *RouteResponce) FromStruct(s interface{}) (err error) {
 	om.Payload, err = json.Marshal(s)
 	return err
 }
+
+// for usability
+func (om RouteResponce) WithStruct(s interface{}) *RouteResponce {
+	if err := om.FromStruct(s); err != nil {
+		panic(err)
+	}
+	return &RouteResponce{
+		Status:  om.Status,
+		Payload: om.Payload,
+	}
+}
