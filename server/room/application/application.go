@@ -1,17 +1,18 @@
-package globalRoom
+package application
 
 import (
 	"Wave/server/room"
 	"strconv"
+	"sync"
 	"time"
 )
 
-// GlobalRoom - main service room
+// Application - main service room
 /* - creates and store other rooms
  * - contains ALL online users
  * - provides all service functions
  */
-type GlobalRoom struct {
+type Application struct {
 	*room.Room // the room super
 
 	/** internal rooms:
@@ -22,39 +23,46 @@ type GlobalRoom struct {
 
 	lastRoomID int64
 	lastUserID int64
+	idsMutex   sync.Mutex
 }
 
-func New(id room.RoomID, step time.Duration) *GlobalRoom {
-	gr := &GlobalRoom{
+func New(id room.RoomID, step time.Duration) *Application {
+	a := &Application{
 		Room: room.NewRoom(id, step),
 	}
-	gr.Roures["lobby_list"] = gr.OnGetLobbyList
-	gr.Roures["lobby_create"] = gr.OnLobbyCreate
-	gr.Roures["lobby_delete"] = gr.OnLobbyDelete
-	return gr
+	a.Roures["lobby_list"] = a.OnGetLobbyList
+	a.Roures["lobby_create"] = a.OnLobbyCreate
+	a.Roures["lobby_delete"] = a.OnLobbyDelete
+	return a
 }
 
 // ----------------| methods
 
-func (gr *GlobalRoom) GetNextUserID() room.UserID {
-	gr.lastUserID++
-	return room.UserID(strconv.FormatInt(gr.lastUserID, 36))
+func (a *Application) GetNextUserID() room.UserID {
+	a.idsMutex.Lock()
+	defer a.idsMutex.Unlock()
+
+	a.lastUserID++
+	return room.UserID(strconv.FormatInt(a.lastUserID, 36))
 }
 
-func (gr *GlobalRoom) GetNextRoomID() room.RoomID {
-	gr.lastRoomID++
-	return room.RoomID(strconv.FormatInt(gr.lastRoomID, 36))
+func (a *Application) GetNextRoomID() room.RoomID {
+	a.idsMutex.Lock()
+	defer a.idsMutex.Unlock()
+
+	a.lastRoomID++
+	return room.RoomID(strconv.FormatInt(a.lastRoomID, 36))
 }
 
 // ----------------| handlers
 
-func (gr *GlobalRoom) OnGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *Application) OnGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type LobbyListItem struct {
 		ID       room.RoomID
 		RoomType room.RoomType
 	}
 	data := []LobbyListItem{}
-	for _, r := range gr.internalRooms {
+	for _, r := range a.internalRooms {
 		data = append(data, LobbyListItem{
 			ID:       r.GetID(),
 			RoomType: r.GetType(),
@@ -66,7 +74,7 @@ func (gr *GlobalRoom) OnGetLobbyList(u room.IUser, im room.IInMessage) room.IRou
 	}.WithStruct(data)
 }
 
-func (gr *GlobalRoom) OnLobbyCreate(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *Application) OnLobbyCreate(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type CreateLobby struct {
 		RoomType room.RoomType
 	}
@@ -82,7 +90,7 @@ func (gr *GlobalRoom) OnLobbyCreate(u room.IUser, im room.IInMessage) room.IRout
 			Status: room.StatusError,
 		}.WithStruct("Unknown room type")
 	} else {
-		r := factory(gr.GetNextRoomID(), gr.Step)
+		r := factory(a.GetNextRoomID(), a.Step)
 		if r == nil {
 			return room.RouteResponce{
 				Status: room.StatusError,
@@ -97,7 +105,7 @@ func (gr *GlobalRoom) OnLobbyCreate(u room.IUser, im room.IInMessage) room.IRout
 	}
 }
 
-func (gr *GlobalRoom) OnLobbyDelete(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *Application) OnLobbyDelete(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type DeleteLobby struct {
 		RoomID room.RoomID
 	}
@@ -108,9 +116,9 @@ func (gr *GlobalRoom) OnLobbyDelete(u room.IUser, im room.IInMessage) room.IRout
 		}.WithStruct("Wrong input")
 	}
 
-	if r, ok := gr.internalRooms[cmd.RoomID]; ok {
+	if r, ok := a.internalRooms[cmd.RoomID]; ok {
 		r.Stop()
-		delete(gr.internalRooms, cmd.RoomID)
+		delete(a.internalRooms, cmd.RoomID)
 		return &room.RouteResponce{
 			Status: room.StatusOK,
 		}

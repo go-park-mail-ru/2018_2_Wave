@@ -32,7 +32,7 @@ type CORSConfiguration struct {
 	Methods     []string `json:"methods"`
 }
 
-func Configure(path string) Configuration {
+func New(path string) Configuration {
 	config := Configuration{}
 	data, err := ioutil.ReadFile(path)
 

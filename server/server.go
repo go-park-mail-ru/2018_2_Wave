@@ -2,9 +2,9 @@ package server
 
 import (
 	"Wave/server/api"
-	"Wave/server/database"
+	ps "Wave/server/database"
 	mw "Wave/server/middleware"
-	"Wave/utiles/config"
+	cf "Wave/utiles/config"
 	lg "Wave/utiles/logger"
 	"net/http"
 
@@ -12,17 +12,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Start(path string) {
-	conf := config.Configure(path)
-	r := mux.NewRouter()
-
-	curlog := lg.Construct()
-	db := database.New(conf.DC, curlog)
-
-	API := &api.Handler{
-		DB: *db,
-	}
-
+// Start serving
+func Start(confPath string) {
+	var (
+		curlog = lg.New()
+		conf   = cf.New(confPath)
+		db     = ps.New(conf.DC, curlog)
+		API    = api.New(db)
+		r      = mux.NewRouter()
+	)
 	//r.HandleFunc("/", mw.Chain(API.SlashHandler, mw.Auth(), mw.CORS(conf.CC))).Methods("GET")
 	r.HandleFunc("/", mw.Chain(API.SlashHandler)).Methods("GET")
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC, curlog))).Methods("POST")
@@ -36,7 +34,7 @@ func Start(path string) {
 	//r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.OptionsPreflight(conf.CC, curlog))).Methods("OPTIONS")
 	r.HandleFunc("/session", mw.Chain(API.LogoutOPTHandler, mw.OptionsPreflight(conf.CC, curlog))).Methods("OPTIONS")
 
-	r.HandleFunc("/conn/lobby", mw.Chain(API.LobbyHandler, mw.WebSocketHeadersCheck(curlog), mw.CORS(conf.CC, curlog))).Methods("GET")
+	r.HandleFunc("/conn/ws", mw.Chain(API.WSHandler, mw.WebSocketHeadersCheck(curlog), mw.CORS(conf.CC, curlog))).Methods("GET")
 
 	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }

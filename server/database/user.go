@@ -1,136 +1,15 @@
 package database
 
 import (
-	"Wave/utiles/config"
-	lg "Wave/utiles/logger"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
-	"fmt"
 	"log"
-	"os"
-	"strconv"
-	"time"
-
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 )
-
-type DatabaseModel struct {
-	DBconf   config.DatabaseConfiguration
-	Database *sqlx.DB
-	LG       *lg.Logger
-}
-
-func New(dbconf_ config.DatabaseConfiguration, lg_ *lg.Logger) *DatabaseModel {
-	postgr := &DatabaseModel{
-		DBconf: dbconf_,
-		LG:     lg_,
-	}
-
-	var err error
-	postgr.Database, err = sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname='%s' sslmode=disable", postgr.DBconf.User, os.Getenv("WAVE_DB_PASSWORD"), postgr.DBconf.DBName))
-	if err != nil {
-		//log.Fatalln(err)
-		panic(err)
-	}
-	postgr.LG.Sugar.Infow("happened form new")
-	log.Println("postgres connection established")
-
-	return postgr
-}
 
 const (
 	UserInfoTable = "userinfo"
 	UsernameCol   = "username"
-
-	SessionTable = "session"
-	CookieCol    = "cookie"
 )
-
-func (model *DatabaseModel) present(tableName string, colName string, target string) (fl bool, err error) {
-	var exists string
-	row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "');")
-	err = row.Scan(&exists)
-
-	if err != nil {
-		//log.Fatal(err)
-		panic(err)
-		return false, err
-	}
-
-	fl, err = strconv.ParseBool(exists)
-	if err != nil {
-		//log.Fatal(err)
-		panic(err)
-		return false, err
-	}
-
-	log.Println(fl)
-	return fl, nil
-}
-
-func validateCredentials(target string) bool {
-	/*
-		// http://regexlib.com/REDetails.aspx?regexp_id=2298
-		reg, _ := regexp.Compile("^([a-zA-Z])[a-zA-Z_-]*[\\w_-]*[\\S]$|^([a-zA-Z])[0-9_-]*[\\S]$|^[a-zA-Z]*[\\S]$")
-
-		if reg.MatchString(target) {
-			return true
-		}
-		log.Println("bad username or/and password")
-
-		return false
-	*/
-	return true
-}
-
-/****************************** session block ******************************/
-
-func (model *DatabaseModel) Logtest() {
-	model.LG.Sugar.Infow("time", time.Now())
-}
-
-func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
-	if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
-		var psswd string
-		row := model.Database.QueryRowx("SELECT password FROM userinfo WHERE username=$1", credentials.Username)
-		err := row.Scan(&psswd)
-
-		if err != nil {
-			//log.Fatal(err)
-			panic(err)
-			return "", err
-		}
-
-		if misc.PasswordsMatched(psswd, credentials.Password) {
-			cookie := misc.GenerateCookie()
-			model.Database.MustExec("INSERT INTO session(uid, cookie) VALUES((SELECT uid FROM userinfo WHERE username=$1), $2);", credentials.Username, cookie)
-
-			log.Println("login successful: cookie set")
-
-			return cookie, nil
-		} else {
-			log.Println("login failed: wrong password")
-
-			return "", nil
-		}
-	} else {
-		//log.Fatal(problem)
-		panic(problem)
-	}
-
-	return "", nil
-}
-
-func (model *DatabaseModel) LogOut(cookie string) error {
-	log.Println(cookie)
-	model.Database.QueryRowx("DELETE FROM session WHERE cookie=$1;", cookie)
-	log.Println("logout successful")
-
-	return nil
-}
-
-/****************************** user block ******************************/
 
 func (model *DatabaseModel) SignUp(credentials models.UserCredentials) (cookie string, err error) {
 	log.Println(credentials.Username)

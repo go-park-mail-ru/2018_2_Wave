@@ -2,8 +2,8 @@ package logger
 
 import (
 	"encoding/json"
-	"log"
 	"os"
+	"path"
 
 	"go.uber.org/zap"
 )
@@ -12,54 +12,49 @@ type Logger struct {
 	Sugar *zap.SugaredLogger
 }
 
-const path = "./logs/wavelog"
+var (
+	dir     = "logs"
+	log     = "wavelog.log"
+	logFile = path.Join(dir, log)
+)
 
-func logfileExists() bool {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		_, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND, 0777)
+// New logger
+func New() *Logger {
+
+	if _, err := os.Stat(logFile); err != nil {
+		println(" -- log file: " + logFile)
+
+		os.Mkdir(dir, 0755)
+		file, err := os.Create(logFile)
 		if err != nil {
 			panic(err)
 		}
-		return true
-	} else if !os.IsNotExist(err) {
-		return true
-	}
-
-	return false
-}
-
-func Construct() *Logger {
-	if !logfileExists() {
-		log.Println("Caution: logger output file missing, no logging utility set.")
-
-		return &Logger{}
+		file.Close()
 	}
 
 	rawJSON := []byte(`{
-	"level": "debug",
-	"encoding": "json",
-	"outputPaths": ["stdout", "./logs/wavelog"],
-	"errorOutputPaths": ["stderr"],
-	"encoderConfig": {
-	  "messageKey": "message",
-	  "levelKey": "level",
-	  "levelEncoder": "lowercase"
-	}
-  }`)
+		"level": "debug",
+		"encoding": "json",
+		"outputPaths": ["stdout", "` + logFile + `"],
+		"errorOutputPaths": ["stderr"],
+		"encoderConfig": {
+			"messageKey": "message",
+			"levelKey": "level",
+			"levelEncoder": "lowercase"
+		}
+	}`)
 
-	var cfg zap.Config
-	var err error
-	var sugarredLogger Logger
-
-	if err := json.Unmarshal(rawJSON, &cfg); err != nil {
+	cfg := &zap.Config{}
+	if err := json.Unmarshal(rawJSON, cfg); err != nil {
 		panic(err)
 	}
 
 	basicLogger, err := cfg.Build()
-	sugarredLogger.Sugar = basicLogger.Sugar()
 	if err != nil {
 		panic(err)
 	}
 
-	return &sugarredLogger
+	return &Logger{
+		Sugar: basicLogger.Sugar(),
+	}
 }

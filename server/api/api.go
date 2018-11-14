@@ -1,33 +1,22 @@
 package api
 
 import (
-	psql "Wave/server/database"
 	//lg "Wave/utiles/logger"
-	"Wave/server/room"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
 	"fmt"
 	"log"
 	"net/http"
 	"reflect"
-	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 
 	_ "github.com/lib/pq"
 )
 
-type Handler struct {
-	DB psql.DatabaseModel
-	//LG *lg.Logger
-}
-
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
-
 	h.DB.Logtest()
 	rw.WriteHeader(http.StatusOK)
-
 	return
 }
 
@@ -228,35 +217,4 @@ func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
-}
-
-/************************* websocket block ************************************/
-
-var globalRoom = makeGlobalRoom()
-
-func makeGlobalRoom() room.IRoom {
-	globalRoom := room.NewRoom("test", 30*time.Millisecond)
-	go globalRoom.Run()
-	return globalRoom
-}
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
-	ws, err := upgrader.Upgrade(rw, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	go func() { // How to take a player ID????
-		user := room.NewUser("testID", ws)
-		user.AddToRoom(globalRoom)
-		user.Listen()
-	}()
 }
