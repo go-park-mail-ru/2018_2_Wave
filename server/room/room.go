@@ -2,55 +2,52 @@ package room
 
 import "time"
 
-type Command struct {
-	IOutMessage
-	Scope string
-}
+type Route func(IUser, IInMessage) IRouteResponce
 
 // Room - default IRoom
-// 	- Chat
+// - Chat
 type Room struct {
-	ID     RoomID                      // room ID
-	Ticker *time.Ticker                // room tick
-	Roures map[string]func(IInMessage) // signal -> handler
-	Users  map[UserID]IUser            // room users
+	ID     RoomID           // room ID
+	Type   RoomType         // room type
+	Ticker *time.Ticker     // room tick
+	Roures map[string]Route // signal -> handler
+	Users  map[UserID]IUser // room users
 
 	OnTick        func(time.Duration)
 	OnUserAdded   func(IUser)
 	OnUserRemoved func(IUser)
 
-	Broadcast       chan Command // broadcast message to it's scope
+	broadcast       chan IRouteResponce
 	CancelRoom      chan interface{}
 	CancelBroadcast chan interface{}
 
-	step time.Duration
+	Step time.Duration
 }
 
 func NewRoom(id RoomID, step time.Duration) *Room {
 	r := &Room{
 		ID:              id,
 		Ticker:          time.NewTicker(step),
-		Roures:          map[string]func(IInMessage){},
+		Roures:          map[string]Route{},
 		Users:           map[UserID]IUser{},
-		Broadcast:       make(chan Command, 150),
+		broadcast:       make(chan IRouteResponce, 150),
 		CancelRoom:      make(chan interface{}, 1),
 		CancelBroadcast: make(chan interface{}, 1),
-		step:            step,
+		Step:            step,
 	}
 	return r
 }
 
-func (r *Room) GetID() RoomID {
-	return r.ID
-}
+func (r *Room) GetID() RoomID     { return r.ID }
+func (r *Room) GetType() RoomType { return r.Type }
 
 func (r *Room) Run() error {
 	go r.runBroadcast()
-	for { // infinity cycle
+	for {
 		select {
 		case <-r.Ticker.C:
 			if r.OnTick != nil {
-				r.OnTick(r.step)
+				r.OnTick(r.Step)
 			}
 		case <-r.CancelRoom:
 			return nil
@@ -66,11 +63,11 @@ func (r *Room) Stop() error {
 
 // must be runned in a new goroutine
 func (r *Room) runBroadcast() {
-	for { // infinity cycle
+	for {
 		select {
-		case m := <-r.Broadcast:
-			for _, p := range r.Users {
-				p.Send(m)
+		case rs := <-r.broadcast:
+			for _, u := range r.Users {
+				r.SendMessageTo(u, rs)
 			}
 		case <-r.CancelBroadcast:
 			return
@@ -106,13 +103,40 @@ func (r *Room) RemoveUser(usr IUser) error {
 	return ErrorNotExists
 }
 
-func (r *Room) SendMessage(im IInMessage) error {
-	if im == nil {
+func (r *Room) ApplyMessage(u IUser, im IInMessage) error {
+	if im == nil || u == nil {
 		return ErrorNil
 	}
+	if _, ok := r.Users[u.GetID()]; !ok {
+		return ErrorForbiden
+	}
 	if route, ok := r.Roures[im.GetSignal()]; ok {
-		route(im)
+		if om := route(u, im); om != nil {
+			return r.SendMessageTo(u, om)
+		}
 		return nil
 	}
 	return ErrorUnknownSignal
+}
+
+func (r *Room) SendMessageTo(u IUser, rs IRouteResponce) error {
+	if u == nil || rs == nil {
+		return ErrorNil
+	}
+	if _, ok := r.Users[u.GetID()]; !ok {
+		return ErrorForbiden
+	}
+	return u.Consume(&OutMessage{
+		RoomID:  r.GetID(),
+		Status:  rs.GetStatus(),
+		Payload: rs.GetPayload(),
+	})
+}
+
+func (r *Room) Broadcast(rs IRouteResponce) error {
+	if rs == nil {
+		return ErrorNil
+	}
+	r.broadcast <- rs
+	return nil
 }

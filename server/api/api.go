@@ -232,12 +232,12 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 /************************* websocket block ************************************/
 
-var lobby = makeLobby()
+var globalRoom = makeGlobalRoom()
 
-func makeLobby() *room.Room {
-	lobby := room.New("test")
-	go lobby.Run()
-	return lobby
+func makeGlobalRoom() room.IRoom {
+	globalRoom := room.NewRoom("test", 30*time.Millisecond)
+	go globalRoom.Run()
+	return globalRoom
 }
 
 var upgrader = websocket.Upgrader{
@@ -254,15 +254,9 @@ func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	go func() {
-		player := &room.Player{
-			ID:   "hhh",
-			Room: lobby,
-			Conn: ws,
-			Data: room.PlayerData{
-				Username: "test",
-			},
-		}
-		player.Listen()
+	go func() { // How to take a player ID????
+		user := room.NewUser("testID", ws)
+		user.AddToRoom(globalRoom)
+		user.Listen()
 	}()
 }

@@ -5,6 +5,7 @@
 # golang
 vendor
 debug
+debug.test
 
 # service
 nginx/

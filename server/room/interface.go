@@ -1,5 +1,7 @@
 package room
 
+import "time"
+
 /** How does it works?
  *	. ## begining of a WS handler
  *  . In WS handler we crate an instance if IUser interface
@@ -11,17 +13,27 @@ package room
 
 type RoomID string
 type UserID string
+type RoomType string
+type RoomFactory func(RoomID, time.Duration) IRoom
 
 // IInMessage - message from a user
 type IInMessage interface {
 	GetRoomID() RoomID          // target room id
 	GetSignal() string          // message method
+	GetPayload() []byte         // message payload
 	ToStruct(interface{}) error // unmurshal data to struct
 }
 
 // IOutMessage - message to a client
 type IOutMessage interface {
 	GetRoomID() RoomID            // message room id
+	GetPayload() []byte           // message payload
+	GetStatus() string            // message status
+	FromStruct(interface{}) error // marshal from struct
+}
+
+// IRouteResponce - responce from route
+type IRouteResponce interface {
 	GetPayload() []byte           // message payload
 	GetStatus() string            // message status
 	FromStruct(interface{}) error // marshal from struct
@@ -34,15 +46,16 @@ type IUser interface {
 	RemoveFromRoom(IRoom) error // order to romve self from the room
 	Listen() error              // Listen to messages
 	StopListening() error       // Stop listening
-	Send(IOutMessage) error     // Send message to user
+	Consume(IOutMessage) error  // Send message to user
 }
 
 // IRoom - abstruct room inteface
 type IRoom interface {
-	GetID() RoomID                // room id
-	Run() error                   // run thr room
-	Stop() error                  // stop the room
-	AddUser(IUser) error          // add the user to the room
-	RemoveUser(IUser) error       // remove  the user from the room
-	SendMessage(IInMessage) error // send message to the room
+	GetID() RoomID                        // room id
+	GetType() RoomType                    // room type
+	Run() error                           // run thr room
+	Stop() error                          // stop the room
+	AddUser(IUser) error                  // add the user to the room
+	RemoveUser(IUser) error               // remove  the user from the room
+	ApplyMessage(IUser, IInMessage) error // send message to the room
 }

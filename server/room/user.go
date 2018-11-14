@@ -49,9 +49,10 @@ func (u *User) RemoveFromRoom(r IRoom) error {
 }
 
 func (u *User) Listen() error {
-	for {
+	for { // stops when connection closes
 		m := &InMessage{}
 
+		// read a message
 		err := u.Conn.ReadJSON(m)
 		if websocket.IsUnexpectedCloseError(err) {
 			u.removeFromAllRooms()
@@ -61,7 +62,7 @@ func (u *User) Listen() error {
 			return ErrorConnectionClosed
 		}
 		if err != nil {
-			u.Send(&OutMessage{
+			u.Consume(&OutMessage{
 				RoomID:  m.GetRoomID(),
 				Status:  StatusError,
 				Payload: []byte("Wrong message"),
@@ -69,10 +70,11 @@ func (u *User) Listen() error {
 			continue
 		}
 
+		// apply the message to a room
 		if r, ok := u.Rooms[m.GetRoomID()]; ok {
-			r.SendMessage(m)
+			r.ApplyMessage(u, m)
 		} else {
-			u.Send(&OutMessage{
+			u.Consume(&OutMessage{
 				RoomID:  m.GetRoomID(),
 				Status:  StatusError,
 				Payload: []byte("Unknown room:" + m.GetRoomID()),
@@ -88,7 +90,7 @@ func (u *User) StopListening() error {
 	return nil
 }
 
-func (u *User) Send(m IOutMessage) error {
+func (u *User) Consume(m IOutMessage) error {
 	if m == nil {
 		return ErrorNil
 	}
