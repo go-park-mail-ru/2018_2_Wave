@@ -35,7 +35,7 @@ GET /users/leaders/... url encoded
 POST /session {username, password}
 403 FORBIDDEN (cors)
 500 INTERTAL SERVER ERROR
-401 UNAUTHORIZED {"reason":"Incorrect Password."}
+401 UNAUTHORIZED {"reason":"Incorrect password/username."}
 
 DELETE /session
 404 FORBIDDEN (cors)

@@ -245,7 +245,7 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.LG.Sugar.Infow("/users/me succeded, user proofile updated",
+	h.LG.Sugar.Infow("/users/me succeded, user profile updated",
 	"source", "api.go",
 	"who", "EditMePUTHandler",)
 
@@ -337,14 +337,14 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	if cookie == "" {
 
 		fr := models.ForbiddenRequest{
-			Reason: "Incorrect password.",
+			Reason: "Incorrect password/username.",
 		}
 
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(rw, string(payload))
 
-		h.LG.Sugar.Infow("/session failed, incorrect password",
+		h.LG.Sugar.Infow("/session failed, incorrect password/username",
 		"source", "api.go",
 		"who", "LoginPOSTHandler",)
 
