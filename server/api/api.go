@@ -28,14 +28,15 @@ type Handler struct {
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
     file, _, err := r.FormFile("avatar")
-	
+	defer file.Close()
+
 	if err != nil {
 
 		h.LG.Sugar.Infow("upload failed, not able to read from FormFile, default avatar set",
 		"source", "api.go",
 		"who", "uploadHandler",)
 
-        return true, "/img/avatars/default"
+        return true, "" // setting default avatar
 	}
 
 	prefix := "/img/avatars/"
@@ -46,15 +47,17 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	log.Println(fileName)
 	path = prefix + fileName
 
-    out, err := os.Create(createPath)
+	out, err := os.Create(createPath)
+	defer out.Close()
+
     if err != nil {
 	   
 		h.LG.Sugar.Infow("upload failed, file couldn't be created",
 		"source", "api.go",
 		"who", "uploadHandler",)
 
-		file.Close()
-		out.Close()
+		//file.Close()
+		//out.Close()
 
         return false, ""
     }
@@ -66,8 +69,8 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 		"source", "api.go",
 		"who", "uploadHandler",)
 
-		file.Close()
-		out.Close()
+		//file.Close()
+		//out.Close()
 
 		return false, ""
     }
@@ -76,8 +79,8 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 		"source", "api.go",
 		"who", "uploadHandler",)
 
-	file.Close()
-	out.Close()
+	//file.Close()
+	//out.Close()
 
 	return true, path
 }
@@ -94,11 +97,11 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		Password: r.FormValue("password"),
 	}
 
-	ok, avatarPath := h.uploadHandler(r)
+	isCreated, avatarPath := h.uploadHandler(r)
 
-	if ok && avatarPath != "" {
+	if isCreated && avatarPath != "" {
 		user.Avatar = avatarPath
-	} else {
+	} else if !isCreated {
 		fr := models.ForbiddenRequest{
 			Reason: "Bad avatar.",
 		}
@@ -133,7 +136,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		}
 
 		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusUnauthorized)
+		rw.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users failed, username already in use.",
@@ -145,7 +148,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	sessionCookie := misc.MakeSessionCookie(cookie)
 	http.SetCookie(rw, sessionCookie)
-	rw.WriteHeader(http.StatusOK)
+	rw.WriteHeader(http.StatusCreated)
 
 	h.LG.Sugar.Infow("/users succeded",
 		"source", "api.go",
@@ -183,16 +186,16 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 
-	editUser := models.UserEdit{
+	user := models.UserEdit{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
 	}
 
-	ok, avatarPath := h.uploadHandler(r)
+	isCreated, avatarPath := h.uploadHandler(r)
 
-	if ok && avatarPath != "" {
-		editUser.Avatar = avatarPath
-	} else {
+	if isCreated && avatarPath != "" {
+		user.Avatar = avatarPath
+	} else if !isCreated {
 		fr := models.ForbiddenRequest{
 			Reason: "Update didn't happend, bad avatar.",
 		}
@@ -208,7 +211,7 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isUpdated, err := h.DB.UpdateProfile(editUser, cookie)
+	isUpdated, err := h.DB.UpdateProfile(user, cookie)
 
 	if err != nil {
 		fr := models.ForbiddenRequest{
@@ -242,15 +245,9 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isUpdated {
-		rw.WriteHeader(http.StatusOK)
-
-		h.LG.Sugar.Infow("/users/me succeded, user proofile updated",
-		"source", "api.go",
-		"who", "EditMePUTHandler",)
-
-		return
-	}
+	h.LG.Sugar.Infow("/users/me succeded, user proofile updated",
+	"source", "api.go",
+	"who", "EditMePUTHandler",)
 
 	rw.WriteHeader(http.StatusOK)
 

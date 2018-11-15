@@ -213,10 +213,17 @@ func (model *DatabaseModel) SignUp(credentials models.UserEdit) (cookie string, 
 			cookie := misc.GenerateCookie()
 			hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
 
-			model.Database.MustExec(`
-				INSERT INTO userinfo(username,password,avatar)
-				VALUES($1, $2, $3)
-			`, credentials.Username, hashedPsswd, credentials.Avatar)
+			if credentials.Avatar != "" {
+				model.Database.MustExec(`
+					INSERT INTO userinfo(username,password,avatar)
+					VALUES($1, $2, $3)
+				`, credentials.Username, hashedPsswd, credentials.Avatar)
+			} else {
+				model.Database.MustExec(`
+					INSERT INTO userinfo(username,password)
+					VALUES($1, $2)
+				`, credentials.Username, hashedPsswd)
+			}
 
 			model.Database.MustExec(`
 				INSERT INTO session(uid, cookie)
@@ -362,6 +369,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 					"source", "database.go",
 					"who", "UpdateProfile",
 				)
+
 				changedU = false
 			}
 		}
@@ -408,7 +416,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 		}
 	}
 
-	if profile.Avatar != "/img/avatars/default" {
+	if profile.Avatar != "" {
 		model.Database.MustExec(`
 			UPDATE userinfo
 			SET avatar=$1
