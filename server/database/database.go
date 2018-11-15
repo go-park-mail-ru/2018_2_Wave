@@ -465,6 +465,7 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 		FROM userinfo
 		ORDER BY score DESC LIMIT $1 OFFSET $2;
 	`, limit, offset)
+	defer rows.Close()
 
 	if err != nil {
 		model.LG.Sugar.Infow(

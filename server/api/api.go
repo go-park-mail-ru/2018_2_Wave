@@ -290,16 +290,9 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
-	//vars := mux.Vars(r)
-	//leaders, err := h.DB.GetTopUsers(strconv.ParseInt(vars["count"]), strconv.ParseInt(vars["page"])
-	
-	pagination := models.Pagination{
-		Page:  r.FormValue("page"),
-		Count: r.FormValue("count"),
-	}
-
-	c, _ := strconv.Atoi(pagination.Count)
-	p, _ := strconv.Atoi(pagination.Page)
+	vars := mux.Vars(r)
+	c, _ := strconv.Atoi(vars["count"])
+	p, _ := strconv.Atoi(vars["page"])
 	leaders, err := h.DB.GetTopUsers(c, p)
 
 	if err != nil || reflect.DeepEqual(models.Leaders{}, leaders) {
