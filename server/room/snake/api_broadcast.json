@@ -3,7 +3,7 @@
         "payload": {
             "snakes": [
                 {
-                    "uid": "",
+                    "user_id": "user_id",
                     "nodes": [
                         {
                             "letter": "a",

@@ -9,7 +9,7 @@
                 },
                 "players": [
                     {
-                        "uid": "",
+                        "user_id": "user_id",
                         "snake": [ 
                             {
                                 "letter": "a",
@@ -35,7 +35,7 @@
     },
     "game_action": {
         "request": {
-            "action_name": "move_left"
+            "action_name": "move_left|move_right|move_up|move_down"
         },
         "response": {
             "status_ok": null,

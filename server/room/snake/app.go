@@ -43,15 +43,16 @@ func init() {
 
 func (a *App) onTick(dt time.Duration) {
 	a.world.Tick(dt)
-
-	// TODO: broadcast tick message
+	var (
+		info = a.world.GetGameInfo()
+		msg  = room.MessageTick.WithStruct(info)
+	)
+	a.Broadcast(msg)
 }
 
 // get information about map and current users
 func (a *App) onGameInfo(u room.IUser, im room.IInMessage) room.IRouteResponce {
-	return room.RouteResponce{
-		Status: room.StatusOK,
-	}.WithStruct(a.world.GetGameInfo())
+	return room.MessageOK.WithStruct(a.world.GetGameInfo())
 }
 
 // receive game action (control)
@@ -62,36 +63,20 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponce
 
 	ac := &Action{}
 	if im.ToStruct(ac) != nil {
-		return room.RouteResponce{
-			Status: room.StatusError,
-		}.WithStruct("Incorrect data")
+		return room.MessageWrongFormat
 	}
 
 	switch ac.ActionName {
 	case "move_left":
-		return a.withSnake(u, func(s *snake) room.IRouteResponce {
-			s.movement = left
-			return nil
-		})
+		return a.withSnake(u, func(s *snake) { s.movement = left })
 	case "move_right":
-		return a.withSnake(u, func(s *snake) room.IRouteResponce {
-			s.movement = right
-			return nil
-		})
+		return a.withSnake(u, func(s *snake) { s.movement = right })
 	case "move_up":
-		return a.withSnake(u, func(s *snake) room.IRouteResponce {
-			s.movement = up
-			return nil
-		})
+		return a.withSnake(u, func(s *snake) { s.movement = up })
 	case "move_down":
-		return a.withSnake(u, func(s *snake) room.IRouteResponce {
-			s.movement = down
-			return nil
-		})
+		return a.withSnake(u, func(s *snake) { s.movement = down })
 	default:
-		return room.RouteResponce{
-			Status: room.StatusError,
-		}.WithStruct("Unknow command")
+		return messageUnknownCommand
 	}
 }
 
@@ -100,28 +85,29 @@ func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	if _, err := a.world.CreateSnake(u, 6); err != nil {
 		return nil
 	}
-	return room.RouteResponce{
-		Status: room.StatusError,
-	}.WithStruct("already plays")
+	return messageAlreadyPlays
 }
 
 // exit from the game
 func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	if err := a.world.DeleteSnake(u); err != nil {
-		return room.RouteResponce{
-			Status: room.StatusError,
-		}.WithStruct("No snake")
+		return messageNoSnake
 	}
 	return nil
 }
 
 // ----------------| helpers
 
-func (a *App) withSnake(u room.IUser, next func(s *snake) room.IRouteResponce) room.IRouteResponce {
+var (
+	messageNoSnake        = room.RouteResponce{Status: room.StatusError}.WithStruct("No snake")
+	messageAlreadyPlays   = room.RouteResponce{Status: room.StatusError}.WithStruct("already plays")
+	messageUnknownCommand = room.RouteResponce{Status: room.StatusError}.WithStruct("unknown command")
+)
+
+func (a *App) withSnake(u room.IUser, next func(s *snake)) room.IRouteResponce {
 	if s, err := a.world.GetSnake(u); err == nil {
-		return next(s)
+		next(s)
+		return nil
 	}
-	return room.RouteResponce{
-		Status: room.StatusError,
-	}.WithStruct("No snake")
+	return messageNoSnake
 }

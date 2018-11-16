@@ -76,8 +76,16 @@ type playerInfo struct {
 	Snake []sceneItemInfo
 }
 
+type worldInfo struct {
+	sceneSize sceneSize
+}
+
+type sceneInfo struct {
+	Playes []playerInfo
+	Items  []sceneItemInfo
+}
+
 type gameInfo struct {
 	SceneSize sceneSize
-	Playes    []playerInfo
-	Items     []sceneItemInfo
+	sceneInfo
 }

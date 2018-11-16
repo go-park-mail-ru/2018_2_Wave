@@ -6,10 +6,6 @@ import (
 	"time"
 )
 
-type worldInfo struct {
-	sceneSize sceneSize
-}
-
 // game world
 type world struct {
 	user2snake map[room.IUser]*snake
@@ -118,11 +114,8 @@ func (w *world) DeleteSnake(u room.IUser) error {
 	return nil
 }
 
-func (w *world) GetGameInfo() *gameInfo {
-	gf := &gameInfo{
-		SceneSize: w.info.sceneSize,
-	}
-
+func (w *world) GetSceneInfo() *sceneInfo {
+	si := &sceneInfo{}
 	for u, s := range w.user2snake {
 		pf := playerInfo{
 			UID: u.GetID(),
@@ -133,17 +126,24 @@ func (w *world) GetGameInfo() *gameInfo {
 				Position: bn.GetPos(),
 			})
 		}
-		gf.Playes = append(gf.Playes, pf)
+		si.Playes = append(si.Playes, pf)
 	}
 	for _, o := range w.objects {
 		if i, ok := o.(iItem); ok {
-			gf.Items = append(gf.Items, sceneItemInfo{
+			si.Items = append(si.Items, sceneItemInfo{
 				Letter:   i.GetLetter(),
 				Position: i.GetPos(),
 			})
 		}
 	}
-	return gf
+	return si
+}
+
+func (w *world) GetGameInfo() *gameInfo {
+	return &gameInfo{
+		SceneSize: w.info.sceneSize,
+		sceneInfo: *w.GetSceneInfo(),
+	}
 }
 
 // ----------------| find functions
