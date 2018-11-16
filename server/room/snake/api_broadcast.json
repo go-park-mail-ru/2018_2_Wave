@@ -1,0 +1,29 @@
+{
+    "status_tick": {
+        "payload": {
+            "snakes": [
+                {
+                    "uid": "",
+                    "nodes": [
+                        {
+                            "letter": "a",
+                            "position": {
+                                "X": 0,
+                                "Y": 0
+                            }
+                        }
+                    ]
+                }
+            ], 
+            "items": [
+                {
+                    "letter": "h",
+                    "position": {
+                        "X": 9,
+                        "Y": 0
+                    }
+                }
+            ]
+        }
+    }
+}

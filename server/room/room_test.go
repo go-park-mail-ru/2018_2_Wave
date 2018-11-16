@@ -34,13 +34,13 @@ func TestRoomSimple(t *testing.T) {
 	room := func() IRoom {
 		r := NewRoom("test0", 30*time.Millisecond)
 		r.Type = "test_type"
-		r.Roures["echo"] = func(u IUser, im IInMessage) IRouteResponce {
+		r.Routes["echo"] = func(u IUser, im IInMessage) IRouteResponce {
 			return &RouteResponce{
 				Status:  "OK",
 				Payload: im.GetPayload(),
 			}
 		}
-		r.Roures["broad"] = func(u IUser, im IInMessage) IRouteResponce {
+		r.Routes["broad"] = func(u IUser, im IInMessage) IRouteResponce {
 			r.Broadcast(&RouteResponce{
 				Status:  "OK",
 				Payload: im.GetPayload(),

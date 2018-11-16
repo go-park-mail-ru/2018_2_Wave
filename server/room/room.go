@@ -10,7 +10,7 @@ type Room struct {
 	ID     RoomID           // room ID
 	Type   RoomType         // room type
 	Ticker *time.Ticker     // room tick
-	Roures map[string]Route // signal -> handler
+	Routes map[string]Route // signal -> handler
 	Users  map[UserID]IUser // room users
 
 	OnTick        func(time.Duration)
@@ -28,7 +28,7 @@ func NewRoom(id RoomID, step time.Duration) *Room {
 	r := &Room{
 		ID:              id,
 		Ticker:          time.NewTicker(step),
-		Roures:          map[string]Route{},
+		Routes:          map[string]Route{},
 		Users:           map[UserID]IUser{},
 		broadcast:       make(chan IRouteResponce, 150),
 		CancelRoom:      make(chan interface{}, 1),
@@ -110,7 +110,7 @@ func (r *Room) ApplyMessage(u IUser, im IInMessage) error {
 	if _, ok := r.Users[u.GetID()]; !ok {
 		return ErrorForbiden
 	}
-	if route, ok := r.Roures[im.GetSignal()]; ok {
+	if route, ok := r.Routes[im.GetSignal()]; ok {
 		if om := route(u, im); om != nil {
 			return r.SendMessageTo(u, om)
 		}

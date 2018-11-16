@@ -1,0 +1,69 @@
+{
+    "game_info": {
+        "request": null,
+        "response": {
+            "status_ok": {
+                "scene_size": {
+                    "X": 900,
+                    "Y": 900
+                },
+                "players": [
+                    {
+                        "uid": "",
+                        "snake": [ 
+                            {
+                                "letter": "a",
+                                "position": {
+                                    "X": 0,
+                                    "Y": 0
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "items": [
+                    {
+                        "letter": "h",
+                        "position": {
+                            "X": 9,
+                            "Y": 0
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "game_action": {
+        "request": {
+            "action_name": "move_left"
+        },
+        "response": {
+            "status_ok": null,
+            "status_error": "description"
+        }
+    },
+    "game_play": {
+        "request": null,
+        "response": {
+            "status_ok": {
+                "snake": [
+                    {
+                        "letter": "a",
+                        "position": {
+                            "X": 0,
+                            "Y": 0
+                        }
+                    }
+                ]
+            },
+            "status_error": "description"
+        }
+    },
+    "game_exit": {
+        "request": null,
+        "response": {
+            "status_ok": null,
+            "status_error": "description"
+        }
+    }
+}

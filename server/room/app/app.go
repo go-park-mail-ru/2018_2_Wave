@@ -1,4 +1,4 @@
-package application
+package app
 
 import (
 	"Wave/server/room"
@@ -7,18 +7,17 @@ import (
 	"time"
 )
 
-// Application - main service room
+// App - main service room
 /* - creates and store other rooms
  * - contains ALL online users
  * - provides all service functions
  */
-type Application struct {
+type App struct {
 	*room.Room // the room super
 
 	/** internal rooms:
 	 * 	- chats
-	 *	- game lobbies
-	 */
+	 *	- game lobbies	*/
 	internalRooms map[room.RoomID]room.IRoom
 
 	lastRoomID int64
@@ -26,19 +25,19 @@ type Application struct {
 	idsMutex   sync.Mutex
 }
 
-func New(id room.RoomID, step time.Duration) *Application {
-	a := &Application{
+func New(id room.RoomID, step time.Duration) *App {
+	a := &App{
 		Room: room.NewRoom(id, step),
 	}
-	a.Roures["lobby_list"] = a.OnGetLobbyList
-	a.Roures["lobby_create"] = a.OnLobbyCreate
-	a.Roures["lobby_delete"] = a.OnLobbyDelete
+	a.Routes["lobby_list"] = a.OnGetLobbyList
+	a.Routes["lobby_create"] = a.OnLobbyCreate
+	a.Routes["lobby_delete"] = a.OnLobbyDelete
 	return a
 }
 
 // ----------------| methods
 
-func (a *Application) GetNextUserID() room.UserID {
+func (a *App) GetNextUserID() room.UserID {
 	a.idsMutex.Lock()
 	defer a.idsMutex.Unlock()
 
@@ -46,7 +45,7 @@ func (a *Application) GetNextUserID() room.UserID {
 	return room.UserID(strconv.FormatInt(a.lastUserID, 36))
 }
 
-func (a *Application) GetNextRoomID() room.RoomID {
+func (a *App) GetNextRoomID() room.RoomID {
 	a.idsMutex.Lock()
 	defer a.idsMutex.Unlock()
 
@@ -56,7 +55,7 @@ func (a *Application) GetNextRoomID() room.RoomID {
 
 // ----------------| handlers
 
-func (a *Application) OnGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *App) OnGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type LobbyListItem struct {
 		ID       room.RoomID
 		RoomType room.RoomType
@@ -74,7 +73,7 @@ func (a *Application) OnGetLobbyList(u room.IUser, im room.IInMessage) room.IRou
 	}.WithStruct(data)
 }
 
-func (a *Application) OnLobbyCreate(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *App) OnLobbyCreate(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type CreateLobby struct {
 		RoomType room.RoomType
 	}
@@ -105,7 +104,7 @@ func (a *Application) OnLobbyCreate(u room.IUser, im room.IInMessage) room.IRout
 	}
 }
 
-func (a *Application) OnLobbyDelete(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *App) OnLobbyDelete(u room.IUser, im room.IInMessage) room.IRouteResponce {
 	type DeleteLobby struct {
 		RoomID room.RoomID
 	}
