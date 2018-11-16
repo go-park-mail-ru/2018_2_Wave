@@ -60,14 +60,14 @@ func (a *App) GetNextRoomID() room.RoomID {
 
 // ----------------| handlers
 
-func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponce {
-	type Responce struct {
+func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponse {
+	type Response struct {
 		RoomID   room.RoomID
 		RoomType room.RoomType
 	}
-	data := []Responce{}
+	data := []Response{}
 	for _, r := range a.internalRooms {
-		data = append(data, Responce{
+		data = append(data, Response{
 			RoomID:   r.GetID(),
 			RoomType: r.GetType(),
 		})
@@ -76,7 +76,7 @@ func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteRespon
 	return room.MessageOK.WithStruct(data)
 }
 
-func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType) room.IRouteResponce {
+func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType) room.IRouteResponse {
 	if factory, ok := type2Factory[cmd]; ok {
 		r := factory(a.GetNextRoomID(), a.Step)
 		if r == nil {
@@ -90,7 +90,7 @@ func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType)
 	return room.MessageWrongRoomType
 }
 
-func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponce {
+func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
 	if r, ok := a.internalRooms[cmd]; ok {
 		r.Stop()
 		delete(a.internalRooms, cmd)
@@ -99,7 +99,7 @@ func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) r
 	return room.MessageWrongRoomID
 }
 
-func (a *App) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponce {
+func (a *App) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
 	if r, ok := a.internalRooms[cmd]; ok {
 		if err := u.AddToRoom(r); err == nil {
 			return room.MessageOK
@@ -109,7 +109,7 @@ func (a *App) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) roo
 	return room.MessageWrongRoomID
 }
 
-func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponce {
+func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
 	if r, ok := a.internalRooms[cmd]; ok {
 		if err := u.RemoveFromRoom(r); err == nil {
 			return room.MessageOK
@@ -129,8 +129,8 @@ type roomTypePayload struct {
 	RoomType room.RoomType
 }
 
-func withRoomID(next func(room.IUser, room.IInMessage, room.RoomID) room.IRouteResponce) room.Route {
-	return func(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func withRoomID(next func(room.IUser, room.IInMessage, room.RoomID) room.IRouteResponse) room.Route {
+	return func(u room.IUser, im room.IInMessage) room.IRouteResponse {
 		cmd := &roomIDPayload{}
 		if im.ToStruct(cmd) == nil {
 			return next(u, im, cmd.RoomID)
@@ -139,8 +139,8 @@ func withRoomID(next func(room.IUser, room.IInMessage, room.RoomID) room.IRouteR
 	}
 }
 
-func withRoomType(next func(room.IUser, room.IInMessage, room.RoomType) room.IRouteResponce) room.Route {
-	return func(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func withRoomType(next func(room.IUser, room.IInMessage, room.RoomType) room.IRouteResponse) room.Route {
+	return func(u room.IUser, im room.IInMessage) room.IRouteResponse {
 		cmd := &roomTypePayload{}
 		if im.ToStruct(cmd) == nil {
 			return next(u, im, cmd.RoomType)

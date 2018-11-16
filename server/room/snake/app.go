@@ -51,12 +51,12 @@ func (a *App) onTick(dt time.Duration) {
 }
 
 // get information about map and current users
-func (a *App) onGameInfo(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *App) onGameInfo(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	return room.MessageOK.WithStruct(a.world.GetGameInfo())
 }
 
 // receive game action (control)
-func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	type Action struct {
 		ActionName string
 	}
@@ -81,7 +81,7 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponce
 }
 
 // place the user into a game scene and allow him play
-func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	if _, err := a.world.CreateSnake(u, 6); err != nil {
 		return nil
 	}
@@ -89,7 +89,7 @@ func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponce {
 }
 
 // exit from the game
-func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponce {
+func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	if err := a.world.DeleteSnake(u); err != nil {
 		return messageNoSnake
 	}
@@ -99,12 +99,12 @@ func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponce {
 // ----------------| helpers
 
 var (
-	messageNoSnake        = room.RouteResponce{Status: room.StatusError}.WithStruct("No snake")
-	messageAlreadyPlays   = room.RouteResponce{Status: room.StatusError}.WithStruct("already plays")
-	messageUnknownCommand = room.RouteResponce{Status: room.StatusError}.WithStruct("unknown command")
+	messageNoSnake        = room.RouteResponse{Status: room.StatusError}.WithStruct("No snake")
+	messageAlreadyPlays   = room.RouteResponse{Status: room.StatusError}.WithStruct("already plays")
+	messageUnknownCommand = room.RouteResponse{Status: room.StatusError}.WithStruct("unknown command")
 )
 
-func (a *App) withSnake(u room.IUser, next func(s *snake)) room.IRouteResponce {
+func (a *App) withSnake(u room.IUser, next func(s *snake)) room.IRouteResponse {
 	if s, err := a.world.GetSnake(u); err == nil {
 		next(s)
 		return nil

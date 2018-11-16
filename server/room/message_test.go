@@ -43,13 +43,13 @@ func TestMessages(t *testing.T) {
 				t.Fatal("Not equal", i, "OutMessage")
 			}
 		}
-		{ // RouteResponce
-			msg := RouteResponce{}
+		{ // RouteResponse
+			msg := RouteResponse{}
 			if err := msg.FromStruct(cs.src); err != nil {
 				t.Fatal(err)
 			}
 			if !reflect.DeepEqual(bin, msg.GetPayload()) {
-				t.Fatal("Not equal", i, "RouteResponce")
+				t.Fatal("Not equal", i, "RouteResponse")
 			}
 		}
 	}

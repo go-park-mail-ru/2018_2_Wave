@@ -37,27 +37,27 @@ func (om *OutMessage) FromStruct(s interface{}) (err error) {
 	return err
 }
 
-// ----------------| RouteResponce
+// ----------------| RouteResponse
 
-// RouteResponce - default IOutMessage
-type RouteResponce struct {
+// RouteResponse - default IOutMessage
+type RouteResponse struct {
 	Status  string
 	Payload []byte
 }
 
-func (om *RouteResponce) GetStatus() string  { return om.Status }
-func (om *RouteResponce) GetPayload() []byte { return om.Payload }
-func (om *RouteResponce) FromStruct(s interface{}) (err error) {
+func (om *RouteResponse) GetStatus() string  { return om.Status }
+func (om *RouteResponse) GetPayload() []byte { return om.Payload }
+func (om *RouteResponse) FromStruct(s interface{}) (err error) {
 	om.Payload, err = json.Marshal(s)
 	return err
 }
 
 // for usability
-func (om RouteResponce) WithStruct(s interface{}) *RouteResponce {
+func (om RouteResponse) WithStruct(s interface{}) *RouteResponse {
 	if err := om.FromStruct(s); err != nil {
 		panic(err)
 	}
-	return &RouteResponce{
+	return &RouteResponse{
 		Status:  om.Status,
 		Payload: om.Payload,
 	}

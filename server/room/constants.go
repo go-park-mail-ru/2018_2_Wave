@@ -11,14 +11,14 @@ const (
 )
 
 var (
-	MessageError         = RouteResponce{Status: StatusError}.WithStruct("")
-	MessageWrongUserID   = RouteResponce{Status: StatusError}.WithStruct("wrong user id")
-	MessageWrongRoomID   = RouteResponce{Status: StatusError}.WithStruct("wrong room id")
-	MessageWrongRoomType = RouteResponce{Status: StatusError}.WithStruct("wrong room type")
-	MessageWrongFormat   = RouteResponce{Status: StatusError}.WithStruct("wrong format")
-	MessageForbiden      = RouteResponce{Status: StatusError}.WithStruct("forbiden")
-	MessageTick          = RouteResponce{Status: StatusTick}.WithStruct("")
-	MessageOK            = RouteResponce{Status: StatusOK}.WithStruct("")
+	MessageError         = RouteResponse{Status: StatusError}.WithStruct("")
+	MessageWrongUserID   = RouteResponse{Status: StatusError}.WithStruct("wrong user id")
+	MessageWrongRoomID   = RouteResponse{Status: StatusError}.WithStruct("wrong room id")
+	MessageWrongRoomType = RouteResponse{Status: StatusError}.WithStruct("wrong room type")
+	MessageWrongFormat   = RouteResponse{Status: StatusError}.WithStruct("wrong format")
+	MessageForbiden      = RouteResponse{Status: StatusError}.WithStruct("forbiden")
+	MessageTick          = RouteResponse{Status: StatusTick}.WithStruct("")
+	MessageOK            = RouteResponse{Status: StatusOK}.WithStruct("")
 )
 
 var ( // const is inavaliable here

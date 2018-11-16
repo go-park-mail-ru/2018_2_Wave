@@ -2,7 +2,7 @@ package room
 
 import "time"
 
-type Route func(IUser, IInMessage) IRouteResponce
+type Route func(IUser, IInMessage) IRouteResponse
 
 // Room - default IRoom
 // - Chat
@@ -17,7 +17,7 @@ type Room struct {
 	OnUserAdded   func(IUser)
 	OnUserRemoved func(IUser)
 
-	broadcast       chan IRouteResponce
+	broadcast       chan IRouteResponse
 	CancelRoom      chan interface{}
 	CancelBroadcast chan interface{}
 
@@ -30,7 +30,7 @@ func NewRoom(id RoomID, step time.Duration) *Room {
 		Ticker:          time.NewTicker(step),
 		Routes:          map[string]Route{},
 		Users:           map[UserID]IUser{},
-		broadcast:       make(chan IRouteResponce, 150),
+		broadcast:       make(chan IRouteResponse, 150),
 		CancelRoom:      make(chan interface{}, 1),
 		CancelBroadcast: make(chan interface{}, 1),
 		Step:            step,
@@ -119,7 +119,7 @@ func (r *Room) ApplyMessage(u IUser, im IInMessage) error {
 	return ErrorUnknownSignal
 }
 
-func (r *Room) SendMessageTo(u IUser, rs IRouteResponce) error {
+func (r *Room) SendMessageTo(u IUser, rs IRouteResponse) error {
 	if u == nil || rs == nil {
 		return ErrorNil
 	}
@@ -133,7 +133,7 @@ func (r *Room) SendMessageTo(u IUser, rs IRouteResponce) error {
 	})
 }
 
-func (r *Room) Broadcast(rs IRouteResponce) error {
+func (r *Room) Broadcast(rs IRouteResponse) error {
 	if rs == nil {
 		return ErrorNil
 	}

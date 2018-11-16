@@ -32,8 +32,8 @@ type IOutMessage interface {
 	FromStruct(interface{}) error // marshal from struct
 }
 
-// IRouteResponce - responce from route
-type IRouteResponce interface {
+// IRouteResponse - response from route
+type IRouteResponse interface {
 	GetPayload() []byte           // message payload
 	GetStatus() string            // message status
 	FromStruct(interface{}) error // marshal from struct

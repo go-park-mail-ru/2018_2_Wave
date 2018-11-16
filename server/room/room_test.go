@@ -34,14 +34,14 @@ func TestRoomSimple(t *testing.T) {
 	room := func() IRoom {
 		r := NewRoom("test0", 30*time.Millisecond)
 		r.Type = "test_type"
-		r.Routes["echo"] = func(u IUser, im IInMessage) IRouteResponce {
-			return &RouteResponce{
+		r.Routes["echo"] = func(u IUser, im IInMessage) IRouteResponse {
+			return &RouteResponse{
 				Status:  "OK",
 				Payload: im.GetPayload(),
 			}
 		}
-		r.Routes["broad"] = func(u IUser, im IInMessage) IRouteResponce {
-			r.Broadcast(&RouteResponce{
+		r.Routes["broad"] = func(u IUser, im IInMessage) IRouteResponse {
+			r.Broadcast(&RouteResponse{
 				Status:  "OK",
 				Payload: im.GetPayload(),
 			})
@@ -113,7 +113,7 @@ func TestRoomSimple(t *testing.T) {
 			}
 			user.Messages = nil
 		}
-		{ // broadcast (no responce)
+		{ // broadcast (no response)
 			if err := room.ApplyMessage(user, in2); err != nil {
 				t.Fatalf("Unexpected error: %v\n", err)
 			}
