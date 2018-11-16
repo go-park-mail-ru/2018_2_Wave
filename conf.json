@@ -3,15 +3,15 @@
         "host": "http://localhost",
         "port": ":9600"
     },
-    "database": {
-        "user": "waveapp",
-        "dbname": "wave"
-    },
     "cors": {
         "origins": [
             "*",
             "http://localhost:3000",
-            "https://sample-txtuvraxsd.now.sh/"
+            "https://sample-txtuvraxsd.now.sh/",
+            "http://localhost",
+            "http://localhost:8080",
+            "https://localhost",
+            "https://localhost:8443"
         ],
         "headers": [
             "Content-type"

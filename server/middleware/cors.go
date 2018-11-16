@@ -15,10 +15,11 @@ func CORS(CC config.CORSConfiguration, curlog *lg.Logger) Middleware {
 			if originToSet == "" {
 				rw.WriteHeader(http.StatusForbidden)
 
-				curlog.Sugar.Errorw("CORS failed",
+				curlog.Sugar.Infow(
+					"CORS failed",
 					"source", "middleware.go",
-					"who", "CORS")
-
+					"who", "CORS",
+				)
 				return
 			}
 			rw.Header().Set("Access-Control-Allow-Origin", originToSet)
@@ -26,9 +27,11 @@ func CORS(CC config.CORSConfiguration, curlog *lg.Logger) Middleware {
 			rw.Header().Set("Access-Control-Allow-Credentials", CC.Credentials)
 			rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
 
-			curlog.Sugar.Infow("CORS succeded",
+			curlog.Sugar.Infow(
+				"CORS succeded",
 				"source", "middleware.go",
-				"who", "CORS")
+				"who", "CORS",
+			)
 
 			hf(rw, r)
 		}
@@ -46,10 +49,11 @@ func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger) Middleware
 				rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
 				rw.WriteHeader(http.StatusForbidden)
 
-				curlog.Sugar.Errorw("preflight failed",
+				curlog.Sugar.Infow(
+					"preflight failed",
 					"source", "middleware.go",
-					"who", "OptionsPreflight")
-
+					"who", "OptionsPreflight",
+				)
 				return
 			}
 
@@ -59,10 +63,11 @@ func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger) Middleware
 			rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
 			rw.WriteHeader(http.StatusOK)
 
-			curlog.Sugar.Infow("preflight succeded",
+			curlog.Sugar.Infow(
+				"preflight succeded",
 				"source", "middleware.go",
-				"who", "OptionsPreflight")
-
+				"who", "OptionsPreflight",
+			)
 			return
 		}
 	}

@@ -1,0 +1,44 @@
+api
+
+POST /users {username, password, [avatar]}
+400 BAD REQUEST {"reason":"Bad avatar."}
+500 INTERTAL SERVER ERROR
+403 FORBIDDEN {"reason":"Username already in use."}
+201 CREATED
+404 FORBIDDEN (cors)
+
+GET /users/me
+403 FORBIDDEN (cors)
+401 UNAUTHORIZED {"reason":"Not authorized."}
+500 INTERTAL SERVER ERROR
+200 OK {user, score, avatar}
+
+PUT /users/me {[username], [password], [avatar]}
+404 FORBIDDEN (cors)
+401 UNAUTHORIZED {"reason":"Not authorized."}
+400 BAD REQUEST {"reason":"Update didn't happend, bad avatar."}
+403 FORBIDDEN {"reason":"Update didn't happend, something went wrong."}
+200 OK {"reason":"Nothing happened actually."}
+200 OK
+
+GET /user/{name}
+403 FORBIDDEN (cors)
+500 INTERTAL SERVER ERROR
+404 NOT FOUND
+200 OK {user, score, avatar}
+
+GET /users/leaders/... url encoded
+403 FORBIDDEN (cors)
+500 INTERTAL SERVER ERROR
+200 OK {users[], total} where users = array of {user, score, avatar}
+
+POST /session {username, password}
+403 FORBIDDEN (cors)
+500 INTERTAL SERVER ERROR
+401 UNAUTHORIZED {"reason":"Incorrect password/username."}
+
+DELETE /session
+404 FORBIDDEN (cors)
+401 UNAUTHORIZED {"reason":"Not authorized."}
+500 INTERTAL SERVER ERROR
+200 OK

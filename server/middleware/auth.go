@@ -21,16 +21,19 @@ func Auth(curlog *lg.Logger) Middleware {
 				rw.WriteHeader(http.StatusUnauthorized)
 				fmt.Fprintln(rw, string(payload))
 
-				curlog.Sugar.Errorw("auth check failed",
+				curlog.Sugar.Infow(
+					"auth check failed",
 					"source", "middleware.go",
-					"who", "Auth")
-
+					"who", "Auth",
+				)
 				return
 			}
 
-			curlog.Sugar.Infow("auth check succeded",
+			curlog.Sugar.Infow(
+				"auth check succeded",
 				"source", "middleware.go",
-				"who", "Auth")
+				"who", "Auth",
+			)
 
 			hf(rw, r)
 		}
