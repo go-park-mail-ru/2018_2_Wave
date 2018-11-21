@@ -17,11 +17,10 @@ type User struct {
 	bClosed bool
 }
 
-func NewUser(ID UserID, Conn *websocket.Conn, LG *lg.Logger) *User {
+func NewUser(ID UserID, Conn *websocket.Conn) *User {
 	return &User{
 		ID:    ID,
 		Conn:  Conn,
-		LG:    LG,
 		Rooms: map[RoomID]IRoom{},
 	}
 }

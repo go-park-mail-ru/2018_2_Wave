@@ -434,7 +434,8 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		UID := h.wsApp.GetNextUserID()
-		user := room.NewUser(UID, ws, h.LG)
+		user := room.NewUser(UID, ws)
+		user.LG = h.LG
 		user.AddToRoom(h.wsApp)
 		user.Listen()
 	}()

@@ -1,6 +1,9 @@
 package room
 
-import "time"
+import (
+	lg "Wave/utiles/logger"
+	"time"
+)
 
 type Route func(IUser, IInMessage) IRouteResponse
 
@@ -12,6 +15,7 @@ type Room struct {
 	Ticker *time.Ticker     // room tick
 	Routes map[string]Route // signal -> handler
 	Users  map[UserID]IUser // room users
+	LG     *lg.Logger
 
 	OnTick        func(time.Duration)
 	OnUserAdded   func(IUser)
@@ -42,6 +46,7 @@ func (r *Room) GetID() RoomID     { return r.ID }
 func (r *Room) GetType() RoomType { return r.Type }
 
 func (r *Room) Run() error {
+	r.log("room started")
 	go r.runBroadcast()
 	for {
 		select {
@@ -56,6 +61,7 @@ func (r *Room) Run() error {
 }
 
 func (r *Room) Stop() error {
+	r.log("room stoped")
 	r.CancelBroadcast <- ""
 	r.CancelRoom <- ""
 	return nil
@@ -63,6 +69,7 @@ func (r *Room) Stop() error {
 
 // must be runned in a new goroutine
 func (r *Room) runBroadcast() {
+	r.log("broadcast started")
 	for {
 		select {
 		case rs := <-r.broadcast:
@@ -82,6 +89,7 @@ func (r *Room) AddUser(usr IUser) error {
 	if _, ok := r.Users[usr.GetID()]; !ok {
 		r.Users[usr.GetID()] = usr
 		if r.OnUserAdded != nil {
+			r.log("user added", usr.GetID())
 			r.OnUserAdded(usr)
 		}
 		return nil
@@ -96,6 +104,7 @@ func (r *Room) RemoveUser(usr IUser) error {
 	if _, ok := r.Users[usr.GetID()]; ok {
 		delete(r.Users, usr.GetID())
 		if r.OnUserRemoved != nil {
+			r.log("user removed", usr.GetID())
 			r.OnUserRemoved(usr)
 		}
 		return nil
@@ -126,6 +135,7 @@ func (r *Room) SendMessageTo(u IUser, rs IRouteResponse) error {
 	if _, ok := r.Users[u.GetID()]; !ok {
 		return ErrorForbiden
 	}
+	r.log("sending message", "to", u.GetID(), "msg", string(rs.GetPayload()))
 	return u.Consume(&OutMessage{
 		RoomID:  r.GetID(),
 		Status:  rs.GetStatus(),
@@ -137,6 +147,19 @@ func (r *Room) Broadcast(rs IRouteResponse) error {
 	if rs == nil {
 		return ErrorNil
 	}
+	r.log("broadcast")
 	r.broadcast <- rs
 	return nil
+}
+
+// ----------------|
+
+func (r *Room) log(data ...interface{}) {
+	if r.LG != nil {
+		r.LG.Sugar.Infof("room_message",
+			append([]interface{}{
+				"room_id", r.ID,
+				"room_type", r.Type,
+			}, data...)...)
+	}
 }
