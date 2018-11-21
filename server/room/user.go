@@ -3,6 +3,8 @@ package room
 import (
 	"io"
 
+	lg "Wave/utiles/logger"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -10,14 +12,16 @@ type User struct {
 	ID    UserID
 	Rooms map[RoomID]IRoom
 	Conn  *websocket.Conn
+	LG    *lg.Logger
 
 	bClosed bool
 }
 
-func NewUser(ID UserID, Conn *websocket.Conn) *User {
+func NewUser(ID UserID, Conn *websocket.Conn, LG *lg.Logger) *User {
 	return &User{
 		ID:    ID,
 		Conn:  Conn,
+		LG:    LG,
 		Rooms: map[RoomID]IRoom{},
 	}
 }
@@ -78,6 +82,11 @@ func (u *User) Listen() error {
 			continue
 		}
 
+		// log input
+		if u.LG != nil {
+			u.LG.Sugar.Infof("in_message: %v", m)
+		}
+
 		// apply the message to a room
 		if r, ok := u.Rooms[m.GetRoomID()]; ok {
 			r.ApplyMessage(u, m)
@@ -101,6 +110,11 @@ func (u *User) StopListening() error {
 func (u *User) Consume(m IOutMessage) error {
 	if m == nil {
 		return ErrorNil
+	}
+
+	// log input
+	if u.LG != nil {
+		u.LG.Sugar.Infof("out_message: %v", m)
 	}
 
 	err := u.Conn.WriteJSON(m)
