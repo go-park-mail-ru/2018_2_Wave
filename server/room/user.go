@@ -51,6 +51,12 @@ func (u *User) RemoveFromRoom(r IRoom) error {
 }
 
 func (u *User) Listen() error {
+	defer func() {
+		if err := recover(); err != nil {
+			u.StopListening()
+		}
+	}()
+
 	for { // stops when connection closes
 		m := &InMessage{}
 
