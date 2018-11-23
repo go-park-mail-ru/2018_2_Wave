@@ -125,6 +125,8 @@ func WebSocketHeadersCheck(curlog *lg.Logger) Middleware {
 					"who", "WebSocketHeadersCheck")
 
 				hf(rw, r)
+
+				return
 			}
 			rw.WriteHeader(http.StatusExpectationFailed)
 
