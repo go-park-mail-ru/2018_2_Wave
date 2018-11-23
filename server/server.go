@@ -19,15 +19,15 @@ import (
 func Start(path string) {
 	conf := config.Configure(path)
 	curlog := lg.Construct()
+	prof := mc.Construct()
 
 	db := database.New(curlog)
 
 	API := &api.Handler{
 		DB: *db,
 		LG: curlog,
+		Prof: prof,
 	}
-
-	API.Prof = mc.Construct()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/metrics", promhttp.Handler().(http.HandlerFunc)).Methods("GET")
