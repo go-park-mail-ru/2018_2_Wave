@@ -4,12 +4,16 @@ import (
 	"Wave/server/api"
 	"Wave/server/database"
 	mw "Wave/server/middleware"
+	mc "Wave/server/metrics"
+
 	"Wave/utiles/config"
 	lg "Wave/utiles/logger"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func Start(path string) {
@@ -23,8 +27,12 @@ func Start(path string) {
 		LG: curlog,
 	}
 
+	API.Prof = mc.Construct()
+
 	r := mux.NewRouter()
-	r.HandleFunc("/", mw.Chain(API.SlashHandler)).Methods("GET")
+	r.HandleFunc("/metrics", promhttp.Handler().(http.HandlerFunc)).Methods("GET")
+
+	r.HandleFunc("/", mw.Chain(API.SlashHandler))
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC, curlog))).Methods("POST")
 	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.Auth(curlog), mw.CORS(conf.CC, curlog))).Methods("GET")
 	r.HandleFunc("/users/me", mw.Chain(API.EditMePUTHandler, mw.Auth(curlog), mw.CORS(conf.CC, curlog))).Methods("PUT")

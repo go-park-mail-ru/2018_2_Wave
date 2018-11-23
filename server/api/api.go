@@ -3,6 +3,8 @@ package api
 import (
 	psql "Wave/server/database"
 	lg "Wave/utiles/logger"
+	mc "Wave/server/metrics"
+
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
 	"fmt"
@@ -24,6 +26,7 @@ import (
 type Handler struct {
 	DB psql.DatabaseModel
 	LG *lg.Logger
+	Prof *mc.Profiler
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
@@ -87,7 +90,7 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
-
+	h.Prof.Hits.Add(1)
 	return
 }
 
@@ -164,10 +167,6 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
-
-		h.LG.Sugar.Infow("/users/me failed",
-		"source", "api.go",
-		"who", "MeGETHandler",)
 
 		return
 	}
@@ -444,10 +443,12 @@ func contains(sl []string, str string) bool {
 
 func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(rw, r, nil)
-		if err != nil {
-			log.Fatal(err)
-		}
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	defer ws.Close()
+/*
 	lobby := []string{}
 
 	go func(client *websocket.Conn, lb []string){
@@ -520,5 +521,11 @@ func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
 					<-ticker.C
 		}
 	}(ws, lobby)
+	*/
+/*
+	go func(client *websocket.Conn) {
+	}(ws)
+	*/
+	log.Println("ws@")
 	return
 }
