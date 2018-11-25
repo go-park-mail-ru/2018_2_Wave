@@ -8,11 +8,8 @@ import (
 	"Wave/server/chat/room/app"
 	"Wave/server/chat/room"
 	"github.com/gorilla/websocket"
-
-	_ "github.com/lib/pq" // do we need to have the fuck right here?
 )
 
-// TODO:: get the value from configuration files
 const wsAppTickRate = 16 * time.Millisecond
 
 type Handler struct {
@@ -25,7 +22,7 @@ type Handler struct {
 func New(model *psql.DatabaseModel) *Handler {
 	return &Handler{
 		wsApp: func() *app.App {
-			wsApp := app.New("app", wsAppTickRate)
+			wsApp := app.New("chat_manager", wsAppTickRate)
 			go wsApp.Run()
 			return wsApp
 		}(),
