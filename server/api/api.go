@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 	"Wave/server/chat"
-	"Wave/server/chat/app"
-	"Wave/server/chat/room"
+	"Wave/server/app"
+	"Wave/server/room"
 	"github.com/gorilla/websocket"
 )
 
