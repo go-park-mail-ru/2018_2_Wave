@@ -35,5 +35,6 @@ func Start(confPath string) {
 
 	r.HandleFunc("/conn/ws", mw.Chain(API.WSHandler, mw.WebSocketHeadersCheck(curlog), mw.CORS(conf.CC, curlog))).Methods("GET")
 
+	println("started")
 	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }

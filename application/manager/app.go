@@ -1,7 +1,7 @@
 package app
 
 import (
-	"Wave/server/room"
+	"Wave/application/room"
 	"strconv"
 	"sync"
 	"time"
@@ -19,6 +19,7 @@ type App struct {
 	 * 	- chats
 	 *	- game lobbies	*/
 	internalRooms map[room.RoomID]room.IRoom
+	db            interface{}
 
 	lastRoomID int64
 	lastUserID int64
@@ -26,9 +27,10 @@ type App struct {
 }
 
 // New applicarion room
-func New(id room.RoomID, step time.Duration) *App {
+func New(id room.RoomID, step time.Duration, db interface{}) *App {
 	a := &App{
 		Room: room.NewRoom(id, step),
+		db:   db,
 	}
 	a.Routes["lobby_list"] = a.onGetLobbyList
 	a.Routes["lobby_create"] = withRoomType(a.onLobbyCreate)
@@ -58,6 +60,20 @@ func (a *App) GetNextRoomID() room.RoomID {
 	return room.RoomID(strconv.FormatInt(a.lastRoomID, 36))
 }
 
+// CreateLobby -
+func (a *App) CreateLobby(room_type room.RoomType, room_id room.RoomID) (room.IRoom, error) {
+	if factory, ok := type2Factory[room_type]; ok {
+		r := factory(room_id, a.Step, a.db)
+		if r == nil {
+			return nil, room.ErrorNil
+		}
+		go r.Run()
+
+		return r, nil
+	}
+	return nil, room.ErrorNotExists
+}
+
 // ----------------| handlers
 
 func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponse {
@@ -77,17 +93,11 @@ func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteRespon
 }
 
 func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType) room.IRouteResponse {
-	if factory, ok := type2Factory[cmd]; ok {
-		r := factory(a.GetNextRoomID(), a.Step)
-		if r == nil {
-			return room.MessageError
-		}
-		go r.Run()
-
-		u.AddToRoom(r)
-		return room.MessageOK.WithStruct(r.GetID())
+	r, err := a.CreateLobby(cmd, a.GetNextRoomID())
+	if err != nil {
+		return room.MessageError
 	}
-	return room.MessageWrongRoomType
+	return room.MessageOK.WithStruct(r.GetID())
 }
 
 func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {

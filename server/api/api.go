@@ -2,8 +2,8 @@ package api
 
 import (
 	psql "Wave/server/database"
-	"Wave/server/room"
-	"Wave/server/room/app"
+	"Wave/application/room"
+	"Wave/application/manager"
 	lg "Wave/utiles/logger"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
@@ -19,15 +19,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/ksuid"
-
-	_ "github.com/lib/pq" // do we need to have the fuck right here?
 )
 
 // TODO:: get the value from configuration files
 const wsAppTickRate = 16 * time.Millisecond
 
 type Handler struct {
-	DB       psql.Model
+	DB       *psql.Model
 	wsApp    *app.App
 	upgrader websocket.Upgrader
 	LG       *lg.Logger
@@ -36,7 +34,7 @@ type Handler struct {
 func New(model *psql.Model) *Handler {
 	return &Handler{
 		wsApp: func() *app.App {
-			wsApp := app.New("app", wsAppTickRate)
+			wsApp := app.New("app", wsAppTickRate, model)
 			go wsApp.Run()
 			return wsApp
 		}(),
@@ -47,7 +45,7 @@ func New(model *psql.Model) *Handler {
 				return true
 			},
 		},
-		DB: *model,
+		DB: model,
 	}
 }
 

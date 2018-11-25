@@ -60,6 +60,8 @@ func (u *User) Listen() error {
 		}
 	}()
 
+	u.LG.Sugar.Infof("User started: id=", u.GetID())
+
 	// send current user_id
 	u.Conn.WriteJSON(u.GetID())
 

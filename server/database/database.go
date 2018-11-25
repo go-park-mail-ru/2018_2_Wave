@@ -17,18 +17,26 @@ type Model struct {
 	LG       *lg.Logger
 }
 
+func envOrDefault(env, def string) string {
+	if res := os.Getenv(env); res != "" {
+		return res
+	}
+	return def
+}
+
 // New Model
 func New(logger *lg.Logger) *Model {
 	var (
 		postgr = &Model{
 			LG: logger,
 		}
-		dbuser     = os.Getenv("WAVE_DB_USER")
-		dbpassword = os.Getenv("WAVE_DB_PASSWORD")
-		dbname     = os.Getenv("WAVE_DB_NAME")
+		dbuser     = envOrDefault("WAVE_DB_USER", "Wave")
+		dbpassword = envOrDefault("WAVE_DB_PASSWORD", "Wave")
+		dbname     = envOrDefault("WAVE_DB_NAME", "Wave")
+		data       = "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable"
 		err        error
 	)
-	postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
+	postgr.Database, err = sqlx.Connect("postgres", data)
 	if err != nil {
 		postgr.LG.Sugar.Panicw(
 			"PostgreSQL connection establishment failed",
