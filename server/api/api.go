@@ -5,7 +5,7 @@ import (
 	lg "Wave/utiles/logger"
 	"net/http"
 	"time"
-	// "Wave/server/chat"
+	"Wave/server/chat"
 	"Wave/server/chat/app"
 	"Wave/server/chat/room"
 	"github.com/gorilla/websocket"
@@ -24,7 +24,11 @@ type Handler struct {
 func New(model *psql.DatabaseModel) *Handler {
 	return &Handler{
 		wsApp: func() *app.App {
-			wsApp := app.New("app", wsAppTickRate, model)
+			wsApp := app.New("manager", wsAppTickRate, model)
+			_, err := wsApp.CreateLobby(chat.RoomType, "global")
+			if err != nil {
+				panic(err)
+			}
 			go wsApp.Run()
 			return wsApp
 		}(),

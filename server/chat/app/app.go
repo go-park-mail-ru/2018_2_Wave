@@ -60,6 +60,19 @@ func (a *App) GetNextRoomID() room.RoomID {
 	return room.RoomID(strconv.FormatInt(a.lastRoomID, 36))
 }
 
+func (a *App) CreateLobby(room_type room.RoomType, room_id room.RoomID) (room.IRoom, error) {
+	if factory, ok := type2Factory[room_type]; ok {
+		r := factory(room_id, a.Step, a.db)
+		if r == nil {
+			return nil, room.ErrorNil
+		}
+		go r.Run()
+
+		return r, nil
+	}
+	return nil, room.ErrorNotExists
+}
+
 // ----------------| handlers
 
 func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponse {
@@ -79,17 +92,11 @@ func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteRespon
 }
 
 func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType) room.IRouteResponse {
-	if factory, ok := type2Factory[cmd]; ok {
-		r := factory(a.GetNextRoomID(), a.Step, a.db)
-		if r == nil {
-			return room.MessageError
-		}
-		go r.Run()
-
-		u.AddToRoom(r)
-		return room.MessageOK.WithStruct(r.GetID())
+	r, err := a.CreateLobby(cmd, a.GetNextRoomID())
+	if err != nil {
+		return room.MessageError
 	}
-	return room.MessageWrongRoomType
+	return room.MessageOK.WithStruct(r.GetID())
 }
 
 func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
