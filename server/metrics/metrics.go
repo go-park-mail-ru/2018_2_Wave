@@ -21,8 +21,7 @@ func Construct() *Profiler {
 			Help: "Number of hits and statuses.",
 		}),
 
-		ActiveRooms: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "active_rooms",
+		ActiveRooms: prometheus.NewGauge(prometheus.Gau
 			Help: "Number of active rooms.",
 		}),
 
