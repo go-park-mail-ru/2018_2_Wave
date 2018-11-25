@@ -19,10 +19,8 @@ func Start(path string) {
 
 	db := database.New(curlog)
 
-	API := &api.Handler{
-		DB: *db,
-		LG: curlog,
-	}
+	API := api.New(db)
+	API.LG = curlog
 
 	r := mux.NewRouter()
 

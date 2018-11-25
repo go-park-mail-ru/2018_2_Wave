@@ -2,11 +2,12 @@ package api
 
 import (
 	psql "Wave/server/database"
+	"Wave/server/chat/room"
+	"Wave/server/chat/app"
 	lg "Wave/utiles/logger"
 	"net/http"
 	"time"
-	"Wave/server/chat/app"
-	"Wave/server/chat/room"
+
 	"github.com/gorilla/websocket"
 
 	_ "github.com/lib/pq" // do we need to have the fuck right here?
@@ -40,7 +41,8 @@ func New(model *psql.DatabaseModel) *Handler {
 	}
 }
 
-func (h *Handler) ChatHandler(rw http.ResponseWriter, r *http.Request) {
+// WSHandler - create ws connection
+func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 	ws, err := h.upgrader.Upgrade(rw, r, nil)
 	if err != nil {
 		panic(err)
@@ -53,5 +55,4 @@ func (h *Handler) ChatHandler(rw http.ResponseWriter, r *http.Request) {
 		user.AddToRoom(h.wsApp)
 		user.Listen()
 	}()
-	return
 }
