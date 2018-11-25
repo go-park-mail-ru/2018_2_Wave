@@ -7,6 +7,7 @@ import (
 	"time"
 	// "Wave/server/chat"
 	"Wave/server/chat/app"
+	"Wave/server/utiles/misc"
 	"Wave/server/chat/room"
 	"github.com/gorilla/websocket"
 )
@@ -44,6 +45,8 @@ func (h *Handler) ChatHandler(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	sender_id := h.DB.SenderId(misc.GetSessionCookie(r))
 
 	go func() {
 		UID := h.wsApp.GetNextUserID()

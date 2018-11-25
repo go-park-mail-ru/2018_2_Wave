@@ -85,12 +85,12 @@ func (model *DatabaseModel) present(tableName string, colName string, target str
 	return fl, nil
 }
 
-func validateCredentials(target string) bool {
-
-	return true
-}
-
 func (model *DatabaseModel) AddMsg(roomid, msg string) error {
 	model.Database.MustExec("INSERT INTO usermessage(roomid, msg) VALUES($1, $2)", roomid, msg)
 	return nil
+}
+
+func (model *DatabaseModel) GetSenderId(cookie string) cookie {
+	//`SELECT DISTINCT username FROM userinfo JOIN session WHERE username.uid=session.uid`
+	return ""
 }
