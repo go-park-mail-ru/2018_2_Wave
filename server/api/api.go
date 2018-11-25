@@ -24,9 +24,8 @@ type Handler struct {
 func New(model *psql.DatabaseModel) *Handler {
 	return &Handler{
 		wsApp: func() *app.App {
-			wsApp := app.New("app", wsAppTickRate)
+			wsApp := app.New("app", wsAppTickRate, model)
 			go wsApp.Run()
-			// wsApp.
 			return wsApp
 		}(),
 		upgrader: websocket.Upgrader{
@@ -50,6 +49,7 @@ func (h *Handler) ChatHandler(rw http.ResponseWriter, r *http.Request) {
 		UID := h.wsApp.GetNextUserID()
 		user := room.NewUser(UID, ws)
 		user.LG = h.LG
+		user.ID = "test id"
 		user.AddToRoom(h.wsApp)
 		user.Listen()
 	}()
