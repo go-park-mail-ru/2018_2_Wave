@@ -8,30 +8,38 @@ import (
 
 // InMessage - default IInMessage
 type InMessage struct {
-	RoomID  RoomID `json:"room_id"`
-	Signal  string `json:"signal"`
-	Payload []byte `json:"payload"`
+	RoomID  RoomID      `json:"room_id"`
+	Signal  string      `json:"signal"`
+	Payload interface{} `json:"payload"`
 }
 
-func (im *InMessage) GetRoomID() RoomID  { return im.RoomID }
-func (im *InMessage) GetSignal() string  { return im.Signal }
-func (im *InMessage) GetPayload() []byte { return im.Payload }
+// func (im *InMessage) UnmarshalJSON(b []byte) error {
+// 	im.Payload = interface{}
+
+// }
+func (im *InMessage) GetRoomID() RoomID       { return im.RoomID }
+func (im *InMessage) GetSignal() string       { return im.Signal }
+func (im *InMessage) GetPayload() interface{} { return im.Payload }
 func (im *InMessage) ToStruct(s interface{}) error {
-	return json.Unmarshal(im.Payload, s)
+	data, err := json.Marshal(im.Payload)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, s)
 }
 
 // ----------------| OutMessage
 
 // OutMessage - default IOutMessage
 type OutMessage struct {
-	RoomID  RoomID `json:"room_id"`
-	Status  string `json:"status"`
-	Payload []byte `json:"payload"`
+	RoomID  RoomID      `json:"room_id"`
+	Status  string      `json:"status"`
+	Payload interface{} `json:"payload"`
 }
 
-func (om *OutMessage) GetRoomID() RoomID  { return om.RoomID }
-func (om *OutMessage) GetStatus() string  { return om.Status }
-func (om *OutMessage) GetPayload() []byte { return om.Payload }
+func (om *OutMessage) GetRoomID() RoomID       { return om.RoomID }
+func (om *OutMessage) GetStatus() string       { return om.Status }
+func (om *OutMessage) GetPayload() interface{} { return om.Payload }
 func (om *OutMessage) FromStruct(s interface{}) (err error) {
 	om.Payload, err = json.Marshal(s)
 	return err
@@ -41,15 +49,15 @@ func (om *OutMessage) FromStruct(s interface{}) (err error) {
 
 // RouteResponse - default IOutMessage
 type RouteResponse struct {
-	Status  string `json:"status"`
-	Payload []byte `json:"payload"`
+	Status  string      `json:"status"`
+	Payload interface{} `json:"payload"`
 }
 
-func (om *RouteResponse) GetStatus() string  { return om.Status }
-func (om *RouteResponse) GetPayload() []byte { return om.Payload }
+func (om *RouteResponse) GetStatus() string       { return om.Status }
+func (om *RouteResponse) GetPayload() interface{} { return om.Payload }
 func (om *RouteResponse) FromStruct(s interface{}) (err error) {
-	om.Payload, err = json.Marshal(s)
-	return err
+	om.Payload = s
+	return nil
 }
 
 // for usability

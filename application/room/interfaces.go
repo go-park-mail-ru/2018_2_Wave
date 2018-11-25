@@ -20,21 +20,21 @@ type RoomFactory func(id RoomID, step time.Duration, db interface{}) IRoom
 type IInMessage interface {
 	GetRoomID() RoomID          // target room id
 	GetSignal() string          // message method
-	GetPayload() []byte         // message payload
+	GetPayload() interface{}    // message payload
 	ToStruct(interface{}) error // unmurshal data to struct
 }
 
 // IOutMessage - message to a client
 type IOutMessage interface {
 	GetRoomID() RoomID            // message room id
-	GetPayload() []byte           // message payload
+	GetPayload() interface{}      // message payload
 	GetStatus() string            // message status
 	FromStruct(interface{}) error // marshal from struct
 }
 
 // IRouteResponse - response from route
 type IRouteResponse interface {
-	GetPayload() []byte           // message payload
+	GetPayload() interface{}      // message payload
 	GetStatus() string            // message status
 	FromStruct(interface{}) error // marshal from struct
 }

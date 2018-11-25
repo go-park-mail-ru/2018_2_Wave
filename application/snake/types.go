@@ -1,7 +1,7 @@
 package snake
 
 import (
-	"Wave/server/room"
+	"Wave/application/room"
 )
 
 // ----------------| vector

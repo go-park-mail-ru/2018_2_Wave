@@ -1,8 +1,8 @@
 package snake
 
 import (
-	"Wave/server/room"
-	"Wave/server/room/app"
+	"Wave/application/room"
+	"Wave/application/manager"
 	"time"
 )
 
@@ -16,7 +16,7 @@ type App struct {
 }
 
 // New snake app
-func New(id room.RoomID, step time.Duration) room.IRoom {
+func New(id room.RoomID, step time.Duration, db interface{}) room.IRoom {
 	s := &App{
 		Room: room.NewRoom(id, step),
 		world: newWorld(sceneSize{

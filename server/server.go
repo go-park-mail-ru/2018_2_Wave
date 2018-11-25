@@ -21,6 +21,7 @@ func Start(confPath string) {
 		API    = api.New(db)
 		r      = mux.NewRouter()
 	)
+	API.LG = curlog
 	r.HandleFunc("/", mw.Chain(API.SlashHandler)).Methods("GET")
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC, curlog))).Methods("POST")
 	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.Auth(curlog), mw.CORS(conf.CC, curlog))).Methods("GET")

@@ -2,7 +2,7 @@
 @object = { letter : "", position : { "X" : 0, "Y" : 0 } }
 @snake  = { user_id : "", body: [ @object ] }
 @game_info  = {
-    scene_size: { X : 900, Y : 900 },
+    scene_size: { X : 0, Y : 0 },
     snakes:     [ @snake ],
     items:      [ @object ]
 }

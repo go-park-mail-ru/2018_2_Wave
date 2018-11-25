@@ -1,8 +1,6 @@
 package room
 
 import (
-	"io"
-
 	lg "Wave/utiles/logger"
 
 	"github.com/gorilla/websocket"
@@ -70,7 +68,7 @@ func (u *User) Listen() error {
 
 		// read a message
 		err := u.Conn.ReadJSON(m)
-		if err == io.ErrClosedPipe {
+		if websocket.IsCloseError(err, wsCloseErrors...) {
 			u.removeFromAllRooms()
 			if u.bClosed {
 				return nil

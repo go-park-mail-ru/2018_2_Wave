@@ -54,3 +54,42 @@ func TestMessages(t *testing.T) {
 		}
 	}
 }
+
+func TestPayload(t *testing.T) {
+	data := []byte(`{
+		"room_id": "u1",
+		"signal": "s1",
+		"payload": {
+			"test": "val"
+		}
+	}`)
+	expected := `{"room_id":"","status":"","payload":{"test":"val"}}`
+	type Pl struct {
+		Test string `json:"test"`
+	}
+
+	im := &InMessage{}
+	if err := json.Unmarshal(data, im); err != nil {
+		t.Fatal(err)
+	}
+
+	pl := &Pl{}
+	if err := im.ToStruct(pl); err != nil {
+		t.Fatal(err)
+	}
+
+	if pl.Test != "val" {
+		t.Fatal("unexpected test value:", pl.Test)
+	}
+
+	om := &OutMessage{
+		Payload: im.Payload,
+	}
+	res, err := json.Marshal(om)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(res) != expected {
+		t.Fatal("unexpected result:", string(res))
+	}
+}

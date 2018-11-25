@@ -30,3 +30,12 @@ var ( // const is inavaliable here
 	ErrorConnectionClosed = errors.New("WS connection closed unexpected")
 	ErrorWrongInputFormat = errors.New("Wrong input format")
 )
+
+var (
+	wsCloseErrors = func() (res []int) {
+		for i := 1000; i <= 1010; i++ {
+			res = append(res, i)
+		}
+		return append(res, 1015)
+	}()
+)

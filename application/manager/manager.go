@@ -18,8 +18,8 @@ type App struct {
 	/** internal rooms:
 	 * 	- chats
 	 *	- game lobbies	*/
-	internalRooms map[room.RoomID]room.IRoom
-	db            interface{}
+	rooms map[room.RoomID]room.IRoom
+	db    interface{}
 
 	lastRoomID int64
 	lastUserID int64
@@ -29,8 +29,9 @@ type App struct {
 // New applicarion room
 func New(id room.RoomID, step time.Duration, db interface{}) *App {
 	a := &App{
-		Room: room.NewRoom(id, step),
-		db:   db,
+		Room:  room.NewRoom(id, step),
+		rooms: map[room.RoomID]room.IRoom{},
+		db:    db,
 	}
 	a.Routes["lobby_list"] = a.onGetLobbyList
 	a.Routes["lobby_create"] = withRoomType(a.onLobbyCreate)
@@ -67,6 +68,7 @@ func (a *App) CreateLobby(room_type room.RoomType, room_id room.RoomID) (room.IR
 		if r == nil {
 			return nil, room.ErrorNil
 		}
+		a.rooms[room_id] = r
 		go r.Run()
 
 		return r, nil
@@ -82,7 +84,7 @@ func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteRespon
 		RoomType room.RoomType
 	}
 	data := []Response{}
-	for _, r := range a.internalRooms {
+	for _, r := range a.rooms {
 		data = append(data, Response{
 			RoomID:   r.GetID(),
 			RoomType: r.GetType(),
@@ -101,16 +103,16 @@ func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType)
 }
 
 func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
-	if r, ok := a.internalRooms[cmd]; ok {
+	if r, ok := a.rooms[cmd]; ok {
 		r.Stop()
-		delete(a.internalRooms, cmd)
+		delete(a.rooms, cmd)
 		return room.MessageOK
 	}
 	return room.MessageWrongRoomID
 }
 
 func (a *App) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
-	if r, ok := a.internalRooms[cmd]; ok {
+	if r, ok := a.rooms[cmd]; ok {
 		if err := u.AddToRoom(r); err == nil {
 			return room.MessageOK
 		}
@@ -120,7 +122,7 @@ func (a *App) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) roo
 }
 
 func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
-	if r, ok := a.internalRooms[cmd]; ok {
+	if r, ok := a.rooms[cmd]; ok {
 		if err := u.RemoveFromRoom(r); err == nil {
 			return room.MessageOK
 		}

@@ -2,11 +2,7 @@ package api
 
 import (
 	psql "Wave/server/database"
-	"Wave/application/room"
-	"Wave/application/manager"
 	lg "Wave/utiles/logger"
-	"Wave/utiles/misc"
-	"Wave/utiles/models"
 	"fmt"
 	"io"
 	"log"
@@ -15,6 +11,12 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+	
+	"Wave/application/room"
+	"Wave/application/snake"
+	"Wave/application/manager"
+	"Wave/utiles/misc"
+	"Wave/utiles/models"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -24,6 +26,7 @@ import (
 // TODO:: get the value from configuration files
 const wsAppTickRate = 16 * time.Millisecond
 
+// Handler - rest api handler
 type Handler struct {
 	DB       *psql.Model
 	wsApp    *app.App
@@ -31,10 +34,12 @@ type Handler struct {
 	LG       *lg.Logger
 }
 
+// New api handler
 func New(model *psql.Model) *Handler {
 	return &Handler{
 		wsApp: func() *app.App {
 			wsApp := app.New("app", wsAppTickRate, model)
+			wsApp.CreateLobby(snake.RoomType, "snake")
 			go wsApp.Run()
 			return wsApp
 		}(),
@@ -431,8 +436,8 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	go func() {
-		UID := h.wsApp.GetNextUserID()
-		user := room.NewUser(UID, ws)
+		println("---------------------------------")
+		user := room.NewUser(h.wsApp.GetNextUserID(), ws)
 		user.LG = h.LG
 		user.AddToRoom(h.wsApp)
 		user.Listen()

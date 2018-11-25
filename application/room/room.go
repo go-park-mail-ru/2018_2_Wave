@@ -135,7 +135,7 @@ func (r *Room) SendMessageTo(u IUser, rs IRouteResponse) error {
 	if _, ok := r.Users[u.GetID()]; !ok {
 		return ErrorForbiden
 	}
-	r.log("sending message", "to", u.GetID(), "msg", string(rs.GetPayload()))
+	r.log("sending message", "to", u.GetID(), "msg", rs.GetPayload())
 	return u.Consume(&OutMessage{
 		RoomID:  r.GetID(),
 		Status:  rs.GetStatus(),

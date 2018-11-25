@@ -111,8 +111,8 @@ func TestUserSimple(t *testing.T) {
 		if res.RoomID != "test" {
 			t.Fatalf("Unexpected roomID: %v\n", res.RoomID)
 		}
-		if string(res.Payload) != testText {
-			t.Fatalf("Unexpected payload: %v\n", string(res.Payload))
+		if res.Payload.(string) != testText {
+			t.Fatalf("Unexpected payload: %v\n", res.Payload.(string))
 		}
 	}
 	{ // remove from room
