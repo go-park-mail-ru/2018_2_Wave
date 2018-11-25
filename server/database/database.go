@@ -89,3 +89,8 @@ func validateCredentials(target string) bool {
 
 	return true
 }
+
+func (model *DatabaseModel) AddMsg(roomid, msg string) error {
+	model.Database.MustExec("INSERT INTO usermessage(roomid, msg) VALUES($1, $2)", roomid, msg)
+	return nil
+}
