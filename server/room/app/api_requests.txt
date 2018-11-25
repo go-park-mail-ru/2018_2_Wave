@@ -1,0 +1,21 @@
+@error = { "reason" : "" }
+@room  = { "room_id": "" }
+
+app lobby_list
+STATUS_OK   [ { "room_id": "", "room_type": "" } ]
+
+app lobby_create {"room_type": "room_type"}
+STATUS_OK   @room
+STATUS_ERR  @error
+
+app lobby_delete @room
+STATUS_ERR  @error
+STATUS_OK   
+
+app add_to_room @room
+STATUS_ERR @error
+STATUS_OK
+
+app remove_from_room @room
+STATUS_ERR @error
+STATUS_OK

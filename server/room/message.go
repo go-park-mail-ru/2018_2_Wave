@@ -8,9 +8,9 @@ import (
 
 // InMessage - default IInMessage
 type InMessage struct {
-	RoomID  RoomID
-	Signal  string
-	Payload []byte
+	RoomID  RoomID `json:"room_id"`
+	Signal  string `json:"signal"`
+	Payload []byte `json:"payload"`
 }
 
 func (im *InMessage) GetRoomID() RoomID  { return im.RoomID }
@@ -24,9 +24,9 @@ func (im *InMessage) ToStruct(s interface{}) error {
 
 // OutMessage - default IOutMessage
 type OutMessage struct {
-	RoomID  RoomID
-	Status  string
-	Payload []byte
+	RoomID  RoomID `json:"room_id"`
+	Status  string `json:"status"`
+	Payload []byte `json:"payload"`
 }
 
 func (om *OutMessage) GetRoomID() RoomID  { return om.RoomID }
@@ -41,8 +41,8 @@ func (om *OutMessage) FromStruct(s interface{}) (err error) {
 
 // RouteResponse - default IOutMessage
 type RouteResponse struct {
-	Status  string
-	Payload []byte
+	Status  string `json:"status"`
+	Payload []byte `json:"payload"`
 }
 
 func (om *RouteResponse) GetStatus() string  { return om.Status }

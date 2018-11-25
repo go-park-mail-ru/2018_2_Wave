@@ -60,6 +60,9 @@ func (u *User) Listen() error {
 		}
 	}()
 
+	// send current user_id
+	u.Conn.WriteJSON(u.GetID())
+
 	for { // stops when connection closes
 		m := &InMessage{}
 
