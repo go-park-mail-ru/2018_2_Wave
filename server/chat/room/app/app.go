@@ -1,7 +1,7 @@
 package app
 
 import (
-	"Wave/server/room"
+	"Wave/server/chat/room"
 	"strconv"
 	"sync"
 	"time"

@@ -1,7 +1,7 @@
 package app
 
 import (
-	"Wave/server/room"
+	"Wave/server/chat/room"
 )
 
 // type2Factory - singletone map converting room type to the room factory
