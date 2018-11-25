@@ -15,7 +15,7 @@ type Handler struct {
 	LG *lg.Logger
 }
 
-func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
+func (h *Handler) ChatHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	return
 }
