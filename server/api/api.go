@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// TODO:: get the value from configuration files
 const wsAppTickRate = 16 * time.Millisecond
 
 type Handler struct {
@@ -22,7 +23,7 @@ type Handler struct {
 func New(model *psql.DatabaseModel) *Handler {
 	return &Handler{
 		wsApp: func() *app.App {
-			wsApp := app.New("chat_manager", wsAppTickRate)
+			wsApp := app.New("app", wsAppTickRate)
 			go wsApp.Run()
 			return wsApp
 		}(),
