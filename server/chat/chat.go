@@ -1,8 +1,8 @@
 package chat
 
 import (
-	"Wave/server/chat/room"
-	"Wave/server/chat/app"
+	"Wave/server/app"
+	"Wave/server/room"
 	"time"
 )
 
