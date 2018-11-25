@@ -28,6 +28,6 @@ func init() {
 }
 
 func (a *App) send(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	room.MessageOK.WithStruct(im.GetPayload())
+	a.Broadcast(room.MessageOK.WithStruct(im.GetPayload()))
 	return room.MessageOK
 }
