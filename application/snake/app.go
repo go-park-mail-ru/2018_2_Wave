@@ -18,7 +18,7 @@ type App struct {
 // New snake app
 func New(id room.RoomID, step time.Duration, db interface{}) room.IRoom {
 	s := &App{
-		Room: room.NewRoom(id, step),
+		Room: room.NewRoom(id, RoomType, step),
 		world: newWorld(sceneSize{
 			X: 900,
 			Y: 900,

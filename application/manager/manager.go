@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const RoomType = "manager"
+
 // App - main service room
 /* - creates and store other rooms
  * - contains ALL online users
@@ -29,7 +31,7 @@ type App struct {
 // New applicarion room
 func New(id room.RoomID, step time.Duration, db interface{}) *App {
 	a := &App{
-		Room:  room.NewRoom(id, step),
+		Room:  room.NewRoom(id, RoomType, step),
 		rooms: map[room.RoomID]room.IRoom{},
 		db:    db,
 	}

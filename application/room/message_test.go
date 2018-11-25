@@ -77,7 +77,6 @@ func TestPayload(t *testing.T) {
 	if err := im.ToStruct(pl); err != nil {
 		t.Fatal(err)
 	}
-
 	if pl.Test != "val" {
 		t.Fatal("unexpected test value:", pl.Test)
 	}

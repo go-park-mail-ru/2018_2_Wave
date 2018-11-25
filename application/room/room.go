@@ -28,9 +28,10 @@ type Room struct {
 	Step time.Duration
 }
 
-func NewRoom(id RoomID, step time.Duration) *Room {
+func NewRoom(id RoomID, tp RoomType, step time.Duration) *Room {
 	r := &Room{
 		ID:              id,
+		Type:            tp,
 		Ticker:          time.NewTicker(step),
 		Routes:          map[string]Route{},
 		Users:           map[UserID]IUser{},
