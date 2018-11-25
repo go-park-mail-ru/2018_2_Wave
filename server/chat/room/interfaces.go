@@ -14,7 +14,7 @@ import "time"
 type RoomID string
 type UserID string
 type RoomType string
-type RoomFactory func(RoomID, time.Duration) IRoom
+type RoomFactory func(RoomID, time.Duration, interface{}) IRoom
 
 // IInMessage - message from a user
 type IInMessage interface {

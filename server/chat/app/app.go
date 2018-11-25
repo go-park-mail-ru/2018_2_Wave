@@ -19,6 +19,7 @@ type App struct {
 	 * 	- chats
 	 *	- game lobbies	*/
 	internalRooms map[room.RoomID]room.IRoom
+	db            interface{}
 
 	lastRoomID int64
 	lastUserID int64
@@ -26,9 +27,10 @@ type App struct {
 }
 
 // New applicarion room
-func New(id room.RoomID, step time.Duration) *App {
+func New(id room.RoomID, step time.Duration, db interface{}) *App {
 	a := &App{
 		Room: room.NewRoom(id, step),
+		db:   db,
 	}
 	a.Routes["lobby_list"] = a.onGetLobbyList
 	a.Routes["lobby_create"] = withRoomType(a.onLobbyCreate)
@@ -78,7 +80,7 @@ func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteRespon
 
 func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType) room.IRouteResponse {
 	if factory, ok := type2Factory[cmd]; ok {
-		r := factory(a.GetNextRoomID(), a.Step)
+		r := factory(a.GetNextRoomID(), a.Step, a.db)
 		if r == nil {
 			return room.MessageError
 		}

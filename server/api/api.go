@@ -5,6 +5,7 @@ import (
 	lg "Wave/utiles/logger"
 	"net/http"
 	"time"
+	// "Wave/server/chat"
 	"Wave/server/chat/app"
 	"Wave/server/chat/room"
 	"github.com/gorilla/websocket"
@@ -25,6 +26,7 @@ func New(model *psql.DatabaseModel) *Handler {
 		wsApp: func() *app.App {
 			wsApp := app.New("app", wsAppTickRate)
 			go wsApp.Run()
+			// wsApp.
 			return wsApp
 		}(),
 		upgrader: websocket.Upgrader{
