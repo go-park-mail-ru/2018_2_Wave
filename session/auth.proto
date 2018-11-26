@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+// protoc --go_out=plugins=grpc:. *.proto
+
+package session;
+
+message SessionID {
+  string ID = 1;
+}
+
+message Session {
+  string login = 1;
+  string password = 2;
+  string avatar = 3;
+}
+
+message Nothing {
+  bool dummy = 1;
+}
+
+service AuthChecker {
+    rpc Create (Session) returns (SessionID) {}
+    rpc Check (SessionID) returns (Nothing) {}
+    rpc Delete (SessionID) returns (Nothing) {}
+    rpc SenderID (SessionID) returns (Session) {}
+}
+

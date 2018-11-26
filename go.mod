@@ -2,7 +2,7 @@ module Wave
 
 require (
 	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
-	github.com/golang/protobuf v1.2.0 // indirect
+	github.com/golang/protobuf v1.2.0
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/websocket v1.4.0
@@ -19,4 +19,6 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
 	golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869
+	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
+	google.golang.org/grpc v1.16.0
 )

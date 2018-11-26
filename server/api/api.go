@@ -6,6 +6,8 @@ import (
 	mc "Wave/server/metrics"
 
 	"Wave/utiles/misc"
+	"golang.org/x/net/context"
+	"Wave/session"
 	"Wave/utiles/models"
 	"fmt"
 	"log"
@@ -27,6 +29,7 @@ type Handler struct {
 	DB psql.DatabaseModel
 	LG *lg.Logger
 	Prof *mc.Profiler
+	SessManager session.AuthCheckerClient
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
@@ -95,6 +98,7 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
+	log.Println("aaa")
 	user := models.UserEdit{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
@@ -120,7 +124,13 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := h.DB.SignUp(user)
+	cookie, err := h.SessManager.Create(
+			context.Background(),
+			&session.Session{
+			Login:     user.Username,
+			Password: user.Username,
+			Avatar: user.Avatar,
+		})
 
 	if err != nil {
 
@@ -133,7 +143,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if cookie == "" {
+	if cookie.ID == "" {
 		fr := models.ForbiddenRequest{
 			Reason: "Username already in use.",
 		}
@@ -149,7 +159,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionCookie := misc.MakeSessionCookie(cookie)
+	sessionCookie := misc.MakeSessionCookie(cookie.ID)
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusCreated)
 
@@ -363,8 +373,13 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
+	success, _ := h.SessManager.Delete(
+		context.Background(),
+		&session.SessionID{
+			ID: cookie,
+		})
 
-	if err := h.DB.LogOut(cookie); err != nil {
+	if success.Dummy == false {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/session failed",
@@ -398,6 +413,22 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 		"source", "api.go",
 		"who", "LogoutOPTHandler",)
 
+}
+
+func (h *Handler) IsLoggedIn(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
+	success, _ := h.SessManager.Check(
+		context.Background(),
+		&session.SessionID{
+			ID: cookie,
+		})
+	if success.Dummy == true {
+		rw.WriteHeader(http.StatusOK)
+
+		return
+	}
+
+	rw.WriteHeader(http.StatusUnauthorized)
 }
 
 /************************* websocket block ************************************/
