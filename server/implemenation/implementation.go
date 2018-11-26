@@ -144,11 +144,3 @@ func (sm *SessionManager) Delete(ctx context.Context, in *session.SessionID) (*s
 
 	return &session.Nothing{Dummy: true}, nil
 }
-
-func (sm *SessionManager) Sender(ctx context.Context, in *session.SessionID) (s *session.Session, error) {
-	fmt.Println("call Sender", in)
-	row := sm.Database.QueryRowx(`SELECT DISTINCT username FROM userinfo JOIN session USING(uid);`)
-	_ := row.Scan(&s.Login)
-	   
-	return &s, nil
-}

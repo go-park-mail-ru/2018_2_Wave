@@ -22,6 +22,5 @@ service AuthChecker {
     rpc Create (Session) returns (SessionID) {}
     rpc Check (SessionID) returns (Nothing) {}
     rpc Delete (SessionID) returns (Nothing) {}
-    rpc SenderID (SessionID) returns (Session) {}
 }
 
