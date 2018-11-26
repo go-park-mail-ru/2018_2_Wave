@@ -24,7 +24,7 @@ import (
 )
 
 // TODO:: get the value from configuration files
-const wsAppTickRate = 16 * time.Millisecond
+const wsAppTickRate = 500 * time.Millisecond
 
 // Handler - rest api handler
 type Handler struct {

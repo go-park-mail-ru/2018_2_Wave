@@ -33,7 +33,7 @@ func New(logger *lg.Logger) *Model {
 		dbuser     = envOrDefault("WAVE_DB_USER", "Wave")
 		dbpassword = envOrDefault("WAVE_DB_PASSWORD", "Wave")
 		dbname     = envOrDefault("WAVE_DB_NAME", "Wave")
-		data       = "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable"
+		data       = "user=" + dbuser + " password=" + dbpassword + " dbname='" + dbname + "' " + "sslmode=disable"
 		err        error
 	)
 	postgr.Database, err = sqlx.Connect("postgres", data)
@@ -64,7 +64,7 @@ const ( // we don't need to export them!
 
 func (model *Model) present(tableName string, colName string, target string) (fl bool, err error) {
 	row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "');")
-	
+
 	var exists string
 	if err = row.Scan(&exists); err != nil {
 		model.LG.Sugar.Infow(
@@ -87,8 +87,8 @@ func (model *Model) present(tableName string, colName string, target string) (fl
 	return fl, nil
 }
 
-func validateCredentials(target string) bool { 
-	return true 
+func validateCredentials(target string) bool {
+	return true
 }
 
 /****************************** session block ******************************/
@@ -101,7 +101,7 @@ func (model *Model) LogIn(credentials models.UserCredentials) (cookie string, er
 		FROM userinfo
 		WHERE username=$1
 		`, credentials.Username)
-		
+
 		var psswd string
 		if err := row.Scan(&psswd); err != nil {
 			model.LG.Sugar.Panicw(
@@ -251,7 +251,6 @@ func (model *Model) GetMyProfile(cookie string) (profile models.UserExtended, er
 			ON session.uid = userinfo.uid
 			AND cookie=$1;
 	`, cookie)
-	
 
 	if err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score); err != nil {
 
@@ -280,7 +279,7 @@ func (model *Model) GetProfile(username string) (profile models.UserExtended, er
 			FROM userinfo
 			WHERE username=$1;
 		`, username)
-		
+
 		if err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score); err != nil {
 
 			model.LG.Sugar.Infow(

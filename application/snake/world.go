@@ -186,7 +186,7 @@ func (w *world) fillInscene(objs []iObject) {
 		}
 		pos := o.GetPos()
 		if pos.X > max.X || pos.Y > max.Y {
-			// TODO:: handle the fuck
+			panic("out of map size")
 		}
 
 		other := w.scene[pos.X][pos.Y]

@@ -1,8 +1,8 @@
 package snake
 
 import (
-	"Wave/application/room"
 	"Wave/application/manager"
+	"Wave/application/room"
 	"time"
 )
 
@@ -83,9 +83,9 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse
 // place the user into a game scene and allow him play
 func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	if _, err := a.world.CreateSnake(u, 6); err != nil {
-		return nil
+		return messageAlreadyPlays
 	}
-	return messageAlreadyPlays
+	return nil
 }
 
 // exit from the game

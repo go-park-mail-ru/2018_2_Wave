@@ -2,6 +2,7 @@ package app
 
 import (
 	"Wave/application/room"
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -73,6 +74,8 @@ func (a *App) CreateLobby(room_type room.RoomType, room_id room.RoomID) (room.IR
 		a.rooms[room_id] = r
 		go r.Run()
 
+		fmt.Printf("%s", a.rooms) // TODO::
+
 		return r, nil
 	}
 	return nil, room.ErrorNotExists
@@ -136,11 +139,11 @@ func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomID
 // ----------------| helper functions
 
 type roomIDPayload struct {
-	RoomID room.RoomID
+	RoomID room.RoomID `json:"room_id"`
 }
 
 type roomTypePayload struct {
-	RoomType room.RoomType
+	RoomType room.RoomType `json:"room_type"`
 }
 
 func withRoomID(next func(room.IUser, room.IInMessage, room.RoomID) room.IRouteResponse) room.Route {

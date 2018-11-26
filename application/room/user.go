@@ -70,8 +70,8 @@ func (u *User) Listen() error {
 		// read a message
 		err := u.Conn.ReadJSON(m)
 		if websocket.IsCloseError(err, wsCloseErrors...) {
-			u.removeFromAllRooms()
-			if u.bClosed {
+			u.StopListening()
+			if u.bClosed { // TODO:: fix that
 				return nil
 			}
 			return ErrorConnectionClosed
@@ -106,8 +106,11 @@ func (u *User) Listen() error {
 }
 
 func (u *User) StopListening() error {
-	u.bClosed = true
-	u.Conn.Close()
+	if !u.bClosed {
+		u.bClosed = true
+		u.LG.Sugar.Infof("ws closed, uid: %s", u.GetID())
+		u.Conn.Close()
+	}
 	return nil
 }
 
@@ -122,12 +125,9 @@ func (u *User) Consume(m IOutMessage) error {
 		u.LG.Sugar.Infof("out_message: %v", string(data))
 	}
 
-	err := u.Conn.WriteJSON(m)
-	if websocket.IsCloseError(err) { // is that correct?
+	if err := u.Conn.WriteJSON(m); err != nil {
+		u.StopListening()
 		return ErrorConnectionClosed
-	}
-	if err != nil {
-		return ErrorWrongInputFormat
 	}
 	return nil
 }

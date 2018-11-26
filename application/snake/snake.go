@@ -1,6 +1,7 @@
 package snake
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -47,12 +48,18 @@ type snake struct {
 }
 
 func newSnake(w *world, points []vec2i, direction direction) *snake {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
 	s := &snake{
 		world:    w,
 		ticker:   time.NewTicker(300 * time.Microsecond),
 		movement: direction,
 	}
-	for i := len(points); i >= 0; i-- {
+	for i := len(points) - 1; i >= 0; i-- {
 		s.setHead('h', direction, points[i])
 	}
 	go s.tick()
