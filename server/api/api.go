@@ -98,7 +98,6 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
-	log.Println("aaa")
 	user := models.UserEdit{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
@@ -116,11 +115,11 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(rw, string(payload))
-
+/*
 		h.LG.Sugar.Infow("/users failed, bad avatar.",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
-
+*/
 		return
 	}
 
@@ -129,17 +128,17 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 			&session.Session{
 			Login:     user.Username,
 			Password: user.Username,
-			Avatar: user.Avatar,
+			//Avatar: user.Avatar,
 		})
 
 	if err != nil {
 
 		rw.WriteHeader(http.StatusInternalServerError)
-
+/*
 		h.LG.Sugar.Infow("/users failed",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
-
+*/
 		return
 	}
 
@@ -151,22 +150,22 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(rw, string(payload))
-
+/*
 		h.LG.Sugar.Infow("/users failed, username already in use.",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
-
+*/
 		return
 	}
 
 	sessionCookie := misc.MakeSessionCookie(cookie.ID)
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusCreated)
-
+/*
 	h.LG.Sugar.Infow("/users succeded",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
-
+*/
 	return
 }
 
