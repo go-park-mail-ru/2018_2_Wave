@@ -31,9 +31,9 @@ func newSnakeNode(letter rune, s *snake, position core.Vec2i) *snakeNode {
 }
 
 func (s *snakeNode) OnColided(o core.IObject) {
-	if p, ok := o.(iItem); ok {
-		s.snake.pushBack(p.GetLetter())
-		o.Destroy()
+	if f, ok := o.(*food); ok {
+		s.snake.pushBack(f.GetLetter())
+		f.Destroy()
 	}
 	if _, ok := o.(*wall); ok {
 		s.snake.destroy()

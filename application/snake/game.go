@@ -87,7 +87,7 @@ func (g *game) GetSceneInfo() sceneInfo {
 		si.Playes = append(si.Playes, pf)
 	}
 	for _, o := range g.world.GetObjects() {
-		if i, ok := o.(iItem); ok {
+		if i, ok := o.(*food); ok {
 			si.Items = append(si.Items, sceneItemInfo{
 				Letter:   i.GetLetter(),
 				Position: i.GetPos(),
