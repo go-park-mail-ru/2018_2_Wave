@@ -13,10 +13,6 @@ type InMessage struct {
 	Payload interface{} `json:"payload"`
 }
 
-// func (im *InMessage) UnmarshalJSON(b []byte) error {
-// 	im.Payload = interface{}
-
-// }
 func (im *InMessage) GetRoomID() RoomID       { return im.RoomID }
 func (im *InMessage) GetSignal() string       { return im.Signal }
 func (im *InMessage) GetPayload() interface{} { return im.Payload }
@@ -60,13 +56,19 @@ func (om *RouteResponse) FromStruct(s interface{}) (err error) {
 	return nil
 }
 
-// for usability
 func (om RouteResponse) WithStruct(s interface{}) *RouteResponse {
-	if err := om.FromStruct(s); err != nil {
-		panic(err)
+	return &RouteResponse{
+		Status:  om.Status,
+		Payload: s,
+	}
+}
+
+func (om RouteResponse) WithReason(reason string) *RouteResponse {
+	type Reason struct {
+		Reason string `json:"reason"`
 	}
 	return &RouteResponse{
 		Status:  om.Status,
-		Payload: om.Payload,
+		Payload: Reason{reason},
 	}
 }

@@ -101,7 +101,10 @@ func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType)
 	if err != nil {
 		return room.MessageError
 	}
-	return room.MessageOK.WithStruct(r.GetID())
+
+	return room.MessageOK.WithStruct(roomIDPayload{
+		RoomID: r.GetID(),
+	})
 }
 
 func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {

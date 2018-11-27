@@ -97,9 +97,9 @@ func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponse {
 // ----------------| helpers
 
 var (
-	messageNoSnake        = room.RouteResponse{Status: room.StatusError}.WithStruct("No snake")
-	messageAlreadyPlays   = room.RouteResponse{Status: room.StatusError}.WithStruct("already plays")
-	messageUnknownCommand = room.RouteResponse{Status: room.StatusError}.WithStruct("unknown command")
+	messageNoSnake        = room.RouteResponse{Status: room.StatusError}.WithReason("No snake")
+	messageAlreadyPlays   = room.RouteResponse{Status: room.StatusError}.WithReason("already plays")
+	messageUnknownCommand = room.RouteResponse{Status: room.StatusError}.WithReason("unknown command")
 )
 
 func (a *App) withSnake(u room.IUser, next func(s *snake)) room.IRouteResponse {

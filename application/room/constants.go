@@ -5,18 +5,18 @@ import (
 )
 
 const (
-	StatusError = "status_error"
-	StatusTick  = "status_tick"
-	StatusOK    = "status_ok"
+	StatusError = "STATUS_ERROR"
+	StatusTick  = "STATUS_TICK"
+	StatusOK    = "STATUS_OK"
 )
 
 var (
-	MessageError         = RouteResponse{Status: StatusError}.WithStruct("")
-	MessageWrongUserID   = RouteResponse{Status: StatusError}.WithStruct("wrong user id")
-	MessageWrongRoomID   = RouteResponse{Status: StatusError}.WithStruct("wrong room id")
-	MessageWrongRoomType = RouteResponse{Status: StatusError}.WithStruct("wrong room type")
-	MessageWrongFormat   = RouteResponse{Status: StatusError}.WithStruct("wrong format")
-	MessageForbiden      = RouteResponse{Status: StatusError}.WithStruct("forbiden")
+	MessageError         = RouteResponse{Status: StatusError}.WithReason("")
+	MessageWrongUserID   = RouteResponse{Status: StatusError}.WithReason("wrong user id")
+	MessageWrongRoomID   = RouteResponse{Status: StatusError}.WithReason("wrong room id")
+	MessageWrongRoomType = RouteResponse{Status: StatusError}.WithReason("wrong room type")
+	MessageWrongFormat   = RouteResponse{Status: StatusError}.WithReason("wrong format")
+	MessageForbiden      = RouteResponse{Status: StatusError}.WithReason("forbiden")
 	MessageTick          = RouteResponse{Status: StatusTick}.WithStruct("")
 	MessageOK            = RouteResponse{Status: StatusOK}.WithStruct("")
 )
