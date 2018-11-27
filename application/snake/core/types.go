@@ -58,6 +58,6 @@ func (d Direction) GetDelta() (res Vec2i) {
 
 // ----------------|
 
-type worldInfo struct {
-	sceneSize Vec2i
+type WorldInfo struct {
+	SceneSize Vec2i
 }

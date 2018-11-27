@@ -10,25 +10,27 @@ type World struct {
 	scene   *scene
 	objects []IObject
 
-	info worldInfo
+	info WorldInfo
 }
 
 // NewWorld - constructor
 func NewWorld(size Vec2i) *World {
 	return &World{
 		scene: newScene(size),
-		info: worldInfo{
-			sceneSize: size,
+		info: WorldInfo{
+			SceneSize: size,
 		},
 	}
 }
 
 // ----------------| tick and lifecycle
 
-// tick the world
-func (w *World) Tick(dt time.Duration) {
+func (w *World) Tick(dt time.Duration) {}
 
-}
+// ----------------|
+
+func (w *World) GetWorldInfo() WorldInfo { return w.info }
+func (w *World) GetObjects() []IObject   { return w.objects } // looks unsafe
 
 // ----------------| object handling
 

@@ -67,8 +67,8 @@ func (g *game) DeleteSnake(u room.IUser) error {
 	return nil
 }
 
-func (g *game) GetSceneInfo() *sceneInfo {
-	si := &sceneInfo{}
+func (g *game) GetSceneInfo() sceneInfo {
+	si := sceneInfo{}
 	for u, s := range g.user2snake {
 		pf := playerInfo{
 			UID: u.GetID(),
@@ -81,20 +81,20 @@ func (g *game) GetSceneInfo() *sceneInfo {
 		}
 		si.Playes = append(si.Playes, pf)
 	}
-	// for _, o := range g.objects {
-	// 	if i, ok := o.(iItem); ok {
-	// 		si.Items = append(si.Items, sceneItemInfo{
-	// 			Letter:   i.GetLetter(),
-	// 			Position: i.GetPos(),
-	// 		})
-	// 	}
-	// }
+	for _, o := range g.world.GetObjects() {
+		if i, ok := o.(iItem); ok {
+			si.Items = append(si.Items, sceneItemInfo{
+				Letter:   i.GetLetter(),
+				Position: i.GetPos(),
+			})
+		}
+	}
 	return si
 }
 
 func (g *game) GetGameInfo() *gameInfo {
 	return &gameInfo{
-		// SceneSize: w.info.sceneSize,
-		// sceneInfo: *w.GetSceneInfo(),
+		SceneSize: g.world.GetWorldInfo().SceneSize,
+		sceneInfo: g.GetSceneInfo(),
 	}
 }
