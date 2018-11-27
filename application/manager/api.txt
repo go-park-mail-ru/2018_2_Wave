@@ -4,7 +4,7 @@
 app lobby_list
 STATUS_OK   [ { "room_id": "", "room_type": "" } ]
 
-app lobby_create {"room_type": "room_type"}
+app lobby_create {"room_type": ""}
 STATUS_OK   @room
 STATUS_ERR  @error
 

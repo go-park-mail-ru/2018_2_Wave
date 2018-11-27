@@ -1,7 +1,6 @@
 package snake
 
 import (
-	"Wave/application/manager"
 	"Wave/application/room"
 	"Wave/application/snake/core"
 	"time"
@@ -32,13 +31,6 @@ func New(id room.RoomID, step time.Duration, db interface{}) room.IRoom {
 	s.Routes["game_play"] = s.onGamePlay
 	s.Routes["game_exit"] = s.onGameExit
 	return s
-}
-
-func init() {
-	// register the room type
-	if err := app.RegisterRoomType(RoomType, New); err != nil {
-		panic(err)
-	}
 }
 
 // ----------------| handlers
