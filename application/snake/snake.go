@@ -25,15 +25,18 @@ func newSnakeNode(letter rune, s *snake, position core.Vec2i) *snakeNode {
 		letter: letter,
 		snake:  s,
 	}
-	n.SetWorld(s.world)
+	s.world.AddObject(n)
 	n.SetPos(position)
 	return n
 }
 
 func (s *snakeNode) OnColided(o core.IObject) {
-	if p, ok := o.(iItem); ok && p != nil {
+	if p, ok := o.(iItem); ok {
 		s.snake.pushBack(p.GetLetter())
 		o.Destroy()
+	}
+	if _, ok := o.(*wall); ok {
+		s.snake.destroy()
 	}
 }
 
@@ -41,12 +44,14 @@ func (s *snakeNode) OnColided(o core.IObject) {
 
 // snake representation
 type snake struct {
-	world    *core.World
+	world    *core.World    // game world
 	body     []*snakeNode   // body elements
 	movement core.Direction // next step direction
 
-	ticker *time.Ticker
-	cancel chan interface{}
+	ticker *time.Ticker     // tick function
+	cancel chan interface{} // stop ticking
+
+	onDestoyed func() // to remove the snake from the game
 }
 
 func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
@@ -56,8 +61,10 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 		cancel:   make(chan interface{}, 1),
 		movement: direction,
 	}
+	l := 'a'
 	for i := len(points) - 1; i >= 0; i-- {
-		s.setHead('h', direction, points[i])
+		s.setHead(l, direction, points[i])
+		l++
 	}
 	go s.tick()
 
@@ -68,6 +75,9 @@ func (s *snake) destroy() {
 	s.cancel <- ""
 	for _, elem := range s.body {
 		elem.Destroy()
+	}
+	if s.onDestoyed != nil {
+		s.onDestoyed()
 	}
 }
 

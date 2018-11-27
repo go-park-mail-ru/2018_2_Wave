@@ -9,16 +9,18 @@ import (
 )
 
 type scene struct {
-	LG      *logger.Logger
-	fields  [][]field
-	objects []IObject
-	size    Vec2i
+	LG        *logger.Logger
+	fields    [][]field
+	objects   []IObject
+	objectMap map[uint64]IObject
+	size      Vec2i
 }
 
 func newScene(size Vec2i) *scene {
 	s := &scene{
-		fields: make([][]field, size.X),
-		size:   size,
+		fields:    make([][]field, size.X),
+		objectMap: make(map[uint64]IObject),
+		size:      size,
 	}
 	for i := range s.fields {
 		s.fields[i] = make([]field, size.Y)
@@ -28,17 +30,18 @@ func newScene(size Vec2i) *scene {
 
 // ----------------|
 
-// assign the object th the scene 
+// assign the object th the scene
 func (s *scene) AddObject(o IObject) error {
 	if s.isPlaced(o) {
 		return room.ErrorAlreadyExists
 	}
 	s.objects = append(s.objects, o)
+	s.objectMap[o.GetID()] = o
 	return nil
 }
 
 func (s *scene) RemoveObject(o IObject) error {
-	if o == nil {
+	if o = s.actualiser(o); o == nil {
 		return room.ErrorNotExists
 	}
 	for i, expectant := range s.objects {
@@ -46,13 +49,14 @@ func (s *scene) RemoveObject(o IObject) error {
 			continue
 		}
 		s.objects = append(s.objects[:i], s.objects[i+1:]...)
+		delete(s.objectMap, o.GetID())
 
 		currPosition, err := s.validatePosition(o.GetPos())
 		if err != nil {
 			return err
 		}
 		s.at(currPosition).remove(o)
-		
+
 		return nil
 	}
 	return room.ErrorNotExists
@@ -92,8 +96,19 @@ func (s *scene) PrintDebug() {
 
 // ----------------|
 
+// some functions calls by embedded structs
+// but the structs have no acces to overrided
+// methods of ther embeders, so we need to upgrade
+// the incoming structs to their embedders to call the functions
+func (s *scene) actualiser(o IObject) IObject {
+	if o == nil {
+		return nil
+	}
+	return s.objectMap[o.GetID()]
+}
+
 func (s *scene) onObjectMove(o IObject, expectedPosition Vec2i) (nextPosition Vec2i, err error) {
-	if o != nil {
+	if o = s.actualiser(o); o != nil {
 		currPosition, err := s.validatePosition(o.GetPos())
 		if err != nil {
 			return Vec2i{}, err
@@ -105,7 +120,7 @@ func (s *scene) onObjectMove(o IObject, expectedPosition Vec2i) (nextPosition Ve
 		}
 
 		s.at(currPosition).remove(o)
-		s.at(nextPosition).colide(o)
+		s.at(nextPosition).collide(o)
 		return nextPosition, nil
 	}
 	return Vec2i{}, room.ErrorNil
@@ -115,12 +130,8 @@ func (s *scene) isPlaced(o IObject) bool {
 	if o == nil {
 		return false
 	}
-	for _, expectant := range s.objects {
-		if expectant == o {
-			return true
-		}
-	}
-	return false
+	_, ok := s.objectMap[o.GetID()]
+	return ok
 }
 
 func (s *scene) validatePosition(expectedPosition Vec2i) (validPosition Vec2i, err error) {
@@ -161,10 +172,11 @@ func (f *field) remove(o IObject) {
 }
 
 // NOTE:: nil safe
-func (f *field) colide(o IObject) {
+func (f *field) collide(o IObject) {
 	if f != nil && o != nil {
+		lastState := *f
 		*f = append(*f, o)
-		for _, elem := range *f {
+		for _, elem := range lastState {
 			elem.OnColided(o)
 			o.OnColided(elem)
 		}

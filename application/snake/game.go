@@ -9,13 +9,16 @@ import (
 type game struct {
 	user2snake map[room.IUser]*snake
 	world      *core.World
+	walls      *walls
 }
 
 func newGame(worldSize core.Vec2i) *game {
-	return &game{
+	g := &game{
 		user2snake: map[room.IUser]*snake{},
 		world:      core.NewWorld(worldSize),
 	}
+	g.walls = newWalls(g.world)
+	return g
 }
 
 // ----------------|
@@ -50,6 +53,9 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 		snake     = newSnake(g.world, poss, dir)
 	)
 	g.user2snake[u] = snake
+	snake.onDestoyed = func() {
+		delete(g.user2snake, u)
+	}
 	return snake, nil
 }
 

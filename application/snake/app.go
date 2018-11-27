@@ -13,7 +13,7 @@ const RoomType room.RoomType = "snake_game"
 // App - snake game room
 type App struct {
 	*room.Room // base room
-	game      *game
+	game       *game
 }
 
 // New snake app

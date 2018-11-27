@@ -11,10 +11,10 @@ import (
 	"reflect"
 	"strconv"
 	"time"
-	
-		"Wave/application/room"
-		"Wave/application/snake"
-		"Wave/application/manager"
+
+	"Wave/application/manager"
+	"Wave/application/room"
+	"Wave/application/snake"
 	"Wave/utiles/misc"
 	"Wave/utiles/models"
 

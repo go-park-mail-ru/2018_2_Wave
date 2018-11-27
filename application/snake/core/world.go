@@ -42,8 +42,20 @@ func (w *World) GetObjects() []IObject {
 
 // AddObject assigns the object to the scen but not places in.
 func (w *World) AddObject(o IObject) error {
-	if w.scene != nil {
-		return w.scene.AddObject(o)
+	if w.scene != nil || o == nil {
+		if o.GetWorld() == w {
+			return nil
+		}
+
+		if err := w.scene.AddObject(o); err != nil {
+			return err
+		}
+
+		if o.GetWorld() != nil {
+			o.GetWorld().RemoveObject(o)
+		}
+		o.setWorld(w)
+		return nil
 	}
 	return room.ErrorNil
 }
