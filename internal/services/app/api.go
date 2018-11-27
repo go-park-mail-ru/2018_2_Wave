@@ -21,15 +21,13 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/ksuid"
 	"golang.org/x/net/context"
-
-	_ "github.com/lib/pq"
 )
 
 type Handler struct {
 	DB psql.DatabaseModel
 	LG *lg.Logger
 	Prof *mc.Profiler
-	AuthManager auth.AuthCheckerClient
+	AuthManager auth.AuthClient
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
@@ -105,15 +103,15 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(rw, string(payload))
-/*
+
 		h.LG.Sugar.Infow("/users failed, bad avatar.",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
-*/
+
 		return
 	}
 
-	cookie, err := h.SessManager.Create(
+	cookie, err := h.AuthManager.Create(
 			context.Background(),
 			&session.Session{
 			Login:     user.Username,
@@ -124,11 +122,11 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 		rw.WriteHeader(http.StatusInternalServerError)
-/*
+
 		h.LG.Sugar.Infow("/users failed",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
-*/
+
 		return
 	}
 
@@ -140,28 +138,28 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(rw, string(payload))
-/*
+
 		h.LG.Sugar.Infow("/users failed, username already in use.",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
-*/
+
 		return
 	}
 
 	sessionCookie := misc.MakeSessionCookie(cookie.ID)
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusCreated)
-/*
+
 	h.LG.Sugar.Infow("/users succeded",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
-*/
+
 	return
 }
 
 func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
-	
+
 	profile, err := h.DB.GetMyProfile(cookie)
 
 	if err != nil {
@@ -362,7 +360,7 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
-	success, _ := h.SessManager.Delete(
+	success, _ := h.AuthManager.Delete(
 		context.Background(),
 		&session.SessionID{
 			ID: cookie,
@@ -406,7 +404,7 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) IsLoggedIn(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
-	success, _ := h.SessManager.Check(
+	success, _ := h.AuthManager.Check(
 		context.Background(),
 		&session.SessionID{
 			ID: cookie,

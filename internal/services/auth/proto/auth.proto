@@ -23,4 +23,3 @@ service Auth {
     rpc Check (Credentials) returns (Bool) {}
     rpc Delete (Cookie) returns (Bool) {}
 }
-

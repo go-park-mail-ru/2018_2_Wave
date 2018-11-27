@@ -11,6 +11,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const (
+	UserInfoTable = "userinfo"
+	UsernameCol   = "username"
+
+	SessionTable = "session"
+	CookieCol    = "cookie"
+)
+
 type DatabaseModel struct {
 	Database *sqlx.DB
 	LG       *lg.Logger
@@ -26,7 +34,7 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	dbuser := os.Getenv("WAVE_DB_USER")
 	dbpassword := os.Getenv("WAVE_DB_PASSWORD")
 	dbname := os.Getenv("WAVE_DB_NAME")
-	
+
 	postgr.Database, err = sqlx.Connect("postgres", "user=" + dbuser + " password=" + dbpassword + " dbname='" + dbname + "' " + "sslmode=disable")
 
 	if err != nil {
@@ -47,17 +55,10 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	return postgr
 }
 
-const (
-	UserInfoTable = "userinfo"
-	UsernameCol   = "username"
-
-	SessionTable = "session"
-	CookieCol    = "cookie"
-)
-
 func (model *DatabaseModel) present(tableName string, colName string, target string) (fl bool, err error) {
 	var exists string
-	row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "');")
+	row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " +
+	tableName + " WHERE " + colName + "='" + target + "');")
 	err = row.Scan(&exists)
 
 	if err != nil {
@@ -87,12 +88,21 @@ func (model *DatabaseModel) present(tableName string, colName string, target str
 	return fl, nil
 }
 
-func validateCredentials(target string) bool {
+func validateUname(target string) bool {
+	if len(target) < 4 {
+		return false
+	}
 
 	return true
 }
 
-/****************************** session block ******************************/
+func validatePassword(target string) bool {
+	if len(target) < 6 {
+		return false
+	}
+
+	return true
+}
 
 func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
 	if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
@@ -187,12 +197,10 @@ func (model *DatabaseModel) LogOut(cookie string) error {
 	return nil
 }
 
-/****************************** user block ******************************/
-
 func (model *DatabaseModel) SignUp(credentials models.UserEdit) (cookie string, err error) {
-	if validateCredentials(credentials.Username) && validateCredentials(credentials.Password) {
+	if validateUname(credentials.Username) && validatePassword(credentials.Password) {
 		if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
-			
+
 			model.LG.Sugar.Infow(
 				"signup failed, user already exists",
 				"source", "database.go",
@@ -343,7 +351,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			return false, problem
 		}
 		if !isPresent {
-			if validateCredentials(profile.Username) {
+			if validateUname(profile.Username) {
 				model.Database.MustExec(`
 					UPDATE userinfo
 					SET username=$1
@@ -385,7 +393,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 	}
 
 	if profile.Password != "" {
-		if validateCredentials(profile.Password) {
+		if validatePassword(profile.Password) {
 			hashedPsswd := misc.GeneratePasswordHash(profile.Password)
 			model.Database.MustExec(`
 				UPDATE userinfo
@@ -495,5 +503,3 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 
 	return board, nil
 }
-
-/*****grp******/
