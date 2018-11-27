@@ -5,22 +5,19 @@ import (
 	"Wave/application/snake/core"
 )
 
-type sceneItemInfo struct {
-	Letter   rune
-	Position core.Vec2i
+type objectInfo struct {
+	Letter   rune       `json:"letter"`
+	Position core.Vec2i `json:"position"`
 }
 
-type playerInfo struct {
-	UID   room.UserID
-	Snake []sceneItemInfo
-}
-
-type sceneInfo struct {
-	Playes []playerInfo
-	Items  []sceneItemInfo
+type snakeInfo struct {
+	UID   room.UserID  `json:"user_id"`
+	Snake []objectInfo `json:"body"`
 }
 
 type gameInfo struct {
-	SceneSize core.Vec2i
-	sceneInfo
+	SceneSize core.Vec2i   `json:"scene_size"`
+	Snakes    []snakeInfo  `json:"snakes"`
+	Food      []objectInfo `json:"food"`
+	Walls     []core.Vec2i `json:"walls"`
 }

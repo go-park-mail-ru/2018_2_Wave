@@ -2,7 +2,6 @@ package room
 
 import (
 	lg "Wave/utiles/logger"
-	"encoding/json"
 
 	"github.com/gorilla/websocket"
 )
@@ -86,10 +85,10 @@ func (u *User) Listen() error {
 		}
 
 		// log input
-		if u.LG != nil {
-			data, _ := json.Marshal(m)
-			u.LG.Sugar.Infof("in_message: %v", string(data))
-		}
+		// if u.LG != nil {
+		// 	data, _ := json.Marshal(m)
+		// 	u.LG.Sugar.Infof("in_message: %v", string(data))
+		// }
 
 		// apply the message to a room
 		if r, ok := u.Rooms[m.GetRoomID()]; ok {
@@ -119,10 +118,10 @@ func (u *User) Consume(m IOutMessage) error {
 	}
 
 	// log input
-	if u.LG != nil {
-		data, _ := json.Marshal(m)
-		u.LG.Sugar.Infof("out_message: %v", string(data))
-	}
+	// if u.LG != nil {
+	// 	data, _ := json.Marshal(m)
+	// 	u.LG.Sugar.Infof("out_message: %v", string(data))
+	// }
 
 	if err := u.Conn.WriteJSON(m); err != nil {
 		u.StopListening()

@@ -9,7 +9,7 @@ import (
 // To add a new factory user @RegisterRoomType function
 var type2Factory = map[room.RoomType]room.RoomFactory{}
 
-// RegisterRoomType factory 
+// RegisterRoomType factory
 func RegisterRoomType(roomType room.RoomType, factory room.RoomFactory) error {
 	if _, ok := type2Factory[roomType]; ok {
 		return room.ErrorAlreadyExists

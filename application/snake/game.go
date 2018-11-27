@@ -72,34 +72,31 @@ func (g *game) DeleteSnake(u room.IUser) error {
 	return room.ErrorNotExists
 }
 
-func (g *game) GetSceneInfo() sceneInfo {
-	si := sceneInfo{}
+func (g *game) GetGameInfo() *gameInfo {
+	gi := &gameInfo{SceneSize: g.world.GetWorldInfo().SceneSize}
+	// snakes
 	for u, s := range g.user2snake {
-		pf := playerInfo{
-			UID: u.GetID(),
-		}
+		si := snakeInfo{UID: u.GetID()}
 		for _, bn := range s.body {
-			pf.Snake = append(pf.Snake, sceneItemInfo{
+			si.Snake = append(si.Snake, objectInfo{
 				Letter:   bn.letter,
 				Position: bn.GetPos(),
 			})
 		}
-		si.Playes = append(si.Playes, pf)
+		gi.Snakes = append(gi.Snakes, si)
 	}
+	// food
 	for _, o := range g.world.GetObjects() {
 		if i, ok := o.(*food); ok {
-			si.Items = append(si.Items, sceneItemInfo{
+			gi.Food = append(gi.Food, objectInfo{
 				Letter:   i.GetLetter(),
 				Position: i.GetPos(),
 			})
 		}
 	}
-	return si
-}
-
-func (g *game) GetGameInfo() *gameInfo {
-	return &gameInfo{
-		SceneSize: g.world.GetWorldInfo().SceneSize,
-		sceneInfo: g.GetSceneInfo(),
+	// walls
+	for _, w := range g.walls.blocks {
+		gi.Walls = append(gi.Walls, w.GetPos())
 	}
+	return gi
 }
