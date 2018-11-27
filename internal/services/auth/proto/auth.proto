@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+// protoc --go_out=plugins=grpc:. *.proto
+
+package auth;
+
+message Cookie {
+  string cookieValue = 1;
+}
+
+message Credentials {
+  string login = 1;
+  string password = 2;
+  string avatar = 3;
+}
+
+message Bool {
+  bool resp = 1;
+}
+
+service Auth {
+    rpc Create (Credentials) returns (Cookie) {}
+    rpc Check (Credentials) returns (Bool) {}
+    rpc Delete (Cookie) returns (Bool) {}
+}
+

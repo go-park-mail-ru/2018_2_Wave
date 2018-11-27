@@ -3,8 +3,11 @@ package grpcserver
 import (
 	"Wave/internal/config"
 	lg "Wave/internal/logger"
-	"google.golang.org/grpc"
+	"Wave/internal/services/auth"
+
 	"net"
+
+	"google.golang.org/grpc"
 )
 
 func StartServer(curlog *lg.Logger, GRPCC config.GRPCConfiguration) {
@@ -17,7 +20,7 @@ func StartServer(curlog *lg.Logger, GRPCC config.GRPCConfiguration) {
 	}
 
 	server := grpc.NewServer()
-	//session.RegisterAuthCheckerServer(server, implementation.NewSessionManager(curlog))
+	auth.RegisterAuthServer(server, auth.NewAuthManager(curlog))
 
 	curlog.Sugar.Infow("starting grpc server on port" + GRPCC.Port,
 		"source", "grpcserv.go",

@@ -4,11 +4,10 @@ import (
 	psql "Wave/internal/database"
 	lg "Wave/internal/logger"
 	mc "Wave/internal/metrics"
-
-	"Wave/internal/misc"
-	"golang.org/x/net/context"
-	"Wave/session"
+	"Wave/internal/services/auth"
 	"Wave/internal/models"
+	"Wave/internal/misc"
+
 	"fmt"
 	"log"
 	"net/http"
@@ -21,6 +20,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/ksuid"
+	"golang.org/x/net/context"
 
 	_ "github.com/lib/pq"
 )
@@ -29,7 +29,7 @@ type Handler struct {
 	DB psql.DatabaseModel
 	LG *lg.Logger
 	Prof *mc.Profiler
-	SessManager session.AuthCheckerClient
+	AuthManager auth.AuthCheckerClient
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
@@ -50,7 +50,6 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	fileName := hash.String()
 
 	createPath := "." + prefix + fileName
-	log.Println(fileName)
 	path = prefix + fileName
 
 	out, err := os.Create(createPath)
@@ -62,9 +61,6 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 		"source", "api.go",
 		"who", "uploadHandler",)
 
-		//file.Close()
-		//out.Close()
-
         return false, ""
     }
 
@@ -75,18 +71,12 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 		"source", "api.go",
 		"who", "uploadHandler",)
 
-		//file.Close()
-		//out.Close()
-
 		return false, ""
     }
 
 	h.LG.Sugar.Infow("upload succeded",
 		"source", "api.go",
 		"who", "uploadHandler",)
-
-	//file.Close()
-	//out.Close()
 
 	return true, path
 }
@@ -445,7 +435,7 @@ const (
 )
 
 //action_uid uniqely generated on the front
-//action_id : 
+//action_id :
 // 1 - add user to the room
 // 2 - remove user from the room
 // 3 - start

@@ -1,16 +1,15 @@
-package implementation
+package auth
 
 import (
+	"Wave/internal/misc"
+	lg "Wave/internal/logger"
+
 	"fmt"
 	"strconv"
-	"Wave/session"
 
 	"golang.org/x/net/context"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"Wave/internal/misc"
-	//"Wave/internal/models"
-	lg "Wave/internal/logger"
 )
 
 const sessKeyLen = 10

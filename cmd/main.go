@@ -6,10 +6,10 @@ import (
 	"Wave/internal/grpcserver"
 	mw "Wave/internal/middleware"
 	mc "Wave/internal/metrics"
-	"Wave/session"
-
+	"Wave/internal/services/auth"
 	"Wave/internal/config"
 	lg "Wave/internal/logger"
+
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -21,6 +21,7 @@ import (
 
 //go:generate easyjson ../internal/config/
 //go:generate easyjson ../internal/models/
+//go generate protoc --go_out=plugins=grpc:. ../internal/services/auth/proto/*.proto
 
 func main() {
 	path := "./configs/conf.json"
@@ -49,9 +50,8 @@ func main() {
 		DB: *db,
 		LG: curlog,
 		Prof: prof,
+		AuthManager: auth.NewAuthClient(grpcConn),
 	}
-
-	API.SessManager = session.NewAuthCheckerClient(grpcConn)
 
 	r := mux.NewRouter()
 	//r.HandleFunc("/metrics", promhttp.Handler().(http.HandlerFunc)).Methods("GET")
