@@ -1,10 +1,18 @@
 @error  = { reason : "" }
-@object = { letter : "", position : { "X" : 0, "Y" : 0 } }
-@snake  = { user_id : "", body: [ @object ] }
+@vector = { X : 0, Y : 0 }
+@object = { 
+    letter : "", 
+    position : @vector 
+}
+@snake  = { 
+    user_id : "", 
+    body: [ @object ] 
+}
 @game_info  = {
-    scene_size: { X : 0, Y : 0 },
-    snakes:     [ @snake ],
-    items:      [ @object ]
+    scene_size: @vector,
+    snakes: [ @snake  ],
+    walls:  [ @vector ],
+    food:   [ @object ]
 }
 
 #------------------| requests
@@ -30,4 +38,4 @@ STATUS_OK
 
 #------------------| broadcast
 
-STATUS_TICK { "snakes" : [ @snake ], items : [ @object ] }
+STATUS_TICK @game_info
