@@ -10,12 +10,16 @@ type game struct {
 	user2snake map[room.IUser]*snake
 	world      *core.World
 	walls      *walls
+
+	leftToFood    time.Duration
+	foodSpawnRate time.Duration
 }
 
 func newGame(worldSize core.Vec2i) *game {
 	g := &game{
-		user2snake: map[room.IUser]*snake{},
-		world:      core.NewWorld(worldSize),
+		user2snake:    map[room.IUser]*snake{},
+		world:         core.NewWorld(worldSize),
+		foodSpawnRate: 2 * time.Second,
 	}
 	g.walls = newWalls(g.world)
 	return g
@@ -25,6 +29,12 @@ func newGame(worldSize core.Vec2i) *game {
 
 func (g *game) Tick(dt time.Duration) {
 	g.world.Tick(dt)
+
+	if g.leftToFood <= 0 {
+		g.leftToFood += g.foodSpawnRate
+		g.spawnFood()
+	}
+	g.leftToFood -= dt
 }
 
 // ----------------| controller interface
@@ -99,4 +109,11 @@ func (g *game) GetGameInfo() *gameInfo {
 		gi.Walls = append(gi.Walls, w.GetPos())
 	}
 	return gi
+}
+
+// ----------------| game mode logic
+
+func (g *game) spawnFood() {
+	pos, _ :=  g.world.FindGap(1)
+	newFood('h', g.world, pos[0])
 }
