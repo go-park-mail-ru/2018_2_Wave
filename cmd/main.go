@@ -27,7 +27,7 @@ import (
 //go:generate go run .
 
 func main() {
-	path := ".././conf.json"
+	path := "../configs/conf.json"
 
 	lis, err := net.Listen("tcp", ":8081")
 	if err != nil {
