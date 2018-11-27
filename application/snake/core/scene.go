@@ -5,6 +5,7 @@ import (
 	"Wave/utiles/logger"
 
 	"math/rand"
+	"strconv"
 )
 
 type scene struct {
@@ -27,6 +28,7 @@ func newScene(size Vec2i) *scene {
 
 // ----------------|
 
+// assign the object th the scene 
 func (s *scene) AddObject(o IObject) error {
 	if s.isPlaced(o) {
 		return room.ErrorAlreadyExists
@@ -44,6 +46,13 @@ func (s *scene) RemoveObject(o IObject) error {
 			continue
 		}
 		s.objects = append(s.objects[:i], s.objects[i+1:]...)
+
+		currPosition, err := s.validatePosition(o.GetPos())
+		if err != nil {
+			return err
+		}
+		s.at(currPosition).remove(o)
+		
 		return nil
 	}
 	return room.ErrorNotExists
@@ -64,12 +73,33 @@ func (s *scene) FindGap(length int) (res []Vec2i, dir Direction) {
 	return res, Right
 }
 
+func (s *scene) PrintDebug() {
+	res := ""
+
+	for y := s.size.Y - 1; y >= 0; y-- {
+		for x := 0; x < s.size.X; x++ {
+			f := s.fields[x][y]
+			if f.isEmpty() {
+				res += "-"
+			} else {
+				res += strconv.Itoa(len(f))
+			}
+		}
+		res += "\n"
+	}
+	println(res)
+}
+
 // ----------------|
 
 func (s *scene) onObjectMove(o IObject, expectedPosition Vec2i) (nextPosition Vec2i, err error) {
 	if o != nil {
-		currPosition := o.GetPos()
-		nextPosition, err := s.validatePosition(expectedPosition)
+		currPosition, err := s.validatePosition(o.GetPos())
+		if err != nil {
+			return Vec2i{}, err
+		}
+
+		nextPosition, err = s.validatePosition(expectedPosition)
 		if err != nil {
 			return Vec2i{}, err
 		}
@@ -96,6 +126,12 @@ func (s *scene) isPlaced(o IObject) bool {
 func (s *scene) validatePosition(expectedPosition Vec2i) (validPosition Vec2i, err error) {
 	validPosition.X = expectedPosition.X % s.size.X
 	validPosition.Y = expectedPosition.Y % s.size.Y
+	if validPosition.X < 0 {
+		validPosition.X = s.size.X + validPosition.X
+	}
+	if validPosition.Y < 0 {
+		validPosition.Y = s.size.Y + validPosition.Y
+	}
 	return validPosition, nil
 }
 
@@ -127,6 +163,7 @@ func (f *field) remove(o IObject) {
 // NOTE:: nil safe
 func (f *field) colide(o IObject) {
 	if f != nil && o != nil {
+		*f = append(*f, o)
 		for _, elem := range *f {
 			elem.OnColided(o)
 			o.OnColided(elem)

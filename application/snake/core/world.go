@@ -7,8 +7,7 @@ import (
 
 // World - game world
 type World struct {
-	scene   *scene
-	objects []IObject
+	scene *scene
 
 	info WorldInfo
 }
@@ -25,44 +24,36 @@ func NewWorld(size Vec2i) *World {
 
 // ----------------| tick and lifecycle
 
-func (w *World) Tick(dt time.Duration) {}
+func (w *World) Tick(dt time.Duration) {
+	w.scene.PrintDebug()
+}
 
 // ----------------|
 
 func (w *World) GetWorldInfo() WorldInfo { return w.info }
-func (w *World) GetObjects() []IObject   { return w.objects } // looks unsafe
+func (w *World) GetObjects() []IObject {
+	if w.scene != nil {
+		return w.scene.objects
+	}
+	return nil
+}
 
 // ----------------| object handling
 
-// assign the object to the world
+// AddObject assigns the object to the scen but not places in.
 func (w *World) AddObject(o IObject) error {
-	_, err := w.getObjectIdx(o)
-	if err == nil {
-		return room.ErrorAlreadyExists
+	if w.scene != nil {
+		return w.scene.AddObject(o)
 	}
-
-	w.objects = append(w.objects, o)
-	return nil
+	return room.ErrorNil
 }
 
-// remove the object from the forld
+// RemoveObject removes the object from the world.
 func (w *World) RemoveObject(o IObject) error {
-	idx, err := w.getObjectIdx(o)
-	if err != nil {
-		return room.ErrorNotExists
+	if w.scene != nil {
+		return w.scene.RemoveObject(o)
 	}
-
-	w.objects = append(w.objects[:idx], w.objects[idx+1:]...)
-	return nil
-}
-
-func (w *World) getObjectIdx(o IObject) (int, error) {
-	for i, ob := range w.objects {
-		if ob == o {
-			return i, nil
-		}
-	}
-	return 0, room.ErrorNotExists
+	return room.ErrorNil
 }
 
 // ----------------| scene functions

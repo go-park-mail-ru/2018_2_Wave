@@ -1,7 +1,6 @@
 package snake
 
 import (
-	"fmt"
 	"time"
 
 	"Wave/application/snake/core"
@@ -20,13 +19,14 @@ type snakeNode struct {
 
 const typeSnakeNode = "snake_node"
 
-func newSnakeNode(letter rune, s *snake) *snakeNode {
+func newSnakeNode(letter rune, s *snake, position core.Vec2i) *snakeNode {
 	n := &snakeNode{
 		Object: core.NewObject(typeSnakeNode),
 		letter: letter,
 		snake:  s,
 	}
 	n.SetWorld(s.world)
+	n.SetPos(position)
 	return n
 }
 
@@ -52,7 +52,7 @@ type snake struct {
 func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
 	s := &snake{
 		world:    w,
-		ticker:   time.NewTicker(1000 * time.Millisecond),
+		ticker:   time.NewTicker(200 * time.Millisecond),
 		cancel:   make(chan interface{}, 1),
 		movement: direction,
 	}
@@ -87,14 +87,12 @@ func (s *snake) moveNext() {
 		delta         = s.movement.GetDelta()
 		nextPosition  = s.body[0].GetPos().Sum(delta)
 		nextDirection = s.movement
+		tmpPosition   = core.Vec2i{}
 	)
-	fmt.Printf("---------- %+v\n", delta)
 	for i := range s.body {
-		tmp := core.Vec2i{}
-		nextPosition, tmp = s.body[i].GetPos(), nextPosition
-		s.body[i].SetPos(tmp)
-
+		nextPosition, tmpPosition = s.body[i].GetPos(), nextPosition
 		nextDirection, s.body[i].direction = s.body[i].direction, nextDirection
+		s.body[i].SetPos(tmpPosition)
 	}
 }
 
@@ -102,12 +100,11 @@ func (s *snake) pushBack(letter rune) {
 	if len(s.body) > 0 {
 		var (
 			curTail     = s.getTail()
-			newTail     = newSnakeNode(letter, s)
 			direction   = curTail.direction
 			delta       = direction.GetDelta().Mult(-1)
 			newPosition = curTail.GetPos().Sum(delta)
+			newTail     = newSnakeNode(letter, s, newPosition)
 		)
-		newTail.SetPos(newPosition)
 		newTail.direction = direction
 
 		s.body = append(s.body, newTail)
@@ -115,8 +112,7 @@ func (s *snake) pushBack(letter rune) {
 }
 
 func (s *snake) setHead(letter rune, direction core.Direction, position core.Vec2i) {
-	newHead := newSnakeNode(letter, s)
-	newHead.SetPos(position)
+	newHead := newSnakeNode(letter, s, position)
 	newHead.direction = direction
 	s.body = append([]*snakeNode{newHead}, s.body...)
 }

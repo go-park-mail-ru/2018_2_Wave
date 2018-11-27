@@ -21,8 +21,8 @@ func New(id room.RoomID, step time.Duration, db interface{}) room.IRoom {
 	s := &App{
 		Room: room.NewRoom(id, RoomType, step),
 		game: newGame(core.Vec2i{
-			X: 100,
-			Y: 100,
+			X: 130,
+			Y: 10,
 		}),
 	}
 	s.OnTick = s.onTick
