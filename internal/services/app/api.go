@@ -17,7 +17,7 @@ import (
 	"strconv"
 	"os"
 	"io"
-	
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/ksuid"
@@ -48,7 +48,7 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	prefix := "/img/avatars/"
 	hash := ksuid.New()
 	fileName := hash.String()
-	
+
 	createPath := "." + prefix + fileName
 	log.Println(fileName)
 	path = prefix + fileName
@@ -57,7 +57,7 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	defer out.Close()
 
     if err != nil {
-	   
+
 		h.LG.Sugar.Infow("upload failed, file couldn't be created",
 		"source", "api.go",
 		"who", "uploadHandler",)
