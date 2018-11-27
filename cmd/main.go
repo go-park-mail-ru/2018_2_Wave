@@ -6,7 +6,6 @@ import (
 	"Wave/server/implemenation"
 	mw "Wave/internal/middleware"
 	mc "Wave/internal/metrics"
-	"log"
 	"Wave/session"
 
 	"Wave/internal/config"
@@ -22,37 +21,37 @@ import (
 	//"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-//go:generate easyjson internal/config/
-//go:generate easyjson internal/models/
+//go:generate easyjson ../internal/config/
+//go:generate easyjson ../internal/models/
 //go:generate go run .
 
 func main() {
 	path := "../configs/conf.json"
+	conf := config.Configure(path)
+	curlog := lg.Construct()
+	prof := mc.Construct()
 
-	lis, err := net.Listen("tcp", ":8081")
+	lis, err := net.Listen("tcp", conf.GRPCC.Port)
 	if err != nil {
-		log.Fatalln("cant listen port", err)
+		curlog.Sugar.Infow("can't listen on port",
+		"source", "main.go",)
 	}
 
 	server := grpc.NewServer()
-	curlog := lg.Construct()
 	session.RegisterAuthCheckerServer(server, implementation.NewSessionManager(curlog))
 
-	fmt.Println("starting server at :8081")
+	fmt.Println("starting server at "+conf.GRPCC.Port)
 	go server.Serve(lis)
-
-	conf := config.Configure(path)
-	
-	prof := mc.Construct()
 
 	db := database.New(curlog)
 
 	grcpConn, err := grpc.Dial(
-		"127.0.0.1:8081",
+		conf.GRPCC.Host+conf.GRPCC.Port,
 		grpc.WithInsecure(),
 	)
 	if err != nil {
-		log.Fatalf("cant connect to grpc")
+		curlog.Sugar.Infow("can't connect to grpc server",
+		"source", "main.go",)
 	}
 	defer grcpConn.Close()
 
@@ -75,7 +74,6 @@ func main() {
 	r.HandleFunc("/users/leaders", mw.Chain(API.LeadersGETHandler, mw.CORS(conf.CC, curlog))).Methods("GET")
 	r.HandleFunc("/session", mw.Chain(API.LoginPOSTHandler, mw.CORS(conf.CC, curlog))).Methods("POST") 
 	r.HandleFunc("/session", mw.Chain(API.LogoutDELETEHandler, mw.Auth(curlog), mw.CORS(conf.CC, curlog))).Methods("DELETE") //!
-	r.HandleFunc("/checkme", mw.Chain(API.IsLoggedIn, mw.CORS(conf.CC, curlog))).Methods("GET") //!
 
 	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.OptionsPreflight(conf.CC, curlog))).Methods("OPTIONS")
 	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.OptionsPreflight(conf.CC, curlog))).Methods("OPTIONS")

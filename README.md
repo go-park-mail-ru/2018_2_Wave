@@ -24,7 +24,7 @@ go generate
 * Сервер &mdash; https://api.rasseki.com
 * Клиент &mdash; Ща буит
 * API &mdash; https://frontend.tech-mail.ru/2018_2_Wave/
-* API &mdash; Ща буит
+* Grafana &mdash; Ща буит
 
 ## Authors
 
