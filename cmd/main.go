@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Wave/internal/service/app"
+	"Wave/internal/services/app"
 	"Wave/internal/database"
 	"Wave/server/implemenation"
 	mw "Wave/internal/middleware"
@@ -26,7 +26,7 @@ import (
 //go:generate go run .
 
 func main() {
-	path := "../configs/conf.json"
+	path := "./configs/conf.json"
 	conf := config.Configure(path)
 	curlog := lg.Construct()
 	prof := mc.Construct()

@@ -12,7 +12,7 @@ type Logger struct {
 }
 
 const (
-	path    = "../logs/"
+	path    = "./logs/"
 	logFile = "wavelog"
 )
 
@@ -39,7 +39,7 @@ func Construct() *Logger {
 	rawJSON := []byte(`{
 	"level": "debug",
 	"encoding": "json",
-	"outputPaths": ["stdout", "../logs/wavelog"],
+	"outputPaths": ["stdout", "./logs/wavelog"],
 	"errorOutputPaths": ["stderr"],
 	"encoderConfig": {
 	  "messageKey": "message",
