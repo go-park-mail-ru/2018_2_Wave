@@ -3,6 +3,7 @@ package auth
 import (
 	psql "Wave/internal/database"
 	lg "Wave/internal/logger"
+	"Wave/internal/misc"
 	auth "Wave/internal/services/auth/proto"
 
 	"golang.org/x/net/context"
@@ -20,92 +21,75 @@ func NewAuthManager(lg_ *lg.Logger, db_ *psql.DatabaseModel) *AuthManager {
 	}
 }
 
-func (authm *AuthManager) Create(ctx context.Context, cs *auth.Credentials) (*auth.Cookie, error) {
-
-}
-
-func (authm *AuthManager) Check(ctx context.Context, cs *auth.Credentials) (*auth.Bool, error) {
-
-}
-
-func (authm *AuthManager) Delete(ctx context.Context, ck *auth.Cookie) (*auth.Bool, error) {
-
-}
-
-/*
-func (authm *AuthManager) Create(ctx context.Context, in *session.Session) (*session.SessionID, error) {
-		if isPresent, problem := authm.DB.present(UserInfoTable, UsernameCol, in.Login); isPresent && problem == nil {
+func (authm *AuthManager) Create(ctx context.Context, credentials *auth.Credentials) (*auth.Cookie, error) {
+	if psql.ValidateUname(credentials.Username) && psql.ValidatePassword(credentials.Password) {
+		if isPresent, problem := authm.DB.Present(psql.UserInfoTable, psql.UsernameCol, credentials.Username); isPresent && problem == nil {
 
 			authm.LG.Sugar.Infow(
 				"signup failed, user already exists",
-				"source", "database.go",
-				"who", "SignUp",
+				"source", "auth.go",
+				"who", "Create",
 			)
 
-			return &session.SessionID{ID: ""}, nil
+			return &auth.Cookie{CookieValue: ""}, nil
 		} else if problem != nil {
 
 			authm.LG.Sugar.Infow(
 				"signup succeded",
-				"source", "database.go",
-				"who", "SignUp",
+				"source", "auth.go",
+				"who", "Create",
 			)
 
-			return &session.SessionID{}, problem
+			return &auth.Cookie{CookieValue: ""}, problem
 		} else if !isPresent {
 			cookie := misc.GenerateCookie()
-			hashedPsswd := misc.GeneratePasswordHash(in.Password)
+			hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
 
-			if in.Avatar != "" {
-				authm.Database.MustExec(`
+			if credentials.Avatar != "" {
+				authm.DB.Database.MustExec(`
 					INSERT INTO userinfo(username,password,avatar)
 					VALUES($1, $2, $3)
-				`, in.Login, hashedPsswd, in.Avatar)
+				`, credentials.Username, hashedPsswd, credentials.Avatar)
 			} else {
-				authm.Database.MustExec(`
+				authm.DB.Database.MustExec(`
 					INSERT INTO userinfo(username,password)
 					VALUES($1, $2)
-				`, in.Login, hashedPsswd)
+				`, credentials.Username, hashedPsswd)
 			}
 
-			authm.Database.MustExec(`
+			authm.DB.Database.MustExec(`
 				INSERT INTO session(uid, cookie)
 				VALUES(
 					(SELECT uid FROM userinfo WHERE username=$1),
 					$2
 				)
-			`, in.Login, cookie)
+			`, credentials.Username, cookie)
 
-			authm.LG.Sugar.Infow(
+			authm.DB.LG.Sugar.Infow(
 				"signup succeded",
-				"source", "database.go",
-				"who", "SignUp",
+				"source", "auth.go",
+				"who", "Create",
 			)
 
-			return &session.SessionID{ID: cookie}, nil
+			return &auth.Cookie{CookieValue: cookie}, nil
 		}
-
-	return  &session.SessionID{ID: ""}, nil
-}
-
-func (authm *AuthManager) Check(ctx context.Context, in *session.SessionID) (*session.Nothing, error) {
-	fmt.Println("call Check", in)
-	if in.ID == "" {
-		return &session.Nothing{Dummy: false}, nil
 	}
 
-	return &session.Nothing{Dummy: true}, nil
+	return &auth.Cookie{CookieValue: ""}, nil
 }
 
-func (authm *AuthManager) Delete(ctx context.Context, in *session.SessionID) (*session.Nothing, error) {
-	fmt.Println("call Delete", in)
-	authm.Database.QueryRowx(`DELETE FROM session WHERE cookie=$1;`, in.ID)
+func (authm *AuthManager) Delete(ctx context.Context, cookie *auth.Cookie) (*auth.Bool, error) {
+	authm.DB.Database.QueryRowx(`
+		DELETE
+		FROM session
+		WHERE cookie=$1;
+	`, cookie.CookieValue)
 
 	authm.LG.Sugar.Infow(
 		"logout succeded",
-		"source", "database.go",
-		"who", "LogOut",
+		"source", "auth.go",
+		"who", "Delete",
 	)
 
-	return &session.Nothing{Dummy: true}, nil
-}*/
+	return &auth.Bool{Resp: true}, nil
+}

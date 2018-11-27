@@ -4,21 +4,18 @@ import (
 	psql "Wave/internal/database"
 	lg "Wave/internal/logger"
 	mc "Wave/internal/metrics"
-	"Wave/internal/services/auth"
+	"Wave/internal/services/auth/proto"
 	"Wave/internal/models"
 	"Wave/internal/misc"
 
 	"fmt"
-	"log"
 	"net/http"
 	"reflect"
-	"time"
 	"strconv"
 	"os"
 	"io"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 	"github.com/segmentio/ksuid"
 	"golang.org/x/net/context"
 )
@@ -36,11 +33,11 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 
 	if err != nil {
 
-		h.LG.Sugar.Infow("upload failed, not able to read from FormFile, default avatar set",
+		h.LG.Sugar.Infow("upload failed, unable to read from FormFile, default avatar set",
 		"source", "api.go",
 		"who", "uploadHandler",)
 
-        return true, "" // setting default avatar
+        return true, "/img/avatars/default"
 	}
 
 	prefix := "/img/avatars/"
@@ -113,10 +110,10 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	cookie, err := h.AuthManager.Create(
 			context.Background(),
-			&session.Session{
-			Login:     user.Username,
+			&auth.Credentials{
+			Username: user.Username,
 			Password: user.Username,
-			//Avatar: user.Avatar,
+			Avatar: user.Avatar,
 		})
 
 	if err != nil {
@@ -129,8 +126,8 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	if cookie.ID == "" {
+	// or validation failed
+	if cookie.CookieValue == "" {
 		fr := models.ForbiddenRequest{
 			Reason: "Username already in use.",
 		}
@@ -146,7 +143,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionCookie := misc.MakeSessionCookie(cookie.ID)
+	sessionCookie := misc.MakeSessionCookie(cookie.CookieValue)
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusCreated)
 
@@ -193,11 +190,11 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		user.Avatar = avatarPath
 	} else if !isCreated {
 		fr := models.ForbiddenRequest{
-			Reason: "Update didn't happend, bad avatar.",
+			Reason: "Update didn't happend, shitty avatar.",
 		}
 
 		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusBadRequest)
+		rw.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me failed, bad avatar.",
@@ -207,11 +204,11 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isUpdated, err := h.DB.UpdateProfile(user, cookie)
+	_, err := h.DB.UpdateProfile(user, cookie)
 
 	if err != nil {
 		fr := models.ForbiddenRequest{
-			Reason: "Update didn't happend, something went wrong.",
+			Reason: "Update didn't happend, shitty username and/or password.",
 		}
 
 		payload, _ := fr.MarshalJSON()
@@ -219,22 +216,6 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me failed",
-		"source", "api.go",
-		"who", "EditMePUTHandler",)
-
-		return
-	}
-
-	if !isUpdated {
-		fr := models.ForbiddenRequest{
-			Reason: "Nothing happened actually.",
-		}
-
-		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusOK)
-		fmt.Fprintln(rw, string(payload))
-
-		h.LG.Sugar.Infow("/users/me succeded, nothing changed",
 		"source", "api.go",
 		"who", "EditMePUTHandler",)
 
@@ -331,7 +312,6 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	if cookie == "" {
-
 		fr := models.ForbiddenRequest{
 			Reason: "Incorrect password/username.",
 		}
@@ -362,11 +342,11 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 	success, _ := h.AuthManager.Delete(
 		context.Background(),
-		&session.SessionID{
-			ID: cookie,
+		&auth.Cookie{
+			CookieValue: cookie,
 		})
 
-	if success.Dummy == false {
+	if success.Resp != true {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/session failed",
@@ -400,150 +380,4 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 		"source", "api.go",
 		"who", "LogoutOPTHandler",)
 
-}
-
-func (h *Handler) IsLoggedIn(rw http.ResponseWriter, r *http.Request) {
-	cookie := misc.GetSessionCookie(r)
-	success, _ := h.AuthManager.Check(
-		context.Background(),
-		&session.SessionID{
-			ID: cookie,
-		})
-	if success.Dummy == true {
-		rw.WriteHeader(http.StatusOK)
-
-		return
-	}
-
-	rw.WriteHeader(http.StatusUnauthorized)
-}
-
-/************************* websocket block ************************************/
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-const (
-	waitTime = 15 * time.Second
-)
-
-//action_uid uniqely generated on the front
-//action_id :
-// 1 - add user to the room
-// 2 - remove user from the room
-// 3 - start
-// 4 - rollback
-
-type lobbyReq struct {
-	actionID 	string `json:"action_id"`
-	actionUID 	string `json:"action_uid"`
-	username 	string `json:"username"`
-}
-
-type lobbyRespGenereic struct {
-	actionUID string `json:"action_id"`
-	status 	 string `json:"status"`
-}
-
-func contains(sl []string, str string) bool {
-    for _, cur := range sl {
-        if str == cur {
-            return true
-        }
-    }
-    return false
-}
-
-func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
-	ws, err := upgrader.Upgrade(rw, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer ws.Close()
-/*
-	lobby := []string{}
-
-	go func(client *websocket.Conn, lb []string){
-		ticker := time.NewTicker(waitTime)
-		defer func() {
-			ticker.Stop()
-			client.Close()
-		}()
-			for {
-					in := lobbyReq{}
-				
-					err := client.ReadJSON(&in)
-					if err != nil {
-						break
-					}
-			
-					fmt.Printf("Got message: %#v\n", in)
-
-					out := lobbyRespGenereic{}
-
-					switch in.actionID {
-						case "1": 
-							if in.username == "" {
-								break
-							}
-							out.actionUID = in.actionUID
-							lb = append(lb, in.username)
-							out.status = "success" 
-
-							if err = client.WriteJSON(out); err != nil {
-								break
-							}
-		
-						case "2":
-							if in.username == "" {
-								break
-							}
-							out.actionUID = in.actionUID
-							if contains(lb, in.username) {
-								for _, cur := range lb {
-									if cur == in.username {
-										cur = ""
-									}
-								}
-								out.status = "success"
-								if err = client.WriteJSON(out); err != nil {
-									break
-								}
-							} else {
-								out.status = "failure"
-								if err = client.WriteJSON(out); err != nil {
-									break
-								}			
-							}
-						case "3":
-							out.actionUID = in.actionUID
-							out.status = "success"
-							if err = client.WriteJSON(out); err != nil {
-								break
-							}		
-							
-						case "4":
-							out.actionUID = in.actionUID
-							out.status = "success"
-							if err = client.WriteJSON(out); err != nil {
-								break
-							}		
-					}
-
-					<-ticker.C
-		}
-	}(ws, lobby)
-	*/
-/*
-	go func(client *websocket.Conn) {
-	}(ws)
-	*/
-	log.Println("ws@")
-	return
 }

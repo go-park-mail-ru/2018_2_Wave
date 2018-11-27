@@ -32,6 +32,7 @@ GET /users/leaders/... url encoded
 
 POST /session {username, password}
 401 UNAUTHORIZED {"reason":"Incorrect password/username."}
+200 OK
 403 FORBIDDEN (cors)
 500 INTERNAL SERVER ERROR
 
