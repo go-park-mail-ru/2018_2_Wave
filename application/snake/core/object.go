@@ -18,7 +18,8 @@ type IObject interface {
 	OnColided(IObject)   // on colided callback
 	Destroy()            // remove the object from it's world and 'destroy'
 
-	setWorld(w *World) // set object world
+	setWorld(w *World) // set world variable
+	setPos(pos Vec2i)  // set position variable
 }
 
 // ----------------|
@@ -48,15 +49,12 @@ func (o *Object) OnColided(IObject)   {}
 
 func (o *Object) SetPos(expected Vec2i) {
 	if o.world != nil {
-		if next, err := o.world.onObjectMove(o, expected); err == nil {
-			o.position = next
-		}
+		o.world.onObjectMove(o, expected)
 	}
 }
 
-func (o *Object) setWorld(w *World) {
-	o.world = w
-}
+func (o *Object) setWorld(w *World) { o.world = w }
+func (o *Object) setPos(pos Vec2i)  { o.position = pos }
 
 func (o *Object) Destroy() {
 	if o.world != nil {

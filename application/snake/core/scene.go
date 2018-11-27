@@ -107,23 +107,24 @@ func (s *scene) actualiser(o IObject) IObject {
 	return s.objectMap[o.GetID()]
 }
 
-func (s *scene) onObjectMove(o IObject, expectedPosition Vec2i) (nextPosition Vec2i, err error) {
+func (s *scene) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {
 	if o = s.actualiser(o); o != nil {
 		currPosition, err := s.validatePosition(o.GetPos())
 		if err != nil {
-			return Vec2i{}, err
+			return err
 		}
 
-		nextPosition, err = s.validatePosition(expectedPosition)
+		nextPosition, err := s.validatePosition(expectedPosition)
 		if err != nil {
-			return Vec2i{}, err
+			return err
 		}
+		o.setPos(nextPosition)
 
 		s.at(currPosition).remove(o)
 		s.at(nextPosition).collide(o)
-		return nextPosition, nil
+		return nil
 	}
-	return Vec2i{}, room.ErrorNil
+	return room.ErrorNil
 }
 
 func (s *scene) isPlaced(o IObject) bool {
@@ -158,9 +159,8 @@ func (s *scene) at(position Vec2i) *field {
 
 type field []IObject
 
-// NOTE:: nil safe
 func (f *field) remove(o IObject) {
-	if f != nil && o != nil {
+	if o != nil {
 		for i, elem := range *f {
 			if elem != o {
 				continue
@@ -171,9 +171,8 @@ func (f *field) remove(o IObject) {
 	}
 }
 
-// NOTE:: nil safe
 func (f *field) collide(o IObject) {
-	if f != nil && o != nil {
+	if o != nil {
 		lastState := *f
 		*f = append(*f, o)
 		for _, elem := range lastState {

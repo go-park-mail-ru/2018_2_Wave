@@ -79,10 +79,10 @@ func (w *World) FindGap(length int) (res []Vec2i, dir Direction) {
 	return nil, NoDirection
 }
 
-func (w *World) onObjectMove(o IObject, expectedPosition Vec2i) (nextPosition Vec2i, err error) {
+func (w *World) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {
 	if w.scene != nil {
 		return w.scene.onObjectMove(o, expectedPosition)
 	}
 	// TODO:: log
-	return Vec2i{}, room.ErrorNil
+	return room.ErrorNil
 }
