@@ -1,33 +1,34 @@
-package server
+package main
 
 import (
-	"Wave/server/api"
-	"Wave/server/database"
+	"Wave/internal/service/app"
+	"Wave/internal/database"
 	"Wave/server/implemenation"
-	mw "Wave/server/middleware"
-	mc "Wave/server/metrics"
+	mw "Wave/internal/middleware"
+	mc "Wave/internal/metrics"
 	"log"
 	"Wave/session"
 
-	_ "math/rand"
-
-	"Wave/utiles/config"
-	lg "Wave/utiles/logger"
+	"Wave/internal/config"
+	lg "Wave/internal/logger"
 	"net/http"
 	"net"
 	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
-	_ "google.golang.org/grpc/codes"
 
-	_ "golang.org/x/net/context"
 	"google.golang.org/grpc"
-	_ "sync"
 	//"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func Start(path string) {
+//go:generate easyjson internal/config/
+//go:generate easyjson internal/models/
+//go:generate go run .
+
+func main() {
+	path := ".././conf.json"
+
 	lis, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		log.Fatalln("cant listen port", err)

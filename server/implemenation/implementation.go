@@ -8,9 +8,9 @@ import (
 	"golang.org/x/net/context"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"Wave/utiles/misc"
-	//"Wave/utiles/models"
-	lg "Wave/utiles/logger"
+	"Wave/internal/misc"
+	//"Wave/internal/models"
+	lg "Wave/internal/logger"
 )
 
 const sessKeyLen = 10

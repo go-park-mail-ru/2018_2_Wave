@@ -1,9 +1,9 @@
 package database
 
 import (
-	lg "Wave/utiles/logger"
-	"Wave/utiles/misc"
-	"Wave/utiles/models"
+	lg "Wave/internal/logger"
+	"Wave/internal/misc"
+	"Wave/internal/models"
 	"os"
 	"strconv"
 

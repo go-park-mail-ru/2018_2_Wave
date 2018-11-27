@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"Wave/utiles/config"
-	"Wave/utiles/cors"
-	lg "Wave/utiles/logger"
-	"Wave/utiles/models"
+	"Wave/internal/config"
+	"Wave/internal/cors"
+	lg "Wave/internal/logger"
+	"Wave/internal/models"
 
 	"fmt"
 	"net/http"

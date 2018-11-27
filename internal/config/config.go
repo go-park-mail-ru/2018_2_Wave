@@ -29,12 +29,10 @@ func Configure(path string) Configuration {
 	data, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		//data = []byte("{}")
-		return config
+		return Configuration{}
 	}
 
 	if err := config.UnmarshalJSON(data); err != nil {
-		//fmt.Printf("Incorrect config json: %s\nError: %v", data, err)
 		return config
 	}
 

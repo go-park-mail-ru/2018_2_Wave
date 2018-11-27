@@ -1,14 +1,14 @@
 package api
 
 import (
-	psql "Wave/server/database"
-	lg "Wave/utiles/logger"
-	mc "Wave/server/metrics"
+	psql "Wave/internal/database"
+	lg "Wave/internal/logger"
+	mc "Wave/internal/metrics"
 
-	"Wave/utiles/misc"
+	"Wave/internal/misc"
 	"golang.org/x/net/context"
 	"Wave/session"
-	"Wave/utiles/models"
+	"Wave/internal/models"
 	"fmt"
 	"log"
 	"net/http"

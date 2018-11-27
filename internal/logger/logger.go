@@ -12,7 +12,7 @@ type Logger struct {
 }
 
 const (
-	path    = "./logs/"
+	path    = "../logs/"
 	logFile = "wavelog"
 )
 
@@ -21,7 +21,6 @@ func logfileExists() bool {
 		os.Mkdir(path, 0755)
 		_, err := os.OpenFile(path+logFile, os.O_CREATE|os.O_APPEND, 0777)
 		if err != nil {
-			//panic(err)
 			return false
 		}
 		return true
@@ -34,14 +33,13 @@ func logfileExists() bool {
 
 func Construct() *Logger {
 	if !logfileExists() {
-		//log.Println("Caution: logger output file missing, no logging utility set.")
 		return &Logger{}
 	}
 
 	rawJSON := []byte(`{
 	"level": "debug",
 	"encoding": "json",
-	"outputPaths": ["stdout", "./logs/wavelog"],
+	"outputPaths": ["stdout", "../logs/wavelog"],
 	"errorOutputPaths": ["stderr"],
 	"encoderConfig": {
 	  "messageKey": "message",
@@ -55,14 +53,12 @@ func Construct() *Logger {
 	var sugarredLogger Logger
 
 	if err := json.Unmarshal(rawJSON, &cfg); err != nil {
-		//panic(err)
 		return &Logger{}
 	}
 
 	basicLogger, err := cfg.Build()
 	sugarredLogger.Sugar = basicLogger.Sugar()
 	if err != nil {
-		//panic(err)
 		return &Logger{}
 	}
 
