@@ -3,7 +3,7 @@ package main
 import (
 	"Wave/internal/services/app"
 	"Wave/internal/database"
-	"Wave/server/implemenation"
+	"Wave/internal/grpcserver"
 	mw "Wave/internal/middleware"
 	mc "Wave/internal/metrics"
 	"Wave/session"
@@ -11,8 +11,6 @@ import (
 	"Wave/internal/config"
 	lg "Wave/internal/logger"
 	"net/http"
-	"net"
-	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
@@ -23,27 +21,16 @@ import (
 
 //go:generate easyjson ../internal/config/
 //go:generate easyjson ../internal/models/
-//go:generate go run .
+//go:generate
 
 func main() {
 	path := "./configs/conf.json"
 	conf := config.Configure(path)
 	curlog := lg.Construct()
 	prof := mc.Construct()
-
-	lis, err := net.Listen("tcp", conf.GRPCC.Port)
-	if err != nil {
-		curlog.Sugar.Infow("can't listen on port",
-		"source", "main.go",)
-	}
-
-	server := grpc.NewServer()
-	session.RegisterAuthCheckerServer(server, implementation.NewSessionManager(curlog))
-
-	fmt.Println("starting server at "+conf.GRPCC.Port)
-	go server.Serve(lis)
-
 	db := database.New(curlog)
+
+	grpcserver.StartServer(curlog, conf.GRPCC)
 
 	grcpConn, err := grpc.Dial(
 		conf.GRPCC.Host+conf.GRPCC.Port,

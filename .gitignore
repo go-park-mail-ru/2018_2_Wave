@@ -17,3 +17,6 @@ wave-serv
 
 # avatars
 img/avatars/
+
+# init scripts
+init.sh
