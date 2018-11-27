@@ -26,6 +26,7 @@ func New(id room.RoomID, step time.Duration, db interface{}) room.IRoom {
 		}),
 	}
 	s.OnTick = s.onTick
+	s.OnUserRemoved = s.onUserRemoved
 	s.Routes["game_info"] = s.onGameInfo
 	s.Routes["game_action"] = s.onGameAction
 	s.Routes["game_play"] = s.onGamePlay
@@ -49,6 +50,10 @@ func (a *App) onTick(dt time.Duration) {
 		msg  = room.MessageTick.WithStruct(info)
 	)
 	a.Broadcast(msg)
+}
+
+func (a *App) onUserRemoved(u room.IUser) {
+	a.game.DeleteSnake(u)
 }
 
 // get information about map and current users

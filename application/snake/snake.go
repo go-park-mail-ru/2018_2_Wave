@@ -53,6 +53,7 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 	s := &snake{
 		world:    w,
 		ticker:   time.NewTicker(1000 * time.Millisecond),
+		cancel:   make(chan interface{}, 1),
 		movement: direction,
 	}
 	for i := len(points) - 1; i >= 0; i-- {
@@ -65,6 +66,9 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 
 func (s *snake) destroy() {
 	s.cancel <- ""
+	for _, elem := range s.body {
+		elem.Destroy()
+	}
 }
 
 func (s *snake) tick() {

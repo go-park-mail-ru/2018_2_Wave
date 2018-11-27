@@ -100,7 +100,8 @@ func (s *scene) validatePosition(expectedPosition Vec2i) (validPosition Vec2i, e
 }
 
 func (s *scene) at(position Vec2i) *field {
-	if position.X < s.size.X && position.Y < s.size.Y {
+	if position.X < s.size.X && position.X >= 0 &&
+		position.Y < s.size.Y && position.Y >= 0 {
 		return &s.fields[position.X][position.Y]
 	}
 	return nil

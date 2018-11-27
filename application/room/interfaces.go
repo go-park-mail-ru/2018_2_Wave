@@ -57,5 +57,6 @@ type IRoom interface {
 	Stop() error                          // stop the room
 	AddUser(IUser) error                  // add the user to the room
 	RemoveUser(IUser) error               // remove  the user from the room
+	OnDisconnected(IUser)                 // inform the room the user was disconnected
 	ApplyMessage(IUser, IInMessage) error // send message to the room
 }

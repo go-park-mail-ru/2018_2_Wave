@@ -2,6 +2,7 @@ package room
 
 import (
 	lg "Wave/utiles/logger"
+	"fmt"
 	"time"
 )
 
@@ -83,34 +84,38 @@ func (r *Room) runBroadcast() {
 	}
 }
 
-func (r *Room) AddUser(usr IUser) error {
-	if usr == nil {
+func (r *Room) AddUser(u IUser) error {
+	if u == nil {
 		return ErrorNil
 	}
-	if _, ok := r.Users[usr.GetID()]; !ok {
-		r.Users[usr.GetID()] = usr
+	if _, ok := r.Users[u.GetID()]; !ok {
+		r.Users[u.GetID()] = u
 		if r.OnUserAdded != nil {
-			r.log("user added", usr.GetID())
-			r.OnUserAdded(usr)
+			r.log("user added", u.GetID())
+			r.OnUserAdded(u)
 		}
 		return nil
 	}
 	return ErrorAlreadyExists
 }
 
-func (r *Room) RemoveUser(usr IUser) error {
-	if usr == nil {
+func (r *Room) RemoveUser(u IUser) error {
+	if u == nil {
 		return ErrorNil
 	}
-	if _, ok := r.Users[usr.GetID()]; ok {
-		delete(r.Users, usr.GetID())
+	if _, ok := r.Users[u.GetID()]; ok {
+		delete(r.Users, u.GetID())
 		if r.OnUserRemoved != nil {
-			r.log("user removed", usr.GetID())
-			r.OnUserRemoved(usr)
+			r.log("user removed", u.GetID())
+			r.OnUserRemoved(u)
 		}
 		return nil
 	}
 	return ErrorNotExists
+}
+
+func (r *Room) OnDisconnected(u IUser) {
+	r.RemoveUser(u)
 }
 
 func (r *Room) ApplyMessage(u IUser, im IInMessage) error {
@@ -136,7 +141,6 @@ func (r *Room) SendMessageTo(u IUser, rs IRouteResponse) error {
 	if _, ok := r.Users[u.GetID()]; !ok {
 		return ErrorForbiden
 	}
-	r.log("sending message", "to", u.GetID(), "msg", rs.GetPayload())
 	return u.Consume(&OutMessage{
 		RoomID:  r.GetID(),
 		Status:  rs.GetStatus(),
@@ -148,7 +152,6 @@ func (r *Room) Broadcast(rs IRouteResponse) error {
 	if rs == nil {
 		return ErrorNil
 	}
-	r.log("broadcast")
 	r.broadcast <- rs
 	return nil
 }
@@ -156,11 +159,14 @@ func (r *Room) Broadcast(rs IRouteResponse) error {
 // ----------------|
 
 func (r *Room) log(data ...interface{}) {
+	data = append([]interface{}{
+		"room_id", r.ID,
+		"room_type", r.Type,
+	}, data...)
+
 	if r.LG != nil {
-		r.LG.Sugar.Infof("room_message",
-			append([]interface{}{
-				"room_id", r.ID,
-				"room_type", r.Type,
-			}, data...)...)
+		r.LG.Sugar.Infof("room_message", data...)
+	} else {
+		fmt.Println(data...)
 	}
 }

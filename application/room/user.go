@@ -68,15 +68,15 @@ func (u *User) Listen() error {
 		m := &InMessage{}
 
 		// read a message
-		err := u.Conn.ReadJSON(m)
-		if websocket.IsCloseError(err, wsCloseErrors...) {
-			u.StopListening()
-			if u.bClosed { // TODO:: fix that
-				return nil
+		if err := u.Conn.ReadJSON(m); err != nil {
+			if websocket.IsCloseError(err, wsCloseErrors...) {
+				u.onDisconnected()
+				u.stop()
+				if u.bClosed {
+					return nil
+				}
+				return ErrorConnectionClosed
 			}
-			return ErrorConnectionClosed
-		}
-		if err != nil {
 			u.Consume(&OutMessage{
 				RoomID:  m.GetRoomID(),
 				Status:  StatusError,
@@ -107,9 +107,8 @@ func (u *User) Listen() error {
 
 func (u *User) StopListening() error {
 	if !u.bClosed {
-		u.bClosed = true
-		u.LG.Sugar.Infof("ws closed, uid: %s", u.GetID())
-		u.Conn.Close()
+		u.removeFromAllRooms() // do we need this?
+		u.stop()
 	}
 	return nil
 }
@@ -142,4 +141,16 @@ func (u *User) removeFromAllRooms() error {
 		}
 	}
 	return nil
+}
+
+func (u *User) onDisconnected() {
+	for _, r := range u.Rooms {
+		r.OnDisconnected(u)
+	}
+}
+
+func (u *User) stop() {
+	u.LG.Sugar.Infof("ws closed, uid: %s", u.GetID())
+	u.bClosed = true
+	u.Conn.Close()
 }

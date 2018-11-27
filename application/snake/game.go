@@ -58,11 +58,12 @@ func (g *game) DeleteSnake(u room.IUser) error {
 	if u == nil {
 		return room.ErrorNil
 	}
-	if _, ok := g.user2snake[u]; !ok {
-		return room.ErrorNotExists
+	if s, ok := g.user2snake[u]; ok {
+		s.destroy()
+		delete(g.user2snake, u)
+		return nil
 	}
-	delete(g.user2snake, u)
-	return nil
+	return room.ErrorNotExists
 }
 
 func (g *game) GetSceneInfo() sceneInfo {
