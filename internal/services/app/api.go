@@ -1,76 +1,58 @@
 package api
 
 import (
-	psql "Wave/server/database"
-	lg "Wave/utiles/logger"
+	psql "Wave/internal/database"
+	lg "Wave/internal/logger"
+	mc "Wave/internal/metrics"
+
+	"Wave/internal/misc"
+	"golang.org/x/net/context"
+	"Wave/session"
+	"Wave/internal/models"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"os"
 	"reflect"
-	"strconv"
 	"time"
+	"strconv"
+	"os"
+	"io"
+	
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
+	"github.com/segmentio/ksuid"
 
 	"Wave/application/manager"
 	"Wave/application/room"
 	"Wave/application/snake"
-	"Wave/utiles/misc"
-	"Wave/utiles/models"
 
-	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
-	"github.com/segmentio/ksuid"
+	_ "github.com/lib/pq"
 )
 
-// TODO:: get the value from configuration files
-const wsAppTickRate = 500 * time.Millisecond
-
-// Handler - rest api handler
 type Handler struct {
-	DB       *psql.Model
-	wsApp    *app.App
-	upgrader websocket.Upgrader
-	LG       *lg.Logger
-}
-
-// New api handler
-func New(model *psql.Model) *Handler {
-	return &Handler{
-		wsApp: func() *app.App {
-			wsApp := app.New("app", wsAppTickRate, model)
-			wsApp.CreateLobby(snake.RoomType, "snake")
-			go wsApp.Run()
-			return wsApp
-		}(),
-		upgrader: websocket.Upgrader{
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
-			CheckOrigin: func(r *http.Request) bool {
-				return true
-			},
-		},
-		DB: model,
-	}
+	DB psql.DatabaseModel
+	LG *lg.Logger
+	Prof *mc.Profiler
+	SessManager session.AuthCheckerClient
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
-	file, _, err := r.FormFile("avatar")
+    file, _, err := r.FormFile("avatar")
 	defer file.Close()
 
 	if err != nil {
 
 		h.LG.Sugar.Infow("upload failed, not able to read from FormFile, default avatar set",
-			"source", "api.go",
-			"who", "uploadHandler")
+		"source", "api.go",
+		"who", "uploadHandler",)
 
-		return true, "" // setting default avatar
+        return true, "" // setting default avatar
 	}
 
 	prefix := "/img/avatars/"
 	hash := ksuid.New()
 	fileName := hash.String()
-
+	
 	createPath := "." + prefix + fileName
 	log.Println(fileName)
 	path = prefix + fileName
@@ -78,34 +60,34 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	out, err := os.Create(createPath)
 	defer out.Close()
 
-	if err != nil {
-
+    if err != nil {
+	   
 		h.LG.Sugar.Infow("upload failed, file couldn't be created",
-			"source", "api.go",
-			"who", "uploadHandler")
+		"source", "api.go",
+		"who", "uploadHandler",)
+
+		//file.Close()
+		//out.Close()
+
+        return false, ""
+    }
+
+    _, err = io.Copy(out, file)
+    if err != nil {
+
+        h.LG.Sugar.Infow("upload failed, couldn't copy data",
+		"source", "api.go",
+		"who", "uploadHandler",)
 
 		//file.Close()
 		//out.Close()
 
 		return false, ""
-	}
-
-	_, err = io.Copy(out, file)
-	if err != nil {
-
-		h.LG.Sugar.Infow("upload failed, couldn't copy data",
-			"source", "api.go",
-			"who", "uploadHandler")
-
-		//file.Close()
-		//out.Close()
-
-		return false, ""
-	}
+    }
 
 	h.LG.Sugar.Infow("upload succeded",
 		"source", "api.go",
-		"who", "uploadHandler")
+		"who", "uploadHandler",)
 
 	//file.Close()
 	//out.Close()
@@ -115,6 +97,7 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 
 func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
+	h.Prof.Hits.Add(1)
 	return
 }
 
@@ -136,28 +119,34 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(rw, string(payload))
-
+/*
 		h.LG.Sugar.Infow("/users failed, bad avatar.",
-			"source", "api.go",
-			"who", "RegisterPOSTHandler")
-
+		"source", "api.go",
+		"who", "RegisterPOSTHandler",)
+*/
 		return
 	}
 
-	cookie, err := h.DB.SignUp(user)
+	cookie, err := h.SessManager.Create(
+			context.Background(),
+			&session.Session{
+			Login:     user.Username,
+			Password: user.Username,
+			//Avatar: user.Avatar,
+		})
 
 	if err != nil {
 
 		rw.WriteHeader(http.StatusInternalServerError)
-
+/*
 		h.LG.Sugar.Infow("/users failed",
-			"source", "api.go",
-			"who", "RegisterPOSTHandler")
-
+		"source", "api.go",
+		"who", "RegisterPOSTHandler",)
+*/
 		return
 	}
 
-	if cookie == "" {
+	if cookie.ID == "" {
 		fr := models.ForbiddenRequest{
 			Reason: "Username already in use.",
 		}
@@ -165,36 +154,32 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(rw, string(payload))
-
+/*
 		h.LG.Sugar.Infow("/users failed, username already in use.",
-			"source", "api.go",
-			"who", "RegisterPOSTHandler")
-
+		"source", "api.go",
+		"who", "RegisterPOSTHandler",)
+*/
 		return
 	}
 
-	sessionCookie := misc.MakeSessionCookie(cookie)
+	sessionCookie := misc.MakeSessionCookie(cookie.ID)
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusCreated)
-
+/*
 	h.LG.Sugar.Infow("/users succeded",
 		"source", "api.go",
-		"who", "RegisterPOSTHandler")
-
+		"who", "RegisterPOSTHandler",)
+*/
 	return
 }
 
 func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
-
+	
 	profile, err := h.DB.GetMyProfile(cookie)
 
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
-
-		h.LG.Sugar.Infow("/users/me failed",
-			"source", "api.go",
-			"who", "MeGETHandler")
 
 		return
 	}
@@ -205,7 +190,7 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/users/me succeded",
 		"source", "api.go",
-		"who", "MeGETHandler")
+		"who", "MeGETHandler",)
 
 	return
 }
@@ -232,8 +217,8 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me failed, bad avatar.",
-			"source", "api.go",
-			"who", "EditMePUTHandler")
+		"source", "api.go",
+		"who", "EditMePUTHandler",)
 
 		return
 	}
@@ -250,8 +235,8 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me failed",
-			"source", "api.go",
-			"who", "EditMePUTHandler")
+		"source", "api.go",
+		"who", "EditMePUTHandler",)
 
 		return
 	}
@@ -266,15 +251,15 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me succeded, nothing changed",
-			"source", "api.go",
-			"who", "EditMePUTHandler")
+		"source", "api.go",
+		"who", "EditMePUTHandler",)
 
 		return
 	}
 
 	h.LG.Sugar.Infow("/users/me succeded, user profile updated",
-		"source", "api.go",
-		"who", "EditMePUTHandler")
+	"source", "api.go",
+	"who", "EditMePUTHandler",)
 
 	rw.WriteHeader(http.StatusOK)
 
@@ -289,8 +274,8 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/users/{name} failed",
-			"source", "api.go",
-			"who", "UserGETHandler")
+		"source", "api.go",
+		"who", "UserGETHandler",)
 
 		return
 	}
@@ -299,8 +284,8 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusNotFound)
 
 		h.LG.Sugar.Infow("/users/{name} failed",
-			"source", "api.go",
-			"who", "UserGETHandler")
+		"source", "api.go",
+		"who", "UserGETHandler",)
 
 		return
 	}
@@ -311,7 +296,7 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/users/{name} succeded",
 		"source", "api.go",
-		"who", "UserGETHandler")
+		"who", "UserGETHandler",)
 
 	return
 }
@@ -326,8 +311,8 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/users/leaders failed",
-			"source", "api.go",
-			"who", "LeadersGETHandler")
+		"source", "api.go",
+		"who", "LeadersGETHandler",)
 
 		return
 	}
@@ -337,8 +322,8 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(rw, string(payload))
 
 	h.LG.Sugar.Infow("/users/leaders succeded",
-		"source", "api.go",
-		"who", "LeadersGETHandler")
+	"source", "api.go",
+	"who", "LeadersGETHandler",)
 
 	return
 }
@@ -355,8 +340,8 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/session failed",
-			"source", "api.go",
-			"who", "LoginPOSTHandler")
+		"source", "api.go",
+		"who", "LoginPOSTHandler",)
 
 		return
 	}
@@ -372,8 +357,8 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/session failed, incorrect password/username",
-			"source", "api.go",
-			"who", "LoginPOSTHandler")
+		"source", "api.go",
+		"who", "LoginPOSTHandler",)
 
 		return
 	}
@@ -384,20 +369,25 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/session succeded",
 		"source", "api.go",
-		"who", "LoginPOSTHandler")
+		"who", "LoginPOSTHandler",)
 
 	return
 }
 
 func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
+	success, _ := h.SessManager.Delete(
+		context.Background(),
+		&session.SessionID{
+			ID: cookie,
+		})
 
-	if err := h.DB.LogOut(cookie); err != nil {
+	if success.Dummy == false {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/session failed",
-			"source", "api.go",
-			"who", "LogoutDELETEHandler")
+		"source", "api.go",
+		"who", "LogoutDELETEHandler",)
 
 		return
 	}
@@ -407,7 +397,7 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/session succeded",
 		"source", "api.go",
-		"who", "LogoutDELETEHandler")
+		"who", "LogoutDELETEHandler",)
 
 	return
 }
@@ -416,7 +406,7 @@ func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/users/me succeded",
 		"source", "api.go",
-		"who", "EditMeOPTHandler")
+		"who", "EditMeOPTHandler",)
 
 }
 
@@ -424,22 +414,190 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/session succeded",
 		"source", "api.go",
-		"who", "LogoutOPTHandler")
+		"who", "LogoutOPTHandler",)
 
 }
 
-// WSHandler - create ws connection
+func (h *Handler) IsLoggedIn(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
+	success, _ := h.SessManager.Check(
+		context.Background(),
+		&session.SessionID{
+			ID: cookie,
+		})
+	if success.Dummy == true {
+		rw.WriteHeader(http.StatusOK)
+
+		return
+	}
+
+	rw.WriteHeader(http.StatusUnauthorized)
+}
+
+/************************* websocket block ************************************/
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+const (
+	waitTime = 15 * time.Second
+)
+
+//action_uid uniqely generated on the front
+//action_id : 
+// 1 - add user to the room
+// 2 - remove user from the room
+// 3 - start
+// 4 - rollback
+
+type lobbyReq struct {
+	actionID 	string `json:"action_id"`
+	actionUID 	string `json:"action_uid"`
+	username 	string `json:"username"`
+}
+
+type lobbyRespGenereic struct {
+	actionUID string `json:"action_id"`
+	status 	 string `json:"status"`
+}
+
+func contains(sl []string, str string) bool {
+    for _, cur := range sl {
+        if str == cur {
+            return true
+        }
+    }
+    return false
+}
+
+func (h *Handler) LobbyHandler(rw http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(rw, r, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer ws.Close()
+/*
+	lobby := []string{}
+
+	go func(client *websocket.Conn, lb []string){
+		ticker := time.NewTicker(waitTime)
+		defer func() {
+			ticker.Stop()
+			client.Close()
+		}()
+			for {
+					in := lobbyReq{}
+				
+					err := client.ReadJSON(&in)
+					if err != nil {
+						break
+					}
+			
+					fmt.Printf("Got message: %#v\n", in)
+
+					out := lobbyRespGenereic{}
+
+					switch in.actionID {
+						case "1": 
+							if in.username == "" {
+								break
+							}
+							out.actionUID = in.actionUID
+							lb = append(lb, in.username)
+							out.status = "success" 
+
+							if err = client.WriteJSON(out); err != nil {
+								break
+							}
+		
+						case "2":
+							if in.username == "" {
+								break
+							}
+							out.actionUID = in.actionUID
+							if contains(lb, in.username) {
+								for _, cur := range lb {
+									if cur == in.username {
+										cur = ""
+									}
+								}
+								out.status = "success"
+								if err = client.WriteJSON(out); err != nil {
+									break
+								}
+							} else {
+								out.status = "failure"
+								if err = client.WriteJSON(out); err != nil {
+									break
+								}			
+							}
+						case "3":
+							out.actionUID = in.actionUID
+							out.status = "success"
+							if err = client.WriteJSON(out); err != nil {
+								break
+							}		
+							
+						case "4":
+							out.actionUID = in.actionUID
+							out.status = "success"
+							if err = client.WriteJSON(out); err != nil {
+								break
+							}		
+					}
+
+					<-ticker.C
+		}
+	}(ws, lobby)
+	*/
+/*
+	go func(client *websocket.Conn) {
+	}(ws)
+	*/
+	log.Println("ws@")
+	return
+}
+
+
+// ----------------| ws
+
+// TODO:: get the value from configuration files
+const wsAppTickRate = 500 * time.Millisecond
+
+// TODO:: place the variables into the handler struct
+// TODO:: add function-constructor for the handler
+// TODO:: initialize the variables in the constructor
+// TODO:: pass throw a db connection instead of nil
+var wsApp *app.App = func() *app.App {
+	wsApp := app.New("app", wsAppTickRate, nil)
+	wsApp.CreateLobby(snake.RoomType, "snake")
+	go wsApp.Run()
+	return wsApp
+}()
+var wsUpgrader websocket.Upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
-	ws, err := h.upgrader.Upgrade(rw, r, nil)
+	ws, err := wsUpgrader.Upgrade(rw, r, nil)
 	if err != nil {
 		panic(err)
 	}
 
 	go func() {
-		println("---------------------------------")
-		user := room.NewUser(h.wsApp.GetNextUserID(), ws)
+		user := room.NewUser(wsApp.GetNextUserID(), ws)
 		user.LG = h.LG
-		user.AddToRoom(h.wsApp)
+		user.AddToRoom(wsApp)
 		user.Listen()
 	}()
 }

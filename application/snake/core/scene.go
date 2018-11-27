@@ -2,7 +2,7 @@ package core
 
 import (
 	"Wave/application/room"
-	"Wave/utiles/logger"
+	"Wave/internal/logger"
 
 	"math/rand"
 	"strconv"

@@ -1,19 +1,19 @@
 {
-    "server": {  
+    "server": {
         "host": "http://localhost",
         "port": ":9600"
     },
     "cors": {
         "origins": [
             "*",
-            "http://176.59.48.26:3000",
             "http://localhost:3000",
-            "http://127.0.0.1:3000",
             "https://sample-txtuvraxsd.now.sh/",
             "http://localhost",
             "http://localhost:8080",
             "https://localhost",
-            "https://localhost:8443"
+            "https://localhost:8443",
+            "https://127.0.0.1",
+            "http://127.0.0.1"
         ],
         "headers": [
             "Content-type"
@@ -26,5 +26,9 @@
             "DELETE",
             "OPTIONS"
         ]
+    },
+    "grpc": {
+        "host": "127.0.0.1",
+        "port": ":8888"
     }
 }

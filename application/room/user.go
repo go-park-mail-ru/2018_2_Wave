@@ -1,7 +1,7 @@
 package room
 
 import (
-	lg "Wave/utiles/logger"
+	lg "Wave/internal/logger"
 
 	"github.com/gorilla/websocket"
 )

@@ -6,8 +6,9 @@ import (
 
 // easyjson:json
 type Configuration struct {
-	SC ServerConfiguration `json:"server"`
-	CC CORSConfiguration   `json:"cors"`
+	SC    ServerConfiguration `json:"server"`
+	CC    CORSConfiguration   `json:"cors"`
+	GRPCC GRPCConfiguration   `json:"grpc"`
 }
 
 // easyjson:json
@@ -24,17 +25,21 @@ type CORSConfiguration struct {
 	Methods     []string `json:"methods"`
 }
 
-func New(path string) Configuration {
+// easyjson:json
+type GRPCConfiguration struct {
+	Host string `json:"host"`
+	Port string `json:"port"`
+}
+
+func Configure(path string) Configuration {
 	config := Configuration{}
 	data, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		//data = []byte("{}")
-		return config
+		return Configuration{}
 	}
 
 	if err := config.UnmarshalJSON(data); err != nil {
-		//fmt.Printf("Incorrect config json: %s\nError: %v", data, err)
 		return config
 	}
 

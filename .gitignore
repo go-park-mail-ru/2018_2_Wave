@@ -5,7 +5,6 @@
 # golang
 vendor
 debug
-debug.test
 
 # service
 nginx/
@@ -18,3 +17,6 @@ wave-serv
 
 # avatars
 img/avatars/
+
+# init scripts
+init.sh

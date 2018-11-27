@@ -1,42 +1,34 @@
 package database
 
 import (
-	lg "Wave/utiles/logger"
-	"Wave/utiles/misc"
-	"Wave/utiles/models"
+	lg "Wave/internal/logger"
+	"Wave/internal/misc"
+	"Wave/internal/models"
 	"os"
 	"strconv"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" // postgreSQL
+	_ "github.com/lib/pq"
 )
 
-// Model - psql facade
-type Model struct {
+type DatabaseModel struct {
 	Database *sqlx.DB
 	LG       *lg.Logger
 }
 
-func envOrDefault(env, def string) string {
-	if res := os.Getenv(env); res != "" {
-		return res
+func New(lg_ *lg.Logger) *DatabaseModel {
+	postgr := &DatabaseModel{
+		LG:     lg_,
 	}
-	return def
-}
 
-// New Model
-func New(logger *lg.Logger) *Model {
-	var (
-		postgr = &Model{
-			LG: logger,
-		}
-		dbuser     = envOrDefault("WAVE_DB_USER", "Wave")
-		dbpassword = envOrDefault("WAVE_DB_PASSWORD", "Wave")
-		dbname     = envOrDefault("WAVE_DB_NAME", "Wave")
-		data       = "user=" + dbuser + " password=" + dbpassword + " dbname='" + dbname + "' " + "sslmode=disable"
-		err        error
-	)
-	postgr.Database, err = sqlx.Connect("postgres", data)
+	var err error
+
+	dbuser := os.Getenv("WAVE_DB_USER")
+	dbpassword := os.Getenv("WAVE_DB_PASSWORD")
+	dbname := os.Getenv("WAVE_DB_NAME")
+	
+	postgr.Database, err = sqlx.Connect("postgres", "user=" + dbuser + " password=" + dbpassword + " dbname='" + dbname + "' " + "sslmode=disable")
+
 	if err != nil {
 		postgr.LG.Sugar.Panicw(
 			"PostgreSQL connection establishment failed",
@@ -55,55 +47,66 @@ func New(logger *lg.Logger) *Model {
 	return postgr
 }
 
-const ( // we don't need to export them!
-	userInfoTable = "userinfo"
-	usernameCol   = "username"
-	sessionTable  = "session"
-	cookieCol     = "cookie"
+const (
+	UserInfoTable = "userinfo"
+	UsernameCol   = "username"
+
+	SessionTable = "session"
+	CookieCol    = "cookie"
 )
 
-func (model *Model) present(tableName string, colName string, target string) (fl bool, err error) {
-	row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "');")
-
+func (model *DatabaseModel) present(tableName string, colName string, target string) (fl bool, err error) {
 	var exists string
-	if err = row.Scan(&exists); err != nil {
+	row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " + tableName + " WHERE " + colName + "='" + target + "');")
+	err = row.Scan(&exists)
+
+	if err != nil {
+
 		model.LG.Sugar.Infow(
 			"Scan failed",
 			"source", "database.go",
 			"who", "present",
 		)
+
 		return false, err
 	}
 
 	fl, err = strconv.ParseBool(exists)
+
 	if err != nil {
+
 		model.LG.Sugar.Infow(
 			"strconv.ParseBool failed",
 			"source", "database.go",
 			"who", "present",
 		)
+
 		return false, err
 	}
+
 	return fl, nil
 }
 
 func validateCredentials(target string) bool {
+
 	return true
 }
 
 /****************************** session block ******************************/
 
-func (model *Model) LogIn(credentials models.UserCredentials) (cookie string, err error) {
-	if isPresent, problem := model.present(userInfoTable, usernameCol, credentials.Username); isPresent && problem == nil {
+func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
+	if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
+		var psswd string
 
 		row := model.Database.QueryRowx(`
-		SELECT password
-		FROM userinfo
-		WHERE username=$1
+			SELECT password
+			FROM userinfo
+			WHERE username=$1
 		`, credentials.Username)
 
-		var psswd string
-		if err := row.Scan(&psswd); err != nil {
+		err := row.Scan(&psswd)
+
+		if err != nil {
 			model.LG.Sugar.Panicw(
 				"Scan failed",
 				"source", "database.go",
@@ -168,7 +171,7 @@ func (model *Model) LogIn(credentials models.UserCredentials) (cookie string, er
 	return "", nil
 }
 
-func (model *Model) LogOut(cookie string) error {
+func (model *DatabaseModel) LogOut(cookie string) error {
 	model.Database.QueryRowx(`
 		DELETE
 		FROM session
@@ -186,10 +189,10 @@ func (model *Model) LogOut(cookie string) error {
 
 /****************************** user block ******************************/
 
-func (model *Model) SignUp(credentials models.UserEdit) (cookie string, err error) {
+func (model *DatabaseModel) SignUp(credentials models.UserEdit) (cookie string, err error) {
 	if validateCredentials(credentials.Username) && validateCredentials(credentials.Password) {
-		if isPresent, problem := model.present(userInfoTable, usernameCol, credentials.Username); isPresent && problem == nil {
-
+		if isPresent, problem := model.present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
+			
 			model.LG.Sugar.Infow(
 				"signup failed, user already exists",
 				"source", "database.go",
@@ -243,7 +246,7 @@ func (model *Model) SignUp(credentials models.UserEdit) (cookie string, err erro
 	return "", nil
 }
 
-func (model *Model) GetMyProfile(cookie string) (profile models.UserExtended, err error) {
+func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExtended, err error) {
 	row := model.Database.QueryRowx(`
 		SELECT username, avatar, score
 		FROM userinfo
@@ -251,8 +254,9 @@ func (model *Model) GetMyProfile(cookie string) (profile models.UserExtended, er
 			ON session.uid = userinfo.uid
 			AND cookie=$1;
 	`, cookie)
+	err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
 
-	if err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score); err != nil {
+	if err != nil {
 
 		model.LG.Sugar.Infow(
 			"getmyprofile failed, scan error",
@@ -272,15 +276,16 @@ func (model *Model) GetMyProfile(cookie string) (profile models.UserExtended, er
 	return profile, nil
 }
 
-func (model *Model) GetProfile(username string) (profile models.UserExtended, err error) {
-	if isPresent, problem := model.present(userInfoTable, usernameCol, username); isPresent && problem == nil {
+func (model *DatabaseModel) GetProfile(username string) (profile models.UserExtended, err error) {
+	if isPresent, problem := model.present(UserInfoTable, UsernameCol, username); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`
 			SELECT username, avatar, score
 			FROM userinfo
 			WHERE username=$1;
 		`, username)
+		err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
 
-		if err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score); err != nil {
+		if err != nil {
 
 			model.LG.Sugar.Infow(
 				"getprofile failed, scan error",
@@ -321,13 +326,13 @@ func (model *Model) GetProfile(username string) (profile models.UserExtended, er
 	return models.UserExtended{}, nil
 }
 
-func (model *Model) UpdateProfile(profile models.UserEdit, cookie string) (bool, error) {
+func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string) (bool, error) {
 	changedU := false
 	changedP := false
 	changedA := false
 
 	if profile.Username != "" {
-		isPresent, problem := model.present(userInfoTable, usernameCol, profile.Username)
+		isPresent, problem := model.present(UserInfoTable, UsernameCol, profile.Username)
 		if problem != nil {
 			model.LG.Sugar.Infow(
 				"present failed",
@@ -439,7 +444,7 @@ func (model *Model) UpdateProfile(profile models.UserEdit, cookie string) (bool,
 	return false, nil
 }
 
-func (model *Model) GetTopUsers(limit int, offset int) (board models.Leaders, err error) {
+func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Leaders, err error) {
 	row := model.Database.QueryRowx(`
 		SELECT COUNT(*)
 		FROM userinfo
@@ -490,3 +495,5 @@ func (model *Model) GetTopUsers(limit int, offset int) (board models.Leaders, er
 
 	return board, nil
 }
+
+/*****grp******/
