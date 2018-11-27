@@ -6,6 +6,19 @@ import (
 	"testing"
 )
 
+type A []int
+
+func (a *A) g() {
+	*a = A(append([]int(*a), 1))
+}
+
+func TestA(t *testing.T) {
+	var a A
+	if a == nil {
+		println("nil")
+	}
+}
+
 func TestMessages(t *testing.T) {
 	type S struct {
 		F1 string

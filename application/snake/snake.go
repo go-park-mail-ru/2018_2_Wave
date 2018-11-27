@@ -3,24 +3,26 @@ package snake
 import (
 	"fmt"
 	"time"
+
+	"Wave/application/snake/core"
 )
 
 // ----------------| snake node
 
 // snake body portion
 type snakeNode struct {
-	*object             // base object
-	letter    rune      // node letter
-	snake     *snake    // parent snake
-	direction direction // next node direction
-	bHead     bool      // head node
+	*core.Object                // base object
+	letter       rune           // node letter
+	snake        *snake         // parent snake
+	direction    core.Direction // next node direction
+	bHead        bool           // head node
 }
 
 const typeSnakeNode = "snake_node"
 
 func newSnakeNode(letter rune, s *snake) *snakeNode {
 	n := &snakeNode{
-		object: newObject(typeSnakeNode),
+		Object: core.NewObject(typeSnakeNode),
 		letter: letter,
 		snake:  s,
 	}
@@ -28,7 +30,7 @@ func newSnakeNode(letter rune, s *snake) *snakeNode {
 	return n
 }
 
-func (s *snakeNode) OnColided(o iObject) {
+func (s *snakeNode) OnColided(o core.IObject) {
 	if p, ok := o.(iItem); ok && p != nil {
 		s.snake.pushBack(p.GetLetter())
 		o.Destroy()
@@ -39,24 +41,18 @@ func (s *snakeNode) OnColided(o iObject) {
 
 // snake representation
 type snake struct {
-	world    *world
-	body     []*snakeNode // body elements
-	movement direction    // next step direction
+	world    *core.World
+	body     []*snakeNode   // body elements
+	movement core.Direction // next step direction
 
 	ticker *time.Ticker
 	cancel chan interface{}
 }
 
-func newSnake(w *world, points []vec2i, direction direction) *snake {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Println(err)
-		}
-	}()
-
+func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
 	s := &snake{
 		world:    w,
-		ticker:   time.NewTicker(300 * time.Microsecond),
+		ticker:   time.NewTicker(300 * time.Millisecond),
 		movement: direction,
 	}
 	for i := len(points) - 1; i >= 0; i-- {
@@ -76,6 +72,10 @@ func (s *snake) tick() {
 		select {
 		case <-s.ticker.C:
 			s.moveNext()
+			for _, node := range s.body {
+				fmt.Printf("%v", node.GetPos()) // TODO:: remove
+			}
+			println("")
 		case <-s.cancel:
 			return
 		}
@@ -84,12 +84,15 @@ func (s *snake) tick() {
 
 func (s *snake) moveNext() {
 	var (
-		delta         = s.movement.getDelta()
-		nextPosition  = s.body[0].Position.Sum(delta)
+		delta         = s.movement.GetDelta()
+		nextPosition  = s.body[0].GetPos().Sum(delta)
 		nextDirection = s.movement
 	)
 	for i := range s.body {
-		nextPosition, s.body[i].Position = s.body[i].Position, nextPosition
+		tmp := core.Vec2i{}
+		nextPosition, tmp = s.body[i].GetPos(), nextPosition
+		s.body[i].SetPos(tmp)
+
 		nextDirection, s.body[i].direction = s.body[i].direction, nextDirection
 	}
 }
@@ -100,19 +103,19 @@ func (s *snake) pushBack(letter rune) {
 			curTail     = s.getTail()
 			newTail     = newSnakeNode(letter, s)
 			direction   = curTail.direction
-			delta       = direction.getDelta().Mult(-1)
-			newPosition = curTail.Position.Sum(delta)
+			delta       = direction.GetDelta().Mult(-1)
+			newPosition = curTail.GetPos().Sum(delta)
 		)
-		newTail.Position = newPosition
+		newTail.SetPos(newPosition)
 		newTail.direction = direction
 
 		s.body = append(s.body, newTail)
 	}
 }
 
-func (s *snake) setHead(letter rune, direction direction, position vec2i) {
+func (s *snake) setHead(letter rune, direction core.Direction, position core.Vec2i) {
 	newHead := newSnakeNode(letter, s)
-	newHead.Position = position
+	newHead.SetPos(position)
 	newHead.direction = direction
 	s.body = append([]*snakeNode{newHead}, s.body...)
 }

@@ -3,6 +3,7 @@ package snake
 import (
 	"Wave/application/manager"
 	"Wave/application/room"
+	"Wave/application/snake/core"
 	"time"
 )
 
@@ -11,17 +12,17 @@ const RoomType room.RoomType = "snake_game"
 
 // App - snake game room
 type App struct {
-	*room.Room        // base room
-	world      *world // game world
+	*room.Room // base room
+	game      *game
 }
 
 // New snake app
 func New(id room.RoomID, step time.Duration, db interface{}) room.IRoom {
 	s := &App{
 		Room: room.NewRoom(id, RoomType, step),
-		world: newWorld(sceneSize{
-			X: 900,
-			Y: 900,
+		game: newGame(core.Vec2i{
+			X: 100,
+			Y: 100,
 		}),
 	}
 	s.OnTick = s.onTick
@@ -42,9 +43,9 @@ func init() {
 // ----------------| handlers
 
 func (a *App) onTick(dt time.Duration) {
-	a.world.Tick(dt)
+	a.game.Tick(dt)
 	var (
-		info = a.world.GetGameInfo()
+		info = a.game.GetGameInfo()
 		msg  = room.MessageTick.WithStruct(info)
 	)
 	a.Broadcast(msg)
@@ -52,7 +53,7 @@ func (a *App) onTick(dt time.Duration) {
 
 // get information about map and current users
 func (a *App) onGameInfo(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	return room.MessageOK.WithStruct(a.world.GetGameInfo())
+	return room.MessageOK.WithStruct(a.game.GetGameInfo())
 }
 
 // receive game action (control)
@@ -68,13 +69,13 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse
 
 	switch ac.ActionName {
 	case "move_left":
-		return a.withSnake(u, func(s *snake) { s.movement = left })
+		return a.withSnake(u, func(s *snake) { s.movement = core.Left })
 	case "move_right":
-		return a.withSnake(u, func(s *snake) { s.movement = right })
+		return a.withSnake(u, func(s *snake) { s.movement = core.Right })
 	case "move_up":
-		return a.withSnake(u, func(s *snake) { s.movement = up })
+		return a.withSnake(u, func(s *snake) { s.movement = core.Up })
 	case "move_down":
-		return a.withSnake(u, func(s *snake) { s.movement = down })
+		return a.withSnake(u, func(s *snake) { s.movement = core.Down })
 	default:
 		return messageUnknownCommand
 	}
@@ -82,7 +83,7 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse
 
 // place the user into a game scene and allow him play
 func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	if _, err := a.world.CreateSnake(u, 6); err != nil {
+	if _, err := a.game.CreateSnake(u, 6); err != nil {
 		return messageAlreadyPlays
 	}
 	return nil
@@ -90,7 +91,7 @@ func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponse {
 
 // exit from the game
 func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	if err := a.world.DeleteSnake(u); err != nil {
+	if err := a.game.DeleteSnake(u); err != nil {
 		return messageNoSnake
 	}
 	return nil
@@ -105,7 +106,7 @@ var (
 )
 
 func (a *App) withSnake(u room.IUser, next func(s *snake)) room.IRouteResponse {
-	if s, err := a.world.GetSnake(u); err == nil {
+	if s, err := a.game.GetSnake(u); err == nil {
 		next(s)
 		return nil
 	}

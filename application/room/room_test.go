@@ -32,7 +32,7 @@ func (t *testRoomSimpleHelper) Consume(om IOutMessage) error {
 
 func TestRoomSimple(t *testing.T) {
 	room := func() IRoom {
-		r := NewRoom("test0", 30*time.Millisecond)
+		r := NewRoom("test0", "", 30*time.Millisecond)
 		r.Type = "test_type"
 		r.Routes["echo"] = func(u IUser, im IInMessage) IRouteResponse {
 			return &RouteResponse{
