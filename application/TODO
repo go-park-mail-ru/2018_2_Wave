@@ -5,6 +5,6 @@ GLOBAL:
         otherwise ws must to keep a silence 
 .
 SNAKE:
-    ☐ Make on dead event messages
+    ✔ Make on dead event messages @done(18-11-27 20:33)
     ☐ Make on eaten event messages
     ☐ Change onTick event message paylad (right now i send too mach)

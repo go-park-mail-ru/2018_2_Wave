@@ -68,6 +68,12 @@
     {
         "response": {
             "room_id": "",
+            "status": "STATUS_DEAD"
+        }
+    },
+    {
+        "response": {
+            "room_id": "",
             "status": "STATUS_TICK",
             "payload": {
                 "scene_size": { 

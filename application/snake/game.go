@@ -13,6 +13,8 @@ type game struct {
 
 	leftToFood    time.Duration
 	foodSpawnRate time.Duration
+
+	OnSnakeDead func(room.IUser)
 }
 
 func newGame(worldSize core.Vec2i) *game {
@@ -65,6 +67,10 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 	g.user2snake[u] = snake
 	snake.onDestoyed = func() {
 		delete(g.user2snake, u)
+		
+		if g.OnSnakeDead != nil {
+			g.OnSnakeDead(u)
+		}
 	}
 	return snake, nil
 }

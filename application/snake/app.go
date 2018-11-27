@@ -26,6 +26,7 @@ func New(id room.RoomID, step time.Duration, db interface{}) room.IRoom {
 	}
 	s.OnTick = s.onTick
 	s.OnUserRemoved = s.onUserRemoved
+	s.game.OnSnakeDead = s.onSnakeDead
 	s.Routes["game_info"] = s.onGameInfo
 	s.Routes["game_action"] = s.onGameAction
 	s.Routes["game_play"] = s.onGamePlay
@@ -94,9 +95,14 @@ func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	return nil
 }
 
+func (a *App) onSnakeDead(u room.IUser) {
+	a.SendMessageTo(u, messageDead)
+}
+
 // ----------------| helpers
 
 var (
+	messageDead           = room.RouteResponse{Status: "STATUS_DEAD"}.WithStruct("")
 	messageNoSnake        = room.RouteResponse{Status: room.StatusError}.WithReason("No snake")
 	messageAlreadyPlays   = room.RouteResponse{Status: room.StatusError}.WithReason("already plays")
 	messageUnknownCommand = room.RouteResponse{Status: room.StatusError}.WithReason("unknown command")
