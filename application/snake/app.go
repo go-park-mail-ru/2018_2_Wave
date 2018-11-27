@@ -59,7 +59,7 @@ func (a *App) onGameInfo(u room.IUser, im room.IInMessage) room.IRouteResponse {
 // receive game action (control)
 func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	type Action struct {
-		ActionName string
+		ActionName string `json:"action"`
 	}
 
 	ac := &Action{}

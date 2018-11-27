@@ -14,7 +14,7 @@ _ game_info
 STATUS_OK   @game_info
 
 # send a control action
-_ game_action { "action_name" : "move_left|move_right|move_up|move_down" }
+_ game_action { "action" : "move_left|move_right|move_up|move_down" }
 STATUS_ERR @error
 STATUS_OK   
 

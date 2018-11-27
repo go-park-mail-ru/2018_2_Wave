@@ -3,7 +3,6 @@ package snake
 import (
 	"Wave/application/room"
 	"Wave/application/snake/core"
-	"fmt"
 	"time"
 )
 
@@ -50,7 +49,6 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 		poss, dir = g.world.FindGap(length)
 		snake     = newSnake(g.world, poss, dir)
 	)
-	fmt.Printf("%v\n", poss) // TODO:: remove
 	g.user2snake[u] = snake
 	return snake, nil
 }

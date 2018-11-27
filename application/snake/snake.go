@@ -52,7 +52,7 @@ type snake struct {
 func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
 	s := &snake{
 		world:    w,
-		ticker:   time.NewTicker(300 * time.Millisecond),
+		ticker:   time.NewTicker(1000 * time.Millisecond),
 		movement: direction,
 	}
 	for i := len(points) - 1; i >= 0; i-- {
@@ -72,10 +72,6 @@ func (s *snake) tick() {
 		select {
 		case <-s.ticker.C:
 			s.moveNext()
-			for _, node := range s.body {
-				fmt.Printf("%v", node.GetPos()) // TODO:: remove
-			}
-			println("")
 		case <-s.cancel:
 			return
 		}
@@ -88,6 +84,7 @@ func (s *snake) moveNext() {
 		nextPosition  = s.body[0].GetPos().Sum(delta)
 		nextDirection = s.movement
 	)
+	fmt.Printf("---------- %+v\n", delta)
 	for i := range s.body {
 		tmp := core.Vec2i{}
 		nextPosition, tmp = s.body[i].GetPos(), nextPosition

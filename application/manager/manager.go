@@ -2,7 +2,6 @@ package app
 
 import (
 	"Wave/application/room"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -73,8 +72,6 @@ func (a *App) CreateLobby(room_type room.RoomType, room_id room.RoomID) (room.IR
 		}
 		a.rooms[room_id] = r
 		go r.Run()
-
-		fmt.Printf("%s", a.rooms) // TODO::
 
 		return r, nil
 	}
