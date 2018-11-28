@@ -9,11 +9,12 @@ import (
 )
 
 type scene struct {
-	LG        *logger.Logger
-	fields    [][]field
-	objects   []IObject
-	objectMap map[uint64]IObject
-	size      Vec2i
+	LG         *logger.Logger
+	fields     [][]field
+	objects    []IObject
+	objectMap  map[uint64]IObject
+	size       Vec2i
+	collisions []collision
 }
 
 func newScene(size Vec2i) *scene {
@@ -29,6 +30,13 @@ func newScene(size Vec2i) *scene {
 }
 
 // ----------------|
+
+func (s *scene) Tick() {
+	for _, cl := range s.collisions {
+		cl.collide()
+	}
+	s.collisions = nil
+}
 
 // assign the object th the scene
 func (s *scene) AddObject(o IObject) error {
@@ -120,7 +128,8 @@ func (s *scene) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {
 		o.setPos(nextPosition)
 
 		s.at(currPosition).remove(o)
-		s.at(nextPosition).collide(o)
+		cs := s.at(nextPosition).collide(o)
+		s.collisions = append(s.collisions, cs...)
 		return nil
 	}
 	return room.ErrorNil
@@ -170,15 +179,18 @@ func (f *field) remove(o IObject) {
 	}
 }
 
-func (f *field) collide(o IObject) {
+func (f *field) collide(o IObject) (collisions []collision) {
 	if o != nil {
 		lastState := f.dump()
 		*f = append(*f, o)
 		for _, elem := range lastState {
-			elem.OnColided(o)
-			o.OnColided(elem)
+			collisions = append(collisions, collision{
+				o0: elem,
+				o1: o,
+			})
 		}
 	}
+	return collisions
 }
 
 func (f *field) dump() []IObject {
@@ -191,4 +203,16 @@ func (f *field) dump() []IObject {
 
 func (f *field) isEmpty() bool {
 	return len(*f) == 0
+}
+
+// ----------------|
+
+type collision struct {
+	o1 IObject
+	o0 IObject
+}
+
+func (c *collision) collide() {
+	c.o0.OnColided(c.o1)
+	c.o1.OnColided(c.o0)
 }
