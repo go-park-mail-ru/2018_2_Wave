@@ -26,7 +26,7 @@ func NewWorld(size Vec2i) *World {
 
 func (w *World) Tick(dt time.Duration) {
 	w.scene.Tick()
-	w.scene.PrintDebug()
+	//w.scene.PrintDebug()
 }
 
 // ----------------|
