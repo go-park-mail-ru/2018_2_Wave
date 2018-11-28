@@ -12,14 +12,18 @@ type User struct {
 	Conn  *websocket.Conn
 	LG    *lg.Logger
 
+	output  chan IOutMessage
+	cancel  chan interface{}
 	bClosed bool
 }
 
 func NewUser(ID UserID, Conn *websocket.Conn) *User {
 	return &User{
-		ID:    ID,
-		Conn:  Conn,
-		Rooms: map[RoomID]IRoom{},
+		ID:     ID,
+		Conn:   Conn,
+		cancel: make(chan interface{}, 1),
+		output: make(chan IOutMessage, 1000),
+		Rooms:  map[RoomID]IRoom{},
 	}
 }
 
@@ -59,6 +63,8 @@ func (u *User) Listen() error {
 	}()
 
 	u.LG.Sugar.Infof("User started: id=", u.GetID())
+
+	go u.sendWorker()
 
 	// send current user_id
 	u.Conn.WriteJSON(u.GetID())
@@ -116,21 +122,31 @@ func (u *User) Consume(m IOutMessage) error {
 	if m == nil {
 		return ErrorNil
 	}
-
-	// log input
-	// if u.LG != nil {
-	// 	data, _ := json.Marshal(m)
-	// 	u.LG.Sugar.Infof("out_message: %v", string(data))
-	// }
-
-	if err := u.Conn.WriteJSON(m); err != nil {
-		u.StopListening()
-		return ErrorConnectionClosed
-	}
+	u.output <- m
 	return nil
 }
 
 // ----------------| internal function
+
+func (u *User) sendWorker() {
+	for {
+		select {
+		case m := <-u.output:
+			// log input
+			// if u.LG != nil {
+			// 	data, _ := json.Marshal(m)
+			// 	u.LG.Sugar.Infof("out_message: %v", string(data))
+			// }
+
+			if err := u.Conn.WriteJSON(m); err != nil {
+				u.StopListening()
+				u.stop()
+			}
+		case <-u.cancel:
+			return
+		}
+	}
+}
 
 func (u *User) removeFromAllRooms() error {
 	for _, r := range u.Rooms {
