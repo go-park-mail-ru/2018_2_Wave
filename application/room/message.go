@@ -7,6 +7,7 @@ import (
 // ----------------| InMessage
 
 // InMessage - default IInMessage
+// easyjson:json
 type InMessage struct {
 	RoomID  RoomID      `json:"room_id"`
 	Signal  string      `json:"signal"`
@@ -27,6 +28,7 @@ func (im *InMessage) ToStruct(s interface{}) error {
 // ----------------| OutMessage
 
 // OutMessage - default IOutMessage
+// easyjson:json
 type OutMessage struct {
 	RoomID  RoomID      `json:"room_id"`
 	Status  string      `json:"status"`

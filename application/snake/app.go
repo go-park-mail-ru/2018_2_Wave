@@ -6,14 +6,16 @@ import (
 	"time"
 )
 
-// RoomType - snake type literal
-const RoomType room.RoomType = "snake_game"
+//go:generate easyjson .
 
-// App - snake game room
 type App struct {
 	*room.Room // base room
 	game       *game
 }
+
+const RoomType room.RoomType = "snake_game"
+
+// ----------------|
 
 // New snake app
 func New(id room.RoomID, step time.Duration, db interface{}) room.IRoom {
@@ -56,11 +58,7 @@ func (a *App) onGameInfo(u room.IUser, im room.IInMessage) room.IRouteResponse {
 
 // receive game action (control)
 func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	type Action struct {
-		ActionName string `json:"action"`
-	}
-
-	ac := &Action{}
+	ac := &gameAction{}
 	if im.ToStruct(ac) != nil {
 		return room.MessageWrongFormat
 	}
@@ -100,6 +98,11 @@ func (a *App) onSnakeDead(u room.IUser) {
 }
 
 // ----------------| helpers
+
+// easyjson:json
+type gameAction struct {
+	ActionName string `json:"action"`
+}
 
 var (
 	messageDead           = room.RouteResponse{Status: "STATUS_DEAD"}.WithStruct("")

@@ -9,7 +9,6 @@ import (
 type Route func(IUser, IInMessage) IRouteResponse
 
 // Room - default IRoom
-// - Chat
 type Room struct {
 	ID     RoomID           // room ID
 	Type   RoomType         // room type

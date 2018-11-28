@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const RoomType = "manager"
+//go:generate easyjson .
 
 // App - main service room
 /* - creates and store other rooms
@@ -16,17 +16,17 @@ const RoomType = "manager"
  */
 type App struct {
 	*room.Room // the room super
-
-	/** internal rooms:
-	 * 	- chats
-	 *	- game lobbies	*/
-	rooms map[room.RoomID]room.IRoom
-	db    interface{}
+	rooms      map[room.RoomID]room.IRoom
+	db         interface{}
 
 	lastRoomID int64
 	lastUserID int64
 	idsMutex   sync.Mutex
 }
+
+const RoomType = "manager"
+
+// ----------------|
 
 // New applicarion room
 func New(id room.RoomID, step time.Duration, db interface{}) *App {
@@ -81,13 +81,9 @@ func (a *App) CreateLobby(room_type room.RoomType, room_id room.RoomID) (room.IR
 // ----------------| handlers
 
 func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	type Response struct {
-		RoomID   room.RoomID
-		RoomType room.RoomType
-	}
-	data := []Response{}
+	data := []roomInfoPayload{}
 	for _, r := range a.rooms {
-		data = append(data, Response{
+		data = append(data, roomInfoPayload{
 			RoomID:   r.GetID(),
 			RoomType: r.GetType(),
 		})
@@ -138,11 +134,19 @@ func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomID
 
 // ----------------| helper functions
 
+// easyjson:json
 type roomIDPayload struct {
 	RoomID room.RoomID `json:"room_id"`
 }
 
+// easyjson:json
 type roomTypePayload struct {
+	RoomType room.RoomType `json:"room_type"`
+}
+
+// easyjson:json
+type roomInfoPayload struct {
+	RoomID   room.RoomID   `json:"room_id"`
 	RoomType room.RoomType `json:"room_type"`
 }
 

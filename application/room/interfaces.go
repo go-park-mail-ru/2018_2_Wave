@@ -11,6 +11,8 @@ import "time"
  *	. ## and of the handler
  */
 
+//go:generate easyjson .
+
 type RoomID string
 type UserID string
 type RoomType string
