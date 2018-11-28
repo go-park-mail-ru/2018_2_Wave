@@ -1,0 +1,58 @@
+[
+    {
+        "requset": {
+            "room_id": "",
+            "signal": "lobby_list"
+        },
+        "response": {
+            "room_id": "",
+            "status": "STATUS_OK",
+            "payload": [ 
+                { 
+                    "room_id": "", 
+                    "room_type": "" 
+                } 
+            ]
+        }
+    },
+    {
+        "requset": {
+            "room_id": "",
+            "signal": "lobby_create"
+        },
+        "response": {
+            "room_id": "",
+            "status": "STATUS_OK",
+            "payload": { 
+                "room_id": "" 
+            }
+        }
+    },
+    {
+        "requset": {
+            "room_id": "",
+            "signal": "lobby_delete",
+            "payload": { 
+                "room_id": "" 
+            }
+        }
+    },
+    {
+        "requset": {
+            "room_id": "",
+            "signal": "add_to_room",
+            "payload": { 
+                "room_id": "" 
+            }
+        }
+    },
+    {
+        "requset": {
+            "room_id": "",
+            "signal": "remove_from_room",
+            "payload": { 
+                "room_id": "" 
+            }
+        }
+    }
+]

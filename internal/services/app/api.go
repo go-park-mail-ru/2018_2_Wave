@@ -19,6 +19,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 	"golang.org/x/net/context"
+
+	_ "github.com/lib/pq"
 )
 
 type Handler struct {
