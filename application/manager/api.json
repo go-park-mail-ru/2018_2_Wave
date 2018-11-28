@@ -1,57 +1,67 @@
 [
     {
+        "verbose": "sends when ws connection is esteblished",
+        "response": {
+            "status": "STATUS_TOKEN",
+            "payload": {
+                "user_token": ""
+            }
+        }
+    },
+    {
+        "verbose": "returns list of existing rooms",
         "requset": {
-            "room_id": "",
             "signal": "lobby_list"
         },
         "response": {
-            "room_id": "",
             "status": "STATUS_OK",
             "payload": [ 
                 { 
-                    "room_id": "", 
+                    "room_token": "", 
                     "room_type": "" 
                 } 
             ]
         }
     },
     {
+        "verbose": "create a new room of a type",
         "requset": {
-            "room_id": "",
-            "signal": "lobby_create"
+            "signal": "lobby_create",
+            "payload": {
+                "room_type": ""
+            }
         },
         "response": {
-            "room_id": "",
             "status": "STATUS_OK",
             "payload": { 
-                "room_id": "" 
+                "room_token": "" 
             }
         }
     },
     {
+        "verbose": "delete the room",
         "requset": {
-            "room_id": "",
             "signal": "lobby_delete",
             "payload": { 
-                "room_id": "" 
+                "room_token": "" 
             }
         }
     },
     {
+        "verbose": "add into the room",
         "requset": {
-            "room_id": "",
             "signal": "add_to_room",
             "payload": { 
-                "room_id": "" 
+                "room_token": "" 
             }
         }
     },
     {
+        "verbose": "remove from the room",
         "requset": {
-            "room_id": "",
             "signal": "remove_from_room",
             "payload": { 
-                "room_id": "" 
+                "room_token": "" 
             }
         }
     }

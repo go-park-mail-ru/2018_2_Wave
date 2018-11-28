@@ -37,8 +37,15 @@ func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, conf config.Configur
 	}
 
 	r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(curlog, Prof), mw.CORS(conf.CC, curlog, Prof))).Methods("GET")
+
+	server := http.Server{
+		Addr: conf.Game.WsPort,
+		Handler: handlers.RecoveryHandler()(r),
+	}
+	server.ListenAndServe()
+
 	// TODO:: log
-	http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r))
+	// http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r))
 	// TODO:: log
 	return g
 }

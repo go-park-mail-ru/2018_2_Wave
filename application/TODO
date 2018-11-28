@@ -8,6 +8,9 @@ GLOBAL:
     ✔ add prof support @started(18-11-28 17:56) @done(18-11-28 18:03) @lasted(7m3s)
     ✔ configuration @started(18-11-28 18:03) @done(18-11-28 18:27) @lasted(24m30s)
     ✔ fix cors @started(18-11-28 18:42) @done(18-11-28 18:43) @lasted(1m48s)
+    ✔ user names @done(18-11-28 22:25)
+    ✔ user_id -> user_token @done(18-11-28 22:25)
+    ✔ change protocol @done(18-11-28 22:25)
 .
 SNAKE:
     ✔ Make on dead event messages @done(18-11-27 20:33)

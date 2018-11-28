@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson426b19f9DecodeWaveApplicationRoom(in *jlexer.Lexer, out *OutMessage) {
+func easyjson426b19f9DecodeWaveApplicationRoom(in *jlexer.Lexer, out *userTokenPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -36,8 +36,79 @@ func easyjson426b19f9DecodeWaveApplicationRoom(in *jlexer.Lexer, out *OutMessage
 			continue
 		}
 		switch key {
-		case "room_id":
-			out.RoomID = RoomID(in.String())
+		case "user_token":
+			out.UserToken = UserID(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson426b19f9EncodeWaveApplicationRoom(out *jwriter.Writer, in userTokenPayload) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"user_token\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.UserToken))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v userTokenPayload) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson426b19f9EncodeWaveApplicationRoom(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v userTokenPayload) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson426b19f9EncodeWaveApplicationRoom(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *userTokenPayload) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson426b19f9DecodeWaveApplicationRoom(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *userTokenPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson426b19f9DecodeWaveApplicationRoom(l, v)
+}
+func easyjson426b19f9DecodeWaveApplicationRoom1(in *jlexer.Lexer, out *OutMessage) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "room_token":
+			out.RoomToken = RoomToken(in.String())
 		case "status":
 			out.Status = string(in.String())
 		case "payload":
@@ -58,19 +129,19 @@ func easyjson426b19f9DecodeWaveApplicationRoom(in *jlexer.Lexer, out *OutMessage
 		in.Consumed()
 	}
 }
-func easyjson426b19f9EncodeWaveApplicationRoom(out *jwriter.Writer, in OutMessage) {
+func easyjson426b19f9EncodeWaveApplicationRoom1(out *jwriter.Writer, in OutMessage) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"room_id\":"
+		const prefix string = ",\"room_token\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.RoomID))
+		out.String(string(in.RoomToken))
 	}
 	{
 		const prefix string = ",\"status\":"
@@ -104,27 +175,27 @@ func easyjson426b19f9EncodeWaveApplicationRoom(out *jwriter.Writer, in OutMessag
 // MarshalJSON supports json.Marshaler interface
 func (v OutMessage) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson426b19f9EncodeWaveApplicationRoom(&w, v)
+	easyjson426b19f9EncodeWaveApplicationRoom1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v OutMessage) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson426b19f9EncodeWaveApplicationRoom(w, v)
+	easyjson426b19f9EncodeWaveApplicationRoom1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *OutMessage) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson426b19f9DecodeWaveApplicationRoom(&r, v)
+	easyjson426b19f9DecodeWaveApplicationRoom1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *OutMessage) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson426b19f9DecodeWaveApplicationRoom(l, v)
+	easyjson426b19f9DecodeWaveApplicationRoom1(l, v)
 }
-func easyjson426b19f9DecodeWaveApplicationRoom1(in *jlexer.Lexer, out *InMessage) {
+func easyjson426b19f9DecodeWaveApplicationRoom2(in *jlexer.Lexer, out *InMessage) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -143,8 +214,8 @@ func easyjson426b19f9DecodeWaveApplicationRoom1(in *jlexer.Lexer, out *InMessage
 			continue
 		}
 		switch key {
-		case "room_id":
-			out.RoomID = RoomID(in.String())
+		case "room_token":
+			out.RoomToken = RoomToken(in.String())
 		case "signal":
 			out.Signal = string(in.String())
 		case "payload":
@@ -165,19 +236,19 @@ func easyjson426b19f9DecodeWaveApplicationRoom1(in *jlexer.Lexer, out *InMessage
 		in.Consumed()
 	}
 }
-func easyjson426b19f9EncodeWaveApplicationRoom1(out *jwriter.Writer, in InMessage) {
+func easyjson426b19f9EncodeWaveApplicationRoom2(out *jwriter.Writer, in InMessage) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"room_id\":"
+		const prefix string = ",\"room_token\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.RoomID))
+		out.String(string(in.RoomToken))
 	}
 	{
 		const prefix string = ",\"signal\":"
@@ -211,23 +282,23 @@ func easyjson426b19f9EncodeWaveApplicationRoom1(out *jwriter.Writer, in InMessag
 // MarshalJSON supports json.Marshaler interface
 func (v InMessage) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson426b19f9EncodeWaveApplicationRoom1(&w, v)
+	easyjson426b19f9EncodeWaveApplicationRoom2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v InMessage) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson426b19f9EncodeWaveApplicationRoom1(w, v)
+	easyjson426b19f9EncodeWaveApplicationRoom2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *InMessage) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson426b19f9DecodeWaveApplicationRoom1(&r, v)
+	easyjson426b19f9DecodeWaveApplicationRoom2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *InMessage) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson426b19f9DecodeWaveApplicationRoom1(l, v)
+	easyjson426b19f9DecodeWaveApplicationRoom2(l, v)
 }

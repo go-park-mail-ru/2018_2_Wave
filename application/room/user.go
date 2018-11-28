@@ -8,7 +8,7 @@ import (
 
 type User struct {
 	ID    UserID
-	Rooms map[RoomID]IRoom
+	Rooms map[RoomToken]IRoom
 	Conn  *websocket.Conn
 	LG    *lg.Logger
 
@@ -23,7 +23,7 @@ func NewUser(ID UserID, Conn *websocket.Conn) *User {
 		Conn:   Conn,
 		cancel: make(chan interface{}, 1),
 		output: make(chan IOutMessage, 1000),
-		Rooms:  map[RoomID]IRoom{},
+		Rooms:  map[RoomToken]IRoom{},
 	}
 }
 
@@ -67,7 +67,9 @@ func (u *User) Listen() error {
 	go u.sendWorker()
 
 	// send current user_id
-	u.Conn.WriteJSON(u.GetID())
+	u.Conn.WriteJSON(&userTokenPayload{
+		UserToken: u.GetID(),
+	})
 
 	for { // stops when connection closes
 		m := &InMessage{}
@@ -83,9 +85,9 @@ func (u *User) Listen() error {
 				return ErrorConnectionClosed
 			}
 			u.Consume(&OutMessage{
-				RoomID:  m.GetRoomID(),
-				Status:  StatusError,
-				Payload: []byte("Wrong message"),
+				RoomToken: m.GetRoomID(),
+				Status:    StatusError,
+				Payload:   []byte("Wrong message"),
 			})
 			continue
 		}
@@ -101,9 +103,9 @@ func (u *User) Listen() error {
 			r.ApplyMessage(u, m)
 		} else {
 			u.Consume(&OutMessage{
-				RoomID:  m.GetRoomID(),
-				Status:  StatusError,
-				Payload: []byte("Unknown room:" + m.GetRoomID()),
+				RoomToken: m.GetRoomID(),
+				Status:    StatusError,
+				Payload:   []byte("Unknown room:" + m.GetRoomID()),
 			})
 			continue
 		}
@@ -127,6 +129,11 @@ func (u *User) Consume(m IOutMessage) error {
 }
 
 // ----------------| internal function
+
+// easyjson:json
+type userTokenPayload struct {
+	UserToken UserID `json:"user_token"`
+}
 
 func (u *User) sendWorker() {
 	for {
@@ -168,4 +175,5 @@ func (u *User) stop() {
 	u.LG.Sugar.Infof("ws closed, uid: %s", u.GetID())
 	u.bClosed = true
 	u.Conn.Close()
+	u.cancel <- ""
 }
