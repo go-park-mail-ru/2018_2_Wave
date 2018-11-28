@@ -7,6 +7,7 @@ GLOBAL:
     ✔ migrate to microservice @started(18-11-28 16:19) @done(18-11-28 17:54) @lasted(1h35m54s)
     ✔ add prof support @started(18-11-28 17:56) @done(18-11-28 18:03) @lasted(7m3s)
     ✔ configuration @started(18-11-28 18:03) @done(18-11-28 18:27) @lasted(24m30s)
+    ✔ fix cors @started(18-11-28 18:42) @done(18-11-28 18:43) @lasted(1m48s)
 .
 SNAKE:
     ✔ Make on dead event messages @done(18-11-27 20:33)
