@@ -79,7 +79,6 @@ func (s *scene) FindGap(length int) (res []Vec2i, dir Direction) {
 
 func (s *scene) PrintDebug() {
 	res := ""
-
 	for y := s.size.Y - 1; y >= 0; y-- {
 		for x := 0; x < s.size.X; x++ {
 			f := s.fields[x][y]
@@ -173,13 +172,21 @@ func (f *field) remove(o IObject) {
 
 func (f *field) collide(o IObject) {
 	if o != nil {
-		lastState := *f
+		lastState := f.dump()
 		*f = append(*f, o)
 		for _, elem := range lastState {
 			elem.OnColided(o)
 			o.OnColided(elem)
 		}
 	}
+}
+
+func (f *field) dump() []IObject {
+	dump := []IObject{}
+	for _, elem := range *f {
+		dump = append(dump, elem)
+	}
+	return dump
 }
 
 func (f *field) isEmpty() bool {

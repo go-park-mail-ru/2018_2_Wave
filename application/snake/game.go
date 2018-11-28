@@ -30,8 +30,13 @@ func newGame(worldSize core.Vec2i) *game {
 // ----------------|
 
 func (g *game) Tick(dt time.Duration) {
+	// tick actors
+	for _, s := range g.user2snake {
+		s.Tick(dt)
+	}
 	g.world.Tick(dt)
 
+	// tick food generator
 	if g.leftToFood <= 0 {
 		g.leftToFood += g.foodSpawnRate
 		g.spawnFood()

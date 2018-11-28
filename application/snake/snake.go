@@ -48,8 +48,8 @@ type snake struct {
 	body     []*snakeNode   // body elements
 	movement core.Direction // next step direction
 
-	ticker *time.Ticker     // tick function
-	cancel chan interface{} // stop ticking
+	tickTime time.Duration // time to tick
+	leftTime time.Duration // left time for a next tick
 
 	onDestoyed func() // to remove the snake from the game
 }
@@ -57,8 +57,7 @@ type snake struct {
 func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
 	s := &snake{
 		world:    w,
-		ticker:   time.NewTicker(200 * time.Millisecond),
-		cancel:   make(chan interface{}, 1),
+		tickTime: 200 * time.Millisecond,
 		movement: direction,
 	}
 	l := 'a'
@@ -66,29 +65,23 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 		s.setHead(l, direction, points[i])
 		l++
 	}
-	go s.tick()
-
 	return s
 }
 
+func (s *snake) Tick(dt time.Duration) {
+	s.leftTime -= dt
+	if s.leftTime <= 0 {
+		s.leftTime += s.tickTime
+		s.moveNext()
+	}
+}
+
 func (s *snake) destroy() {
-	s.cancel <- ""
 	for _, elem := range s.body {
 		elem.Destroy()
 	}
 	if s.onDestoyed != nil {
 		s.onDestoyed()
-	}
-}
-
-func (s *snake) tick() {
-	for { //
-		select {
-		case <-s.ticker.C:
-			s.moveNext()
-		case <-s.cancel:
-			return
-		}
 	}
 }
 
