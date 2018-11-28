@@ -6,7 +6,7 @@ import (
 )
 
 type Profiler struct {
-	Hits        prometheus.Counter
+	HitsStats   prometheus.CounterVec
 	ActiveRooms prometheus.Gauge
 	Routines    prometheus.Gauge
 	CPUUsage    prometheus.Gauge
@@ -16,10 +16,12 @@ type Profiler struct {
 
 func Construct() *Profiler {
 	p := Profiler{
-		Hits: prometheus.NewCounter(prometheus.CounterOpts{
+		HitsStats: *prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "hits_statuses_total",
 			Help: "Number of hits and statuses.",
-		}),
+		},
+			[]string{"code", "status"},
+		),
 
 		ActiveRooms: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "active_rooms",
@@ -42,7 +44,7 @@ func Construct() *Profiler {
 		}),
 	}
 
-	prometheus.MustRegister(p.Hits)
+	prometheus.MustRegister(p.HitsStats)
 	prometheus.MustRegister(p.ActiveRooms)
 	prometheus.MustRegister(p.CPUUsage)
 	prometheus.MustRegister(p.MemUsage)
