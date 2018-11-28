@@ -5,6 +5,7 @@ import (
 	"Wave/internal/cors"
 	lg "Wave/internal/logger"
 	"Wave/internal/models"
+	mc "Wave/internal/metrics"
 
 	"fmt"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
 
-func CORS(CC config.CORSConfiguration, curlog *lg.Logger) Middleware {
+func CORS(CC config.CORSConfiguration, curlog *lg.Logger, prof *mc.Profiler) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
@@ -25,6 +26,10 @@ func CORS(CC config.CORSConfiguration, curlog *lg.Logger) Middleware {
 					"source", "middleware.go",
 					"who", "CORS",
 				)
+
+				prof.HitsStats.
+				WithLabelValues("403", "FORBIDDEN").
+				Add(1)
 
 				return
 			}
@@ -44,7 +49,7 @@ func CORS(CC config.CORSConfiguration, curlog *lg.Logger) Middleware {
 	}
 }
 
-func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger) Middleware {
+func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger, prof *mc.Profiler) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			originToSet := cors.SetOrigin(r.Header.Get("Origin"), CC.Origins)
@@ -61,6 +66,10 @@ func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger) Middleware
 					"who", "OptionsPreflight",
 				)
 
+				prof.HitsStats.
+				WithLabelValues("403", "FORBIDDEN").
+				Add(1)
+
 				return
 			}
 
@@ -76,12 +85,16 @@ func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger) Middleware
 				"who", "OptionsPreflight",
 			)
 
+			prof.HitsStats.
+			WithLabelValues("200", "OK").
+			Add(1)
+
 			return
 		}
 	}
 }
 
-func Auth(curlog *lg.Logger) Middleware {
+func Auth(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie("session")
@@ -101,6 +114,10 @@ func Auth(curlog *lg.Logger) Middleware {
 					"who", "Auth",
 				)
 
+				prof.HitsStats.
+				WithLabelValues("401", "UNAUTHORIZED").
+				Add(1)
+
 				return
 			}
 
@@ -115,7 +132,7 @@ func Auth(curlog *lg.Logger) Middleware {
 	}
 }
 
-func WebSocketHeadersCheck(curlog *lg.Logger) Middleware {
+func WebSocketHeadersCheck(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			if r.Header.Get("Connection") == "Upgrade" &&
@@ -135,6 +152,10 @@ func WebSocketHeadersCheck(curlog *lg.Logger) Middleware {
 			curlog.Sugar.Infow("websocket headers check failed",
 				"source", "middleware.go",
 				"who", "WebSocketHeadersCheck")
+
+			prof.HitsStats.
+			WithLabelValues("417", "EXPECTATION FAILED").
+			Add(1)
 
 			return
 		}
