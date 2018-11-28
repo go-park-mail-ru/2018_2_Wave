@@ -71,13 +71,14 @@ func (s *scene) RemoveObject(o IObject) error {
 }
 
 func (s *scene) FindGap(length int) (res []Vec2i, dir Direction) {
+FIND_POSITION:
 	position := Vec2i{
 		X: rand.Intn(s.size.X),
 		Y: rand.Intn(s.size.Y),
 	}
 	for i := 0; i < length; i++ {
 		if o := s.at(position); o == nil || !o.isEmpty() {
-			return s.FindGap(length)
+			goto FIND_POSITION
 		}
 		res = append(res, position)
 		position.X++

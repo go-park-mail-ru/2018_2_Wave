@@ -11,6 +11,6 @@ SNAKE:
     ☐ Change onTick event message paylad (right now i send too mach)
     ✔ thread safety @started(18-11-28 14:28) @done(18-11-28 15:08) @lasted(40m25s)
     ✔ async ticks to sync @started(18-11-28 14:33) @done(18-11-28 15:08) @lasted(35m27s)
-    ☐ FindGap() recursive to loop
+    ✔ FindGap() recursive to loop @started(18-11-28 15:26) @done(18-11-28 15:32) @lasted(6m50s)
     ✔ fix snake uppend @started(18-11-28 15:09) @done(18-11-28 15:25) @lasted(16m46s)
         right now we have too week anomaly safety
