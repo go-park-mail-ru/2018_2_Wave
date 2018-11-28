@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"os"
 	"io"
+	"log"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
@@ -28,7 +29,9 @@ type Handler struct {
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
-    file, _, err := r.FormFile("avatar")
+	log.Println("hey")
+	file, _, err := r.FormFile("avatar")
+	log.Println("gurl")
 	defer file.Close()
 
 	if err != nil {

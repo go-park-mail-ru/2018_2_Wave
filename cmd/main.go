@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/handlers"
 
 	"google.golang.org/grpc"
-	//"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 //go:generate easyjson ../internal/config/
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	//r.HandleFunc("/metrics", promhttp.Handler().(http.HandlerFunc)).Methods("GET")
+	r.HandleFunc("/metrics", promhttp.Handler().(http.HandlerFunc)).Methods("GET")
 
 	r.HandleFunc("/", mw.Chain(API.SlashHandler))
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC, curlog))).Methods("POST")
