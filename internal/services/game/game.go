@@ -1,6 +1,7 @@
 package game
 
 import (
+	"Wave/internal/config"
 	"Wave/internal/logger"
 	"Wave/internal/metrics"
 	"Wave/internal/services/auth/proto"
@@ -8,6 +9,7 @@ import (
 
 	"net/http"
 
+	"google.golang.org/grpc"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
 )
@@ -16,14 +18,27 @@ type Game struct {
 	*Handler
 }
 
-func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, AuthManager auth.AuthClient) *Game {
+func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, conf config.Configuration) *Game {
 	var (
+		AuthManager auth.AuthClient
 		g = &Game{ Handler: NewHandler(curlog, Prof, AuthManager)}
 		r = mux.NewRouter()
 	)
+	{ // get auth manager
+		Auth := conf.Auth
+		grpcConn, err := grpc.Dial(
+			Auth.Host+Auth.Port,
+			grpc.WithInsecure(),
+		)
+		if err != nil {
+			panic(err) //TODO::
+		}
+		AuthManager = auth.NewAuthClient(grpcConn)
+	}
+
 	r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(curlog))).Methods("GET") // TODO:: cors
 	// TODO:: log
-	http.ListenAndServe(":9605", handlers.RecoveryHandler()(r))
+	http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r))
 	// TODO:: log
 	return g
 }

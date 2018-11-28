@@ -14,7 +14,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
-	
+
 	"google.golang.org/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -30,10 +30,10 @@ func main() {
 	prof := mc.Construct()
 	db := database.New(curlog)
 
-	grpcserver.StartServer(curlog, conf.GRPCC, db, prof)
+	grpcserver.StartServer(curlog, conf, db, prof)
 
 	grpcConn, err := grpc.Dial(
-		conf.GRPCC.Host+conf.GRPCC.Port,
+		conf.Auth.Host+conf.Auth.Port,
 		grpc.WithInsecure(),
 	)
 

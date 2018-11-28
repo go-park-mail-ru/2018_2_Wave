@@ -6,9 +6,10 @@ import (
 
 // easyjson:json
 type Configuration struct {
-	SC    ServerConfiguration `json:"server"`
-	CC    CORSConfiguration   `json:"cors"`
-	GRPCC GRPCConfiguration   `json:"grpc"`
+	SC   ServerConfiguration `json:"server"`
+	CC   CORSConfiguration   `json:"cors"`
+	Auth GRPCConfiguration   `json:"auth"`
+	Game GameConfiguration   `json:"game"`
 }
 
 // easyjson:json
@@ -29,6 +30,12 @@ type CORSConfiguration struct {
 type GRPCConfiguration struct {
 	Host string `json:"host"`
 	Port string `json:"port"`
+}
+
+// easyjson:json
+type GameConfiguration struct {
+	WsPort string `json:"ws_port"`
+	GRPCConfiguration
 }
 
 func Configure(path string) Configuration {

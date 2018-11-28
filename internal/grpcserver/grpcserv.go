@@ -35,29 +35,20 @@ func startAuthServer(curlog *lg.Logger, GRPCC config.GRPCConfiguration, db *data
 	go server.Serve(lis)
 }
 
-func startGameServer(curlog *lg.Logger, GRPCC config.GRPCConfiguration, Prof *mc.Profiler) {
-	grpcConn, err := grpc.Dial(
-		GRPCC.Host+GRPCC.Port,
-		grpc.WithInsecure(),
-	)
-	if err != nil {
-		panic(err) //TODO::
-	}
-	AuthManager := auth.NewAuthClient(grpcConn)
-	
-	lis, err := net.Listen("tcp", ":8889")
+func startGameServer(curlog *lg.Logger, conf config.Configuration, Prof *mc.Profiler) {
+	lis, err := net.Listen("tcp", conf.Game.Port)
 	if err != nil {
 		curlog.Sugar.Infow("can't listen on port",
 		"source", "grpcserv.go",
 		"who", "New")
 	}
-
 	server := grpc.NewServer()
-	game.RegisterGameServer(server, gm.NewGame(curlog, Prof, AuthManager))
+	game.RegisterGameServer(server, gm.NewGame(curlog, Prof, conf))
 	go server.Serve(lis)
 }
 
-func StartServer(curlog *lg.Logger, GRPCC config.GRPCConfiguration, db *database.DatabaseModel, Prof *mc.Profiler) {
-	startAuthServer(curlog, GRPCC, db)
-	startGameServer(curlog, GRPCC, Prof)
+// StartServer - start microservices
+func StartServer(curlog *lg.Logger, conf config.Configuration, db *database.DatabaseModel, Prof *mc.Profiler) {
+	startAuthServer(curlog, conf.Auth, db)
+	startGameServer(curlog, conf, Prof)
 }
