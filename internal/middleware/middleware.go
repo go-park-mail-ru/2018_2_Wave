@@ -118,7 +118,9 @@ func Auth(curlog *lg.Logger) Middleware {
 func WebSocketHeadersCheck(curlog *lg.Logger) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
-			if r.Header.Get("Connection") == "Upgrade" && r.Header.Get("Upgrade") == "websocket" && r.Header.Get("Sec-Websocket-Version") == "13" {
+			if r.Header.Get("Connection") == "Upgrade" &&
+			r.Header.Get("Upgrade") == "websocket" &&
+			r.Header.Get("Sec-Websocket-Version") == "13" {
 
 				curlog.Sugar.Infow("websocket headers check succeded",
 					"source", "middleware.go",

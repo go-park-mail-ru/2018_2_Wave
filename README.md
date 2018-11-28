@@ -9,7 +9,8 @@
 Перед сборкой необходимо иметь нужную конфигурацию ``PostgreSQL`` и ``Go1.11``.
 
 ```
-./init.sh
+go build -o wave-serv ./cmd/.
+./wave-serv
 ```
 
 ## Links
