@@ -4,6 +4,7 @@ GLOBAL:
         and so just the most significant errors must be sent to the frontend layer
         otherwise ws must to keep a silence 
     ✔ migrate to easyjson @started(18-11-28 13:37) @done(18-11-28 13:48) @lasted(11m26s)
+    ✔ migrate to microservice @started(18-11-28 16:19) @done(18-11-28 17:54) @lasted(1h35m54s)
 .
 SNAKE:
     ✔ Make on dead event messages @done(18-11-27 20:33)
