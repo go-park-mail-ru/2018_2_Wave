@@ -5,6 +5,7 @@ GLOBAL:
         otherwise ws must to keep a silence 
     ✔ migrate to easyjson @started(18-11-28 13:37) @done(18-11-28 13:48) @lasted(11m26s)
     ✔ migrate to microservice @started(18-11-28 16:19) @done(18-11-28 17:54) @lasted(1h35m54s)
+    ✔ add prof support @started(18-11-28 17:56) @done(18-11-28 18:03) @lasted(7m3s)
 .
 SNAKE:
     ✔ Make on dead event messages @done(18-11-27 20:33)

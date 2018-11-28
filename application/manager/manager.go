@@ -2,6 +2,7 @@ package app
 
 import (
 	"Wave/application/room"
+	"Wave/internal/metrics"
 	"strconv"
 	"sync"
 	"time"
@@ -18,6 +19,7 @@ type App struct {
 	*room.Room // the room super
 	rooms      map[room.RoomID]room.IRoom
 	db         interface{}
+	prof       *metrics.Profiler
 
 	lastRoomID int64
 	lastUserID int64
@@ -29,10 +31,11 @@ const RoomType = "manager"
 // ----------------|
 
 // New applicarion room
-func New(id room.RoomID, step time.Duration, db interface{}) *App {
+func New(id room.RoomID, step time.Duration, db interface{}, prof *metrics.Profiler) *App {
 	a := &App{
 		Room:  room.NewRoom(id, RoomType, step),
 		rooms: map[room.RoomID]room.IRoom{},
+		prof:  prof,
 		db:    db,
 	}
 	a.Routes["lobby_list"] = a.onGetLobbyList
@@ -73,6 +76,11 @@ func (a *App) CreateLobby(room_type room.RoomType, room_id room.RoomID) (room.IR
 		a.rooms[room_id] = r
 		go r.Run()
 
+		// profiler
+		if a.prof != nil { 
+			a.prof.ActiveRooms.Inc()
+		}
+
 		return r, nil
 	}
 	return nil, room.ErrorNotExists
@@ -107,6 +115,12 @@ func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) r
 	if r, ok := a.rooms[cmd]; ok {
 		r.Stop()
 		delete(a.rooms, cmd)
+
+		// profiler
+		if a.prof != nil { 
+			a.prof.ActiveRooms.Dec()
+		}
+
 		return room.MessageOK
 	}
 	return room.MessageWrongRoomID

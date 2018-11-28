@@ -30,7 +30,7 @@ type Handler struct {
 func NewHandler(LG *logger.Logger, Prof *metrics.Profiler, AuthManager auth.AuthClient) *Handler{
 	return &Handler {
 		wsApp: func() *app.App {
-			wsApp := app.New("app", wsAppTickRate, nil)
+			wsApp := app.New("app", wsAppTickRate, nil, Prof)
 			wsApp.CreateLobby(snake.RoomType, "snake")
 			go wsApp.Run()
 			return wsApp
