@@ -35,17 +35,9 @@ func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, conf config.Configur
 		}
 		AuthManager = auth.NewAuthClient(grpcConn)
 	}
-
-	r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(curlog, Prof), mw.CORS(conf.CC, curlog, Prof))).Methods("GET")
-
-	server := http.Server{
-		Addr: conf.Game.WsPort,
-		Handler: handlers.RecoveryHandler()(r),
-	}
-	server.ListenAndServe()
-
-	// TODO:: log
-	// http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r))
-	// TODO:: log
+	go func() { 
+		r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(curlog, Prof), mw.CORS(conf.CC, curlog, Prof))).Methods("GET")
+		http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r)) 
+	}()
 	return g
 }
