@@ -11,6 +11,7 @@ import (
 	lg "Wave/internal/logger"
 
 	"net/http"
+	"log"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
@@ -30,6 +31,7 @@ func main() {
 	prof := mc.Construct()
 	db := database.New(curlog)
 
+	log.Println(conf.SC.Port)
 	grpcserver.StartServer(curlog, conf, db, prof)
 
 	grpcConn, err := grpc.Dial(
