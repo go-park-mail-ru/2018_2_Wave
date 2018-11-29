@@ -84,19 +84,19 @@ func TestRoomSimple(t *testing.T) {
 	}
 	{ // apply message
 		in1 := &InMessage{
-			RoomID:  "test0",
-			Signal:  "echo",
-			Payload: []byte("test text"),
+			RoomToken: "test0",
+			Signal:    "echo",
+			Payload:   []byte("test text"),
 		}
 		in2 := &InMessage{
-			RoomID:  "test0",
-			Signal:  "broad",
-			Payload: []byte("test text"),
+			RoomToken: "test0",
+			Signal:    "broad",
+			Payload:   []byte("test text"),
 		}
 		msg := &OutMessage{
-			RoomID:  "test0",
-			Status:  "OK",
-			Payload: []byte("test text"),
+			RoomToken: "test0",
+			Status:    "OK",
+			Payload:   []byte("test text"),
 		}
 		{ // echo (no broadcast)
 			if err := room.ApplyMessage(user, in1); err != nil {

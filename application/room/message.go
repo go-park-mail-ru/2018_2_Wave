@@ -9,12 +9,12 @@ import (
 // InMessage - default IInMessage
 // easyjson:json
 type InMessage struct {
-	RoomID  RoomID      `json:"room_id"`
-	Signal  string      `json:"signal"`
-	Payload interface{} `json:"payload"`
+	RoomToken RoomToken   `json:"room_token"`
+	Signal    string      `json:"signal"`
+	Payload   interface{} `json:"payload"`
 }
 
-func (im *InMessage) GetRoomID() RoomID       { return im.RoomID }
+func (im *InMessage) GetRoomID() RoomToken    { return im.RoomToken }
 func (im *InMessage) GetSignal() string       { return im.Signal }
 func (im *InMessage) GetPayload() interface{} { return im.Payload }
 func (im *InMessage) ToStruct(s interface{}) error {
@@ -30,12 +30,12 @@ func (im *InMessage) ToStruct(s interface{}) error {
 // OutMessage - default IOutMessage
 // easyjson:json
 type OutMessage struct {
-	RoomID  RoomID      `json:"room_id"`
-	Status  string      `json:"status"`
-	Payload interface{} `json:"payload"`
+	RoomToken RoomToken   `json:"room_token"`
+	Status    string      `json:"status"`
+	Payload   interface{} `json:"payload"`
 }
 
-func (om *OutMessage) GetRoomID() RoomID       { return om.RoomID }
+func (om *OutMessage) GetRoomID() RoomToken    { return om.RoomToken }
 func (om *OutMessage) GetStatus() string       { return om.Status }
 func (om *OutMessage) GetPayload() interface{} { return om.Payload }
 func (om *OutMessage) FromStruct(s interface{}) (err error) {

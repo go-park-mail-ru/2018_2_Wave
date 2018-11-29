@@ -6,6 +6,7 @@ import (
 
 	"math/rand"
 	"strconv"
+	"sync"
 )
 
 type scene struct {
@@ -15,6 +16,7 @@ type scene struct {
 	objectMap  map[uint64]IObject
 	size       Vec2i
 	collisions []collision
+	mu		   sync.RWMutex
 }
 
 func newScene(size Vec2i) *scene {
@@ -71,16 +73,21 @@ func (s *scene) RemoveObject(o IObject) error {
 }
 
 func (s *scene) FindGap(length int) (res []Vec2i, dir Direction) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 FIND_POSITION:
 	position := Vec2i{
 		X: rand.Intn(s.size.X),
 		Y: rand.Intn(s.size.Y),
 	}
 	for i := 0; i < length; i++ {
-		if o := s.at(position); o == nil || !o.isEmpty() {
+		o := s.at(position)
+		if o == nil || !o.isEmpty() {
 			goto FIND_POSITION
 		}
 		res = append(res, position)
+		// o.
 		position.X++
 	}
 	return res, Right

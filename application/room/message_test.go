@@ -57,13 +57,13 @@ func TestMessages(t *testing.T) {
 
 func TestPayload(t *testing.T) {
 	data := []byte(`{
-		"room_id": "u1",
+		"room_token": "u1",
 		"signal": "s1",
 		"payload": {
 			"test": "val"
 		}
 	}`)
-	expected := `{"room_id":"","status":"","payload":{"test":"val"}}`
+	expected := `{"room_token":"","status":"","payload":{"test":"val"}}`
 	type Pl struct {
 		Test string `json:"test"`
 	}

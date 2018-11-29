@@ -21,7 +21,7 @@ func newTestUserHelper() *testUserHelper {
 	}
 }
 
-func (tr *testUserHelper) GetID() RoomID     { return "test" }
+func (tr *testUserHelper) GetID() RoomToken     { return "test" }
 func (tr *testUserHelper) GetType() RoomType { return "test" }
 func (tr *testUserHelper) AddUser(u IUser) error {
 	tr.users[u.GetID()] = u
@@ -36,7 +36,7 @@ func (tr *testUserHelper) RemoveUser(u IUser) error {
 func (tr *testUserHelper) ApplyMessage(u IUser, im IInMessage) error {
 	for _, u := range tr.users {
 		u.Consume(&OutMessage{
-			RoomID:  im.GetRoomID(),
+			RoomToken:  im.GetRoomID(),
 			Payload: im.(*InMessage).Payload,
 			Status:  "OK",
 		})
@@ -96,7 +96,7 @@ func TestUserSimple(t *testing.T) {
 	{ // send message
 		const testText = "test text"
 		to := &InMessage{
-			RoomID:  "test",
+			RoomToken:  "test",
 			Signal:  "test",
 			Payload: []byte(testText),
 		}
@@ -108,8 +108,8 @@ func TestUserSimple(t *testing.T) {
 		if err := room.Con.ReadJSON(res); err != nil {
 			t.Fatalf("Unexpected error: %v\n", err)
 		}
-		if res.RoomID != "test" {
-			t.Fatalf("Unexpected roomID: %v\n", res.RoomID)
+		if res.RoomToken != "test" {
+			t.Fatalf("Unexpected roomType: %v\n", res.RoomToken)
 		}
 		if res.Payload.(string) != testText {
 			t.Fatalf("Unexpected payload: %v\n", res.Payload.(string))

@@ -89,7 +89,7 @@ func (v *roomTypePayload) UnmarshalJSON(data []byte) error {
 func (v *roomTypePayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2c14bDecodeWaveApplicationManager(l, v)
 }
-func easyjsonD2c14bDecodeWaveApplicationManager1(in *jlexer.Lexer, out *roomInfoPayload) {
+func easyjsonD2c14bDecodeWaveApplicationManager1(in *jlexer.Lexer, out *roomTokenPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -108,8 +108,79 @@ func easyjsonD2c14bDecodeWaveApplicationManager1(in *jlexer.Lexer, out *roomInfo
 			continue
 		}
 		switch key {
-		case "room_id":
-			out.RoomID = room.RoomID(in.String())
+		case "room_token":
+			out.RoomToken = room.RoomToken(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2c14bEncodeWaveApplicationManager1(out *jwriter.Writer, in roomTokenPayload) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"room_token\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.RoomToken))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v roomTokenPayload) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2c14bEncodeWaveApplicationManager1(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v roomTokenPayload) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2c14bEncodeWaveApplicationManager1(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *roomTokenPayload) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2c14bDecodeWaveApplicationManager1(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *roomTokenPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2c14bDecodeWaveApplicationManager1(l, v)
+}
+func easyjsonD2c14bDecodeWaveApplicationManager2(in *jlexer.Lexer, out *roomInfoPayload) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "room_token":
+			out.RoomToken = room.RoomToken(in.String())
 		case "room_type":
 			out.RoomType = room.RoomType(in.String())
 		default:
@@ -122,19 +193,19 @@ func easyjsonD2c14bDecodeWaveApplicationManager1(in *jlexer.Lexer, out *roomInfo
 		in.Consumed()
 	}
 }
-func easyjsonD2c14bEncodeWaveApplicationManager1(out *jwriter.Writer, in roomInfoPayload) {
+func easyjsonD2c14bEncodeWaveApplicationManager2(out *jwriter.Writer, in roomInfoPayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"room_id\":"
+		const prefix string = ",\"room_token\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.RoomID))
+		out.String(string(in.RoomToken))
 	}
 	{
 		const prefix string = ",\"room_type\":"
@@ -152,94 +223,23 @@ func easyjsonD2c14bEncodeWaveApplicationManager1(out *jwriter.Writer, in roomInf
 // MarshalJSON supports json.Marshaler interface
 func (v roomInfoPayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2c14bEncodeWaveApplicationManager1(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v roomInfoPayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2c14bEncodeWaveApplicationManager1(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *roomInfoPayload) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjsonD2c14bDecodeWaveApplicationManager1(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *roomInfoPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2c14bDecodeWaveApplicationManager1(l, v)
-}
-func easyjsonD2c14bDecodeWaveApplicationManager2(in *jlexer.Lexer, out *roomIDPayload) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "room_id":
-			out.RoomID = room.RoomID(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjsonD2c14bEncodeWaveApplicationManager2(out *jwriter.Writer, in roomIDPayload) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"room_id\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.RoomID))
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v roomIDPayload) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
 	easyjsonD2c14bEncodeWaveApplicationManager2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v roomIDPayload) MarshalEasyJSON(w *jwriter.Writer) {
+func (v roomInfoPayload) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjsonD2c14bEncodeWaveApplicationManager2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *roomIDPayload) UnmarshalJSON(data []byte) error {
+func (v *roomInfoPayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjsonD2c14bDecodeWaveApplicationManager2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *roomIDPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *roomInfoPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2c14bDecodeWaveApplicationManager2(l, v)
 }

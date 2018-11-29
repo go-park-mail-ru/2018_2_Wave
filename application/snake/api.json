@@ -1,52 +1,7 @@
 [
     {
         "request": {
-            "room_id": "",
-            "signal": "game_info"
-        },
-        "response": {
-            "room_id": "",
-            "status": "STATUS_OK",
-            "payload": {
-                "scene_size": { 
-                    "X" : 0, 
-                    "Y" : 0 
-                },
-                "snakes": [ 
-                    { 
-                        "user_id" : "", 
-                        "body": [
-                            {
-                                "letter" : "", 
-                                "position" : { 
-                                    "X": 0, 
-                                    "Y": 0 
-                                }
-                            }
-                        ] 
-                    }
-                ],
-                "walls": [ 
-                    { 
-                        "X": 0, 
-                        "Y": 0 
-                    }
-                ],
-                "food": [ 
-                    {
-                        "letter" : "", 
-                        "position" : { 
-                            "X": 0, 
-                            "Y": 0 
-                        }
-                    }
-                ]
-            }
-        }
-    },
-    {
-        "request": {
-            "room_id": "",
+            "room_token": "",
             "signal": "game_action",
             "payload": { 
                 "action" : "move_left|move_right|move_up|move_down" 
@@ -55,40 +10,44 @@
     },
     {
         "request": {
-            "room_id": "",
+            "room_token": "",
             "signal": "game_play"
         }
     },
     {
         "request": {
-            "room_id": "",
+            "room_token": "",
             "signal": "game_exit"
         }
     },
     {
-        "response": {
-            "room_id": "",
-            "status": "STATUS_DEAD"
+        "broadcast": {
+            "room_token": "",
+            "status": "STATUS_DEAD",
+            "payload": {
+                "user_token": ""
+            }
         }
     },
     {
-        "response": {
-            "room_id": "",
+        "broadcast": {
+            "room_token": "",
             "status": "STATUS_TICK",
             "payload": {
                 "scene_size": { 
-                    "X" : 0, 
-                    "Y" : 0 
+                    "x" : 0, 
+                    "y" : 0 
                 },
-                "snakes": [ 
+                "players": [ 
                     { 
-                        "user_id" : "", 
-                        "body": [
+                        "user_token" : "", 
+                        "score": 1500,
+                        "snake": [
                             {
                                 "letter" : "", 
                                 "position" : { 
-                                    "X": 0, 
-                                    "Y": 0 
+                                    "x": 0, 
+                                    "y": 0 
                                 }
                             }
                         ] 
@@ -96,16 +55,16 @@
                 ],
                 "walls": [ 
                     { 
-                        "X": 0, 
-                        "Y": 0 
+                        "x": 0, 
+                        "y": 0 
                     }
                 ],
                 "food": [ 
                     {
                         "letter" : "", 
                         "position" : { 
-                            "X": 0, 
-                            "Y": 0 
+                            "x": 0, 
+                            "y": 0 
                         }
                     }
                 ]

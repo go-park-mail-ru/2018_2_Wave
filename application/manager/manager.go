@@ -17,7 +17,7 @@ import (
  */
 type App struct {
 	*room.Room // the room super
-	rooms      map[room.RoomID]room.IRoom
+	rooms      map[room.RoomToken]room.IRoom
 	db         interface{}
 	prof       *metrics.Profiler
 
@@ -31,10 +31,10 @@ const RoomType = "manager"
 // ----------------|
 
 // New applicarion room
-func New(id room.RoomID, step time.Duration, db interface{}, prof *metrics.Profiler) *App {
+func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Profiler) *App {
 	a := &App{
 		Room:  room.NewRoom(id, RoomType, step),
-		rooms: map[room.RoomID]room.IRoom{},
+		rooms: map[room.RoomToken]room.IRoom{},
 		prof:  prof,
 		db:    db,
 	}
@@ -58,22 +58,22 @@ func (a *App) GetNextUserID() room.UserID {
 }
 
 // GetNextRoomID returns next room id
-func (a *App) GetNextRoomID() room.RoomID {
+func (a *App) GetNextRoomID() room.RoomToken {
 	a.idsMutex.Lock()
 	defer a.idsMutex.Unlock()
 
 	a.lastRoomID++
-	return room.RoomID(strconv.FormatInt(a.lastRoomID, 36))
+	return room.RoomToken(strconv.FormatInt(a.lastRoomID, 36))
 }
 
 // CreateLobby -
-func (a *App) CreateLobby(room_type room.RoomType, room_id room.RoomID) (room.IRoom, error) {
+func (a *App) CreateLobby(room_type room.RoomType, room_token room.RoomToken) (room.IRoom, error) {
 	if factory, ok := type2Factory[room_type]; ok {
-		r := factory(room_id, a.Step, a.db)
+		r := factory(room_token, a.Step, a.db)
 		if r == nil {
 			return nil, room.ErrorNil
 		}
-		a.rooms[room_id] = r
+		a.rooms[room_token] = r
 		go r.Run()
 
 		// profiler
@@ -92,26 +92,24 @@ func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteRespon
 	data := []roomInfoPayload{}
 	for _, r := range a.rooms {
 		data = append(data, roomInfoPayload{
-			RoomID:   r.GetID(),
+			RoomToken:   r.GetID(),
 			RoomType: r.GetType(),
 		})
 	}
-
 	return room.MessageOK.WithStruct(data)
 }
 
 func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType) room.IRouteResponse {
 	r, err := a.CreateLobby(cmd, a.GetNextRoomID())
 	if err != nil {
-		return room.MessageError
+		return nil
 	}
-
-	return room.MessageOK.WithStruct(roomIDPayload{
-		RoomID: r.GetID(),
+	return room.MessageOK.WithStruct(roomTokenPayload{
+		RoomToken: r.GetID(),
 	})
 }
 
-func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
+func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
 	if r, ok := a.rooms[cmd]; ok {
 		r.Stop()
 		delete(a.rooms, cmd)
@@ -120,37 +118,29 @@ func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomID) r
 		if a.prof != nil { 
 			a.prof.ActiveRooms.Dec()
 		}
-
-		return room.MessageOK
 	}
-	return room.MessageWrongRoomID
+	return nil
 }
 
-func (a *App) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
+func (a *App) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
 	if r, ok := a.rooms[cmd]; ok {
-		if err := u.AddToRoom(r); err == nil {
-			return room.MessageOK
-		}
-		return room.MessageForbiden
+		u.AddToRoom(r)
 	}
-	return room.MessageWrongRoomID
+	return nil
 }
 
-func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomID) room.IRouteResponse {
+func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
 	if r, ok := a.rooms[cmd]; ok {
-		if err := u.RemoveFromRoom(r); err == nil {
-			return room.MessageOK
-		}
-		return room.MessageForbiden
+		u.RemoveFromRoom(r)
 	}
-	return room.MessageWrongRoomID
+	return nil
 }
 
 // ----------------| helper functions
 
 // easyjson:json
-type roomIDPayload struct {
-	RoomID room.RoomID `json:"room_id"`
+type roomTokenPayload struct {
+	RoomToken room.RoomToken `json:"room_token"`
 }
 
 // easyjson:json
@@ -160,15 +150,15 @@ type roomTypePayload struct {
 
 // easyjson:json
 type roomInfoPayload struct {
-	RoomID   room.RoomID   `json:"room_id"`
+	RoomToken   room.RoomToken   `json:"room_token"`
 	RoomType room.RoomType `json:"room_type"`
 }
 
-func withRoomID(next func(room.IUser, room.IInMessage, room.RoomID) room.IRouteResponse) room.Route {
+func withRoomID(next func(room.IUser, room.IInMessage, room.RoomToken) room.IRouteResponse) room.Route {
 	return func(u room.IUser, im room.IInMessage) room.IRouteResponse {
-		cmd := &roomIDPayload{}
+		cmd := &roomTokenPayload{}
 		if im.ToStruct(cmd) == nil {
-			return next(u, im, cmd.RoomID)
+			return next(u, im, cmd.RoomToken)
 		}
 		return room.MessageWrongFormat
 	}

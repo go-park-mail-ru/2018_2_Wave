@@ -10,7 +10,7 @@ type Route func(IUser, IInMessage) IRouteResponse
 
 // Room - default IRoom
 type Room struct {
-	ID     RoomID           // room ID
+	ID     RoomToken        // room ID
 	Type   RoomType         // room type
 	Ticker *time.Ticker     // room tick
 	Routes map[string]Route // signal -> handler
@@ -28,7 +28,7 @@ type Room struct {
 	Step time.Duration
 }
 
-func NewRoom(id RoomID, tp RoomType, step time.Duration) *Room {
+func NewRoom(id RoomToken, tp RoomType, step time.Duration) *Room {
 	r := &Room{
 		ID:              id,
 		Type:            tp,
@@ -43,7 +43,7 @@ func NewRoom(id RoomID, tp RoomType, step time.Duration) *Room {
 	return r
 }
 
-func (r *Room) GetID() RoomID     { return r.ID }
+func (r *Room) GetID() RoomToken  { return r.ID }
 func (r *Room) GetType() RoomType { return r.Type }
 
 func (r *Room) Run() error {
@@ -141,9 +141,9 @@ func (r *Room) SendMessageTo(u IUser, rs IRouteResponse) error {
 		return ErrorForbiden
 	}
 	return u.Consume(&OutMessage{
-		RoomID:  r.GetID(),
-		Status:  rs.GetStatus(),
-		Payload: rs.GetPayload(),
+		RoomToken: r.GetID(),
+		Status:    rs.GetStatus(),
+		Payload:   rs.GetPayload(),
 	})
 }
 
@@ -159,7 +159,7 @@ func (r *Room) Broadcast(rs IRouteResponse) error {
 
 func (r *Room) log(data ...interface{}) {
 	data = append([]interface{}{
-		"room_id", r.ID,
+		"room_token", r.ID,
 		"room_type", r.Type,
 	}, data...)
 
