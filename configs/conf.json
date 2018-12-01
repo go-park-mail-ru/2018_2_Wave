@@ -13,7 +13,8 @@
             "https://localhost",
             "https://localhost:8443",
             "https://127.0.0.1",
-            "http://127.0.0.1"
+            "http://127.0.0.1",
+            "http://192.168.137.1:3000/"
         ],
         "headers": [
             "Content-type"
