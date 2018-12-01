@@ -29,8 +29,7 @@ func main() {
 	if err != nil {
 
 		curlog.Sugar.Infow("can't listen on port",
-		"source", "grpcserv.go",
-		"who", "New")
+		"source", "main.go",)
 
 	}
 
@@ -38,8 +37,7 @@ func main() {
 	auth.RegisterAuthServer(server, au.NewAuthManager(curlog, db))
 
 	curlog.Sugar.Infow("starting grpc server on " + conf.AC.Host + conf.AC.Port,
-		"source", "grpcserv.go",
-		"who", "New")
+		"source", "main.go",)
 
 	server.Serve(lis)
 }
