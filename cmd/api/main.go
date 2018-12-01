@@ -1,7 +1,6 @@
 package main
 
 import (
-	"Wave/internal/grpcserver"
 	"Wave/internal/services/app"
 	"Wave/internal/database"
 	mw "Wave/internal/middleware"
@@ -19,18 +18,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const (
+	confPath = "../configs/conf.json"
+
+	logPath    = "../logs/"
+	logFile = "api-serv-log"
+)
+
 //go:generate easyjson ../internal/config/
 //go:generate easyjson ../internal/models/
 //go generate protoc --go_out=plugins=grpc:. ../internal/services/auth/proto/*.proto
 
 func main() {
-	path := "./configs/conf.json"
-	conf := config.Configure(path)
-	curlog := lg.Construct()
+	conf := config.Configure(confPath)
+	curlog := lg.Construct(logPath, logFile)
 	prof := mc.Construct()
 	db := database.New(curlog)
-
-	grpcserver.StartAuthServer(curlog, conf.AC, db)
 
 	grpcConn, err := grpc.Dial(
 		conf.AC.Host+conf.AC.Port,
