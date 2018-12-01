@@ -14,13 +14,11 @@ import (
 	"strconv"
 	"os"
 	"io"
-	"log"
+	//"log"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 	"golang.org/x/net/context"
-
-	_ "github.com/lib/pq"
 )
 
 type Handler struct {
@@ -31,9 +29,7 @@ type Handler struct {
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
-	log.Println("hey")
 	file, _, err := r.FormFile("avatar")
-	log.Println("gurl")
 	defer file.Close()
 
 	if err != nil {
@@ -49,7 +45,7 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	hash := ksuid.New()
 	fileName := hash.String()
 
-	createPath := "." + prefix + fileName
+	createPath := ".." + prefix + fileName
 	path = prefix + fileName
 
 	out, err := os.Create(createPath)
