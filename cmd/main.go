@@ -11,7 +11,6 @@ import (
 	lg "Wave/internal/logger"
 
 	"net/http"
-	"log"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
@@ -31,11 +30,10 @@ func main() {
 	prof := mc.Construct()
 	db := database.New(curlog)
 
-	log.Println(conf.SC.Port)
-	grpcserver.StartServer(curlog, conf, db, prof)
+	grpcserver.StartAuthServer(curlog, conf.AC, db)
 
 	grpcConn, err := grpc.Dial(
-		conf.Auth.Host+conf.Auth.Port,
+		conf.AC.Host+conf.AC.Port,
 		grpc.WithInsecure(),
 	)
 
@@ -69,6 +67,9 @@ func main() {
 
 	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.OptionsPreflight(conf.CC, curlog, prof))).Methods("OPTIONS")
 	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.OptionsPreflight(conf.CC, curlog, prof))).Methods("OPTIONS")
+
+	curlog.Sugar.Infow("starting api server on " + conf.SC.Host + conf.SC.Port,
+		"source", "main.go",)
 
 	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }

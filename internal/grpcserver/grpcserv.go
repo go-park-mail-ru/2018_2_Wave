@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func startAuthServer(curlog *lg.Logger, GRPCC config.GRPCConfiguration, db *database.DatabaseModel) {
+func StartAuthServer(curlog *lg.Logger, GRPCC config.AuthConfiguration, db *database.DatabaseModel) {
 	lis, err := net.Listen("tcp", GRPCC.Port)
 	if err != nil {
 
@@ -28,7 +28,7 @@ func startAuthServer(curlog *lg.Logger, GRPCC config.GRPCConfiguration, db *data
 	server := grpc.NewServer()
 	auth.RegisterAuthServer(server, au.NewAuthManager(curlog, db))
 
-	curlog.Sugar.Infow("starting grpc server on port" + GRPCC.Port,
+	curlog.Sugar.Infow("starting grpc server on " + GRPCC.Host + GRPCC.Port,
 		"source", "grpcserv.go",
 		"who", "New")
 
@@ -38,17 +38,15 @@ func startAuthServer(curlog *lg.Logger, GRPCC config.GRPCConfiguration, db *data
 func startGameServer(curlog *lg.Logger, conf config.Configuration, Prof *mc.Profiler) {
 	lis, err := net.Listen("tcp", conf.Game.Port)
 	if err != nil {
+
 		curlog.Sugar.Infow("can't listen on port",
 		"source", "grpcserv.go",
 		"who", "New")
+
 	}
+
 	server := grpc.NewServer()
 	game.RegisterGameServer(server, gm.NewGame(curlog, Prof, conf))
-	go server.Serve(lis)
-}
 
-// StartServer - start microservices
-func StartServer(curlog *lg.Logger, conf config.Configuration, db *database.DatabaseModel, Prof *mc.Profiler) {
-	startAuthServer(curlog, conf.Auth, db)
-	//startGameServer(curlog, conf, Prof)
+	go server.Serve(lis)
 }
