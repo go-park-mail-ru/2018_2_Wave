@@ -50,5 +50,5 @@ func startGameServer(curlog *lg.Logger, conf config.Configuration, Prof *mc.Prof
 // StartServer - start microservices
 func StartServer(curlog *lg.Logger, conf config.Configuration, db *database.DatabaseModel, Prof *mc.Profiler) {
 	startAuthServer(curlog, conf.Auth, db)
-	startGameServer(curlog, conf, Prof)
+	//startGameServer(curlog, conf, Prof)
 }
