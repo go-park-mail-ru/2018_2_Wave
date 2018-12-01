@@ -1,21 +1,29 @@
-package grpcserver
+package main
 
 import (
 	"Wave/internal/config"
-	"Wave/internal/database"
 	lg "Wave/internal/logger"
 	mc "Wave/internal/metrics"
-	au "Wave/internal/services/auth"
 	gm "Wave/internal/services/game"
 	"Wave/internal/services/game/proto"
-	"Wave/internal/services/auth/proto"
 
 	"net"
 
 	"google.golang.org/grpc"
 )
 
-func startGameServer(curlog *lg.Logger, conf config.Configuration, Prof *mc.Profiler) {
+const (
+	confPath = "../configs/conf.json"
+
+	logPath    = "../logs/"
+	logFile = "game-serv-log"
+)
+
+func main() {
+	conf := config.Configure(confPath)
+	curlog := lg.Construct(logPath, logFile)
+	prof := mc.Construct()
+
 	lis, err := net.Listen("tcp", conf.Game.Port)
 	if err != nil {
 
@@ -26,7 +34,7 @@ func startGameServer(curlog *lg.Logger, conf config.Configuration, Prof *mc.Prof
 	}
 
 	server := grpc.NewServer()
-	game.RegisterGameServer(server, gm.NewGame(curlog, Prof, conf))
+	game.RegisterGameServer(server, gm.NewGame(curlog, prof, conf))
 
-	go server.Serve(lis)
+	server.Serve(lis)
 }
