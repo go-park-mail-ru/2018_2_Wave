@@ -4,30 +4,31 @@
 
 ![Alt Text](https://media.giphy.com/media/l3vR2SwA3hfH4NtVC/giphy.gif)
 
-## Build Instructions
+## Сборка
 
 Перед сборкой необходимо иметь нужную конфигурацию ``PostgreSQL`` и ``Go1.11``.
 
 ```
-go build -o wave-serv ./cmd/.
-./wave-serv
+./init.sh
 ```
 
-## Links
+## Ссылки
 
 * Сервер &mdash; https://api.rasseki.com
-* Клиент &mdash; Ща буит
+* Клиент &mdash; https://rasseki.com
 * API &mdash; https://frontend.tech-mail.ru/2018_2_Wave/
-* Grafana &mdash; Ща буит
+* Grafana &mdash; https://grafana.rasseki.com
 
-## Authors
+* Репозиторий клиента &mdash; https://github.com/frontend-park-mail-ru/2018_2_Wave
+
+## Авторы
 
 * Дмитрий Палий &mdash; [stanford](https://github.com/stanf0rd)
 * Илья Лебедев &mdash; [bomkvilt](https://github.com/bomkvilt)
 * Ксения Глазачёва &mdash; [ksgl](https://github.com/ksgl)
 * Дмитрий Липко &mdash; [dlipko](https://github.com/dlipko)
 
-## Menthors
+## Ментор
 
 * Игорь Дружинин &mdash; [Drujininii](https://github.com/Drujininii)
 
