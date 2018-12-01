@@ -13,7 +13,7 @@ start_bot.sh
 logs/
 
 # binaries
-wave-serv
+build/
 
 # avatars
 img/avatars/
