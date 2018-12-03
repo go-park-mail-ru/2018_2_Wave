@@ -71,8 +71,11 @@ func (u *User) Listen() error {
 	go u.sendWorker()
 
 	// send current user_id
-	u.Conn.WriteJSON(&userTokenPayload{
-		UserToken: u.GetID(),
+	u.Consume(&OutMessage{
+		Status: "STATUS_TOKEN",
+		Payload: &userTokenPayload{
+			UserToken: u.GetID(),
+		},
 	})
 
 	for { // stops when connection closes
