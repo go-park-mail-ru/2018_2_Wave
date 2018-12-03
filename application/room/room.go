@@ -89,8 +89,8 @@ func (r *Room) AddUser(u IUser) error {
 	}
 	if _, ok := r.Users[u.GetID()]; !ok {
 		r.Users[u.GetID()] = u
+		r.log("user added", u.GetID())
 		if r.OnUserAdded != nil {
-			r.log("user added", u.GetID())
 			r.OnUserAdded(u)
 		}
 		return nil
