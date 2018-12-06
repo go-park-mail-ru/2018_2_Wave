@@ -28,8 +28,7 @@ func main() {
 	if err != nil {
 
 		curlog.Sugar.Infow("can't listen on port",
-		"source", "grpcserv.go",
-		"who", "New")
+		"source", "main.go",)
 
 	}
 

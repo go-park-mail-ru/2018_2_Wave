@@ -5,6 +5,7 @@ import (
 	lg "Wave/internal/logger"
 	"Wave/internal/misc"
 	auth "Wave/internal/services/auth/proto"
+	"fmt"
 
 	"golang.org/x/net/context"
 )
@@ -35,7 +36,7 @@ func (authm *AuthManager) Create(ctx context.Context, credentials *auth.Credenti
 		} else if problem != nil {
 
 			authm.LG.Sugar.Infow(
-				"signup succeded",
+				"signup failed, present failed",
 				"source", "auth.go",
 				"who", "Create",
 			)
@@ -45,7 +46,7 @@ func (authm *AuthManager) Create(ctx context.Context, credentials *auth.Credenti
 			cookie := misc.GenerateCookie()
 			hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
 
-			if credentials.Avatar != "" {
+			if credentials.Avatar != "/img/avatars/default" {
 				authm.DB.Database.MustExec(`
 					INSERT INTO userinfo(username,password,avatar)
 					VALUES($1, $2, $3)
@@ -75,7 +76,13 @@ func (authm *AuthManager) Create(ctx context.Context, credentials *auth.Credenti
 		}
 	}
 
-	return &auth.Cookie{CookieValue: ""}, nil
+	authm.LG.Sugar.Infow(
+		"signup failed, validation failed",
+		"source", "auth.go",
+		"who", "Create",
+	)
+
+	return &auth.Cookie{CookieValue: ""}, fmt.Errorf("validation failed")
 }
 
 func (authm *AuthManager) Delete(ctx context.Context, cookie *auth.Cookie) (*auth.Bool, error) {

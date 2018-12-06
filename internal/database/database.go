@@ -38,12 +38,13 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	postgr.Database, err = sqlx.Connect("postgres", "user=" + dbuser + " password=" + dbpassword + " dbname='" + dbname + "' " + "sslmode=disable")
 
 	if err != nil {
-		postgr.LG.Sugar.Panicw(
+		postgr.LG.Sugar.Infow(
 			"PostgreSQL connection establishment failed",
 			"source", "database.go",
 			"who", "New",
 		)
-		panic(err)
+
+		os.Exit(1)
 	}
 
 	postgr.LG.Sugar.Infow(
@@ -104,7 +105,7 @@ func ValidatePassword(target string) bool {
 	return true
 }
 
-func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
+func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie string, err error) {
 	if isPresent, problem := model.Present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 		var psswd string
 
@@ -117,11 +118,13 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 		err := row.Scan(&psswd)
 
 		if err != nil {
-			model.LG.Sugar.Panicw(
+
+			model.LG.Sugar.Infow(
 				"Scan failed",
 				"source", "database.go",
 				"who", "LogIn",
 			)
+
 			return "", err
 		}
 
@@ -151,16 +154,6 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 
 			return "", nil
 		}
-	} else if !isPresent && problem == nil {
-
-		model.LG.Sugar.Infow(
-			"login failed, no such user",
-			"source", "database.go",
-			"who", "LogIn",
-		)
-
-		return "", nil
-
 	} else if problem != nil {
 
 		model.LG.Sugar.Infow(
@@ -180,24 +173,6 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 
 	return "", nil
 }
-
-/*
-func (model *DatabaseModel) LogOut(cookie string) error {
-	model.Database.QueryRowx(`
-		DELETE
-		FROM session
-		WHERE cookie=$1;
-	`, cookie)
-
-	model.LG.Sugar.Infow(
-		"logout succeded",
-		"source", "database.go",
-		"who", "LogOut",
-	)
-
-	return nil
-}
-*/
 
 func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExtended, err error) {
 	row := model.Database.QueryRowx(`
@@ -265,16 +240,13 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 		)
 
 		return models.UserExtended{}, err
-	} else if !isPresent {
-
-		model.LG.Sugar.Infow(
-			"getprofile failed, user doesn't exist",
-			"source", "database.go",
-			"who", "GetProfile",
-		)
-
-		return models.UserExtended{}, nil
 	}
+
+	model.LG.Sugar.Infow(
+		"getprofile failed, user doesn't exist",
+		"source", "database.go",
+		"who", "GetProfile",
+	)
 
 	return models.UserExtended{}, nil
 }
@@ -369,7 +341,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 		}
 	}
 
-	if profile.Avatar != "" {
+	if profile.Avatar != "/img/avatars/default" {
 		model.Database.MustExec(`
 			UPDATE userinfo
 			SET avatar=$1
