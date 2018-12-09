@@ -64,5 +64,46 @@
                 "room_token": "" 
             }
         }
+    },
+    {
+        "verbose": "add into a random room with deffinded number of players",
+        "phases": [
+            {
+                "request": {
+                    "signal": "quick_search",
+                    "payload": {
+                        "player_count": "2|3|4"
+                    }
+                }
+            },
+            {
+                "verbose": "game found. Need to accept the invite or send 'no' or take out of time",
+                "response": {
+                    "status": "quick_search_ready",
+                    "payload": {
+                        "players_ready": 4,
+                        "accept_timeout": 30
+                    }
+                }
+            },
+            {
+                "verbose": "accept a found game. If time is over or ansver is 'no' - kick. If someone else failed it - back to serch stage",
+                "request": {
+                    "signal": "quick_search_accept",
+                    "payload": "yes|no"
+                },
+                "response": {
+                    "case_1": {
+                        "status": "created",
+                        "payload": {
+                            "room_token": ""
+                        }
+                    },
+                    "case_2": {
+                        "status": "failed"
+                    }
+                }
+            }
+        ]
     }
 ]
