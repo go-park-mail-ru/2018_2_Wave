@@ -262,7 +262,7 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.DB.UpdateProfile(user, cookie)
+	err := h.DB.UpdateProfile(user, cookie)
 
 	if err != nil {
 		fr := models.ForbiddenRequest{

@@ -26,7 +26,7 @@ type DatabaseModel struct {
 
 func New(lg_ *lg.Logger) *DatabaseModel {
 	postgr := &DatabaseModel{
-		LG:     lg_,
+		LG: lg_,
 	}
 
 	var err error
@@ -35,7 +35,7 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	dbpassword := os.Getenv("WAVE_DB_PASSWORD")
 	dbname := os.Getenv("WAVE_DB_NAME")
 
-	postgr.Database, err = sqlx.Connect("postgres", "user=" + dbuser + " password=" + dbpassword + " dbname='" + dbname + "' " + "sslmode=disable")
+	postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
 
 	if err != nil {
 		postgr.LG.Sugar.Infow(
@@ -59,7 +59,7 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 func (model *DatabaseModel) Present(tableName string, colName string, target string) (fl bool, err error) {
 	var exists string
 	row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " +
-	tableName + " WHERE " + colName + "='" + target + "');")
+		tableName + " WHERE " + colName + "='" + target + "');")
 	err = row.Scan(&exists)
 
 	if err != nil {
@@ -251,11 +251,7 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 	return models.UserExtended{}, nil
 }
 
-func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string) (bool, error) {
-	changedU := false
-	changedP := false
-	changedA := false
-
+func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string) error {
 	if profile.Username != "" {
 		isPresent, problem := model.Present(UserInfoTable, UsernameCol, profile.Username)
 		if problem != nil {
@@ -265,7 +261,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				"who", "UpdateProfile",
 			)
 
-			return false, problem
+			return problem
 		}
 		if !isPresent {
 			if ValidateUname(profile.Username) {
@@ -285,8 +281,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 					"source", "database.go",
 					"who", "UpdateProfile",
 				)
-				changedU = true
-
 			} else {
 
 				model.LG.Sugar.Infow(
@@ -294,8 +288,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 					"source", "database.go",
 					"who", "UpdateProfile",
 				)
-
-				changedU = false
 			}
 		}
 		if isPresent {
@@ -304,8 +296,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				"source", "database.go",
 				"who", "UpdateProfile",
 			)
-
-			changedU = false
 		}
 	}
 
@@ -327,8 +317,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				"source", "database.go",
 				"who", "UpdateProfile",
 			)
-
-			changedP = true
 		} else {
 
 			model.LG.Sugar.Infow(
@@ -336,8 +324,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				"source", "database.go",
 				"who", "UpdateProfile",
 			)
-
-			changedP = false
 		}
 	}
 
@@ -358,15 +344,9 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			"source", "database.go",
 			"who", "UpdateProfile",
 		)
-
-		changedA = true
 	}
 
-	if changedU || changedP || changedA {
-		return true, nil
-	}
-
-	return false, nil
+	return nil
 }
 
 func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Leaders, err error) {
