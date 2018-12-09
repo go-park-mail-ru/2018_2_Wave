@@ -20,3 +20,6 @@ img/avatars/
 
 # init scripts
 init.sh
+
+#macos
+.DS_Store
