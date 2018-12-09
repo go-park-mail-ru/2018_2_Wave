@@ -327,7 +327,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 		}
 	}
 
-	if profile.Avatar != "/img/avatars/default" {
+	if profile.Avatar != "" {
 		model.Database.MustExec(`
 			UPDATE userinfo
 			SET avatar=$1

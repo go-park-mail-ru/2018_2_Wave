@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"os"
 	"io"
+	"log"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
@@ -262,6 +263,7 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println(user.Avatar)
 	err := h.DB.UpdateProfile(user, cookie)
 
 	if err != nil {
