@@ -45,7 +45,7 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	hash := ksuid.New()
 	fileName := hash.String()
 
-	createPath := ".." + prefix + fileName
+	createPath := "." + prefix + fileName
 	path = prefix + fileName
 
 	out, err := os.Create(createPath)
@@ -123,31 +123,30 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 			context.Background(),
 			&auth.Credentials{
 			Username: user.Username,
-			Password: user.Username,
+			Password: user.Password,
 			Avatar: user.Avatar,
 		})
 
-	if err == fmt.Errorf("validation failed") {
-		fr := models.ForbiddenRequest{
-			Reason: "Bad username or/and password",
-		}
-
-		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(rw, string(payload))
-
-		h.LG.Sugar.Infow("/users failed, bad username or/and password.",
-		"source", "api.go",
-		"who", "RegisterPOSTHandler",)
-
-		h.Prof.HitsStats.
-		WithLabelValues("403", "FORBIDDEN").
-		Add(1)
-
-		return
-	}
-
 	if err != nil {
+		if err.Error() == "rpc error: code = Unknown desc = validation failed" {
+			fr := models.ForbiddenRequest{
+				Reason: "Bad username or/and password",
+			}
+
+			payload, _ := fr.MarshalJSON()
+			rw.WriteHeader(http.StatusForbidden)
+			fmt.Fprintln(rw, string(payload))
+
+			h.LG.Sugar.Infow("/users failed, bad username or/and password.",
+			"source", "api.go",
+			"who", "RegisterPOSTHandler",)
+
+			h.Prof.HitsStats.
+			WithLabelValues("403", "FORBIDDEN").
+			Add(1)
+
+			return
+		}
 
 		rw.WriteHeader(http.StatusInternalServerError)
 

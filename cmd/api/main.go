@@ -12,7 +12,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/handlers"
+	//"github.com/gorilla/handlers"
 
 	"google.golang.org/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -74,5 +74,5 @@ func main() {
 	curlog.Sugar.Infow("starting api server on " + conf.SC.Host + conf.SC.Port,
 		"source", "main.go",)
 
-	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
+	http.ListenAndServe(conf.SC.Port, r)//handlers.RecoveryHandler()(r))
 }

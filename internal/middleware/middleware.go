@@ -105,6 +105,8 @@ func Auth(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 					"who", "Auth",
 				)
 
+				rw.WriteHeader(http.StatusUnauthorized)
+
 				prof.HitsStats.
 					WithLabelValues("401", "UNAUTHORIZED").
 					Add(1)
