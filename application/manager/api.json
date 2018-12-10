@@ -77,6 +77,25 @@
                 }
             },
             {
+                "verbose": "abort the serach",
+                "request": {
+                    "signal": "quick_search_abort"
+                }
+            }, 
+            {
+                "verbose": "someone added or removed",
+                "response": {
+                    "status": "quick_search_status",
+                    "payload": {
+                        "members": [ 
+                            {
+                                "user_token": ""
+                            }
+                        ]
+                    }
+                }
+            },
+            {
                 "verbose": "game found. Need to accept the invite or send 'no' or take out of time",
                 "response": {
                     "status": "quick_search_ready",
