@@ -72,12 +72,12 @@ func (w *World) RemoveObject(o IObject) error {
 // ----------------| scene functions
 
 // FindGap of @length
-func (w *World) FindGap(length int) (res []Vec2i, dir Direction) {
+func (w *World) FindGap(length int) (res []Vec2i, dir Direction, err error) {
 	if w.scene != nil {
 		return w.scene.FindGap(length)
 	}
 	// TODO:: log
-	return nil, NoDirection
+	return nil, NoDirection, nil
 }
 
 func (w *World) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {

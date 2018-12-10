@@ -65,10 +65,14 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 	if _, ok := g.user2snake[u]; ok {
 		return nil, room.ErrorAlreadyExists
 	}
-	var ( // create a snake object and find a spwn area
-		poss, dir = g.world.FindGap(length)
-		snake     = newSnake(g.world, poss, dir)
-	)
+
+	// create a snake object and find a spwn area
+	poss, dir, err := g.world.FindGap(length)
+	if err != nil {
+		return nil, err
+	}
+	snake := newSnake(g.world, poss, dir)
+	
 	g.user2snake[u] = snake
 	snake.onDestoyed = func() {
 		delete(g.user2snake, u)
@@ -125,6 +129,9 @@ func (g *game) GetGameInfo() *gameInfo {
 // ----------------| game mode logic
 
 func (g *game) spawnFood() {
-	pos, _ := g.world.FindGap(1)
+	pos, _, err := g.world.FindGap(1)
+	if err != nil {
+		return
+	}
 	newFood('h', g.world, pos[0])
 }

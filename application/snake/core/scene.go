@@ -72,25 +72,30 @@ func (s *scene) RemoveObject(o IObject) error {
 	return room.ErrorNotExists
 }
 
-func (s *scene) FindGap(length int) (res []Vec2i, dir Direction) {
+func (s *scene) FindGap(length int) (res []Vec2i, dir Direction, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-FIND_POSITION:
-	position := Vec2i{
-		X: rand.Intn(s.size.X),
-		Y: rand.Intn(s.size.Y),
-	}
-	for i := 0; i < length; i++ {
-		o := s.at(position)
-		if o == nil || !o.isEmpty() {
-			goto FIND_POSITION
+	iteration := 0
+FIND_POSITION: {
+		if iteration++; iteration > 300 {
+			return nil, NoDirection, room.ErrorNotFound
 		}
-		res = append(res, position)
-		// o.
-		position.X++
+	
+		position := Vec2i{
+			X: rand.Intn(s.size.X),
+			Y: rand.Intn(s.size.Y),
+		}
+		for i := 0; i < length; i++ {
+			o := s.at(position)
+			if o == nil || !o.isEmpty() {
+				goto FIND_POSITION
+			}
+			res = append(res, position)
+			position.X++
+		}
+		return res, Right, nil
 	}
-	return res, Right
 }
 
 func (s *scene) PrintDebug() {

@@ -77,7 +77,7 @@ func (a *App) CreateLobby(room_type room.RoomType, room_token room.RoomToken) (r
 		go r.Run()
 
 		// profiler
-		if a.prof != nil { 
+		if a.prof != nil {
 			a.prof.ActiveRooms.Inc()
 		}
 
@@ -92,8 +92,8 @@ func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteRespon
 	data := []roomInfoPayload{}
 	for _, r := range a.rooms {
 		data = append(data, roomInfoPayload{
-			RoomToken:   r.GetID(),
-			RoomType: r.GetType(),
+			RoomToken: r.GetID(),
+			RoomType:  r.GetType(),
 		})
 	}
 	return room.MessageOK.WithStruct(data)
@@ -115,7 +115,7 @@ func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomToken
 		delete(a.rooms, cmd)
 
 		// profiler
-		if a.prof != nil { 
+		if a.prof != nil {
 			a.prof.ActiveRooms.Dec()
 		}
 	}
@@ -150,8 +150,8 @@ type roomTypePayload struct {
 
 // easyjson:json
 type roomInfoPayload struct {
-	RoomToken   room.RoomToken   `json:"room_token"`
-	RoomType room.RoomType `json:"room_type"`
+	RoomToken room.RoomToken `json:"room_token"`
+	RoomType  room.RoomType  `json:"room_type"`
 }
 
 func withRoomID(next func(room.IUser, room.IInMessage, room.RoomToken) room.IRouteResponse) room.Route {
