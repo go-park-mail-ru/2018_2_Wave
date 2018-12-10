@@ -1,4 +1,4 @@
-package app
+package manager
 
 import (
 	"Wave/application/room"
@@ -24,6 +24,8 @@ type App struct {
 	lastRoomID int64
 	lastUserID int64
 	idsMutex   sync.Mutex
+
+	former *roomsFormer
 }
 
 const RoomType = "manager"
@@ -33,16 +35,27 @@ const RoomType = "manager"
 // New applicarion room
 func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Profiler) *App {
 	a := &App{
-		Room:  room.NewRoom(id, RoomType, step),
-		rooms: map[room.RoomToken]room.IRoom{},
-		prof:  prof,
-		db:    db,
+		Room:   room.NewRoom(id, RoomType, step),
+		rooms:  map[room.RoomToken]room.IRoom{},
+		former: newRoomsFormer(),
+		prof:   prof,
+		db:     db,
 	}
 	a.Routes["lobby_list"] = a.onGetLobbyList
 	a.Routes["lobby_create"] = withRoomType(a.onLobbyCreate)
 	a.Routes["lobby_delete"] = withRoomID(a.onLobbyDelete)
+
 	a.Routes["add_to_room"] = withRoomID(a.onAddToRoom)
 	a.Routes["remove_from_room"] = withRoomID(a.onRemoveFromRoom)
+
+	a.Routes["quick_search"] = a.onQuickSearch
+	a.Routes["quick_search_abort"] = a.onQuickSearchAbort
+	a.Routes["quick_search_accept"] = a.onQuickSearchAccept
+	a.former.OnUserAdded = a.onQuickSearchStatus
+	a.former.OnUserRemoved = a.onQuickSearchStatus
+	a.former.OnFormed = a.onQuickSearchReady
+	a.former.OnDone = a.onQuickSearchDone
+
 	return a
 }
 
@@ -136,7 +149,96 @@ func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomTo
 	return nil
 }
 
+// ------| quick serarch
+
+func (a *App) onQuickSearch(u room.IUser, im room.IInMessage) room.IRouteResponse {
+	p := quickSearchPayload{}
+	if err := im.ToStruct(p); err != nil {
+		return nil
+	}
+	if !p.IsValid() {
+		return nil
+	}
+	a.former.AddUser(u, p.RoomType, p.PlayerCount)
+	return nil
+}
+
+func (a *App) onQuickSearchAbort(u room.IUser, im room.IInMessage) room.IRouteResponse {
+	a.former.RemoveUser(u)
+	return nil
+}
+
+func (a *App) onQuickSearchAccept(u room.IUser, im room.IInMessage) room.IRouteResponse {
+	p := quickSearchAcceptPayload{}
+	if err := im.ToStruct(p); err != nil {
+		return nil
+	}
+
+	// remove the user from former and continue the search
+	if p.Status == false {
+		f, ok := a.former.GetUserFormer(u)
+		if !ok {
+			return nil
+		}
+		a.former.RemoveUser(u)
+
+		for _, u := range f.users {
+			a.SendMessageTo(u, messageQuickSearchFailed)
+		}
+	}
+	// accept the game 
+	a.former.Accept(u)
+	return nil
+}
+
+func (a *App) onQuickSearchStatus(f *roomFormer) {
+	p := quickSearchStatusPayload{}
+	for _, u := range f.users {
+		p.Members = append(p.Members, userTokenPayload{
+			UserToken: u.GetID(),
+		})
+	}
+
+	om := messageQuickSearchStatus.WithStruct(p)
+	for _, u := range f.users {
+		a.SendMessageTo(u, om)
+	}
+}
+
+func (a *App) onQuickSearchReady(f *roomFormer) {
+	p := quickSearchReadyPayload{
+		AcceptTimeout: 30,
+	}
+	om := messageQuickSearchReady.WithStruct(p)
+	for _, u := range f.users {
+		a.SendMessageTo(u, om)
+	}
+}
+
+func (a *App) onQuickSearchDone(f *roomFormer) {
+	r, err := a.CreateLobby(f.roomType, a.GetNextRoomID())
+	if err != nil {
+		return // TODO::
+	}
+
+	om := messageQuickSearchDone.WithStruct(roomTokenPayload{
+		RoomToken: r.GetID(),
+	})
+	for _, u := range f.users {
+		a.SendMessageTo(u, om)
+		u.AddToRoom(r)
+	}
+}
+
 // ----------------| helper functions
+
+var (
+	messageQuickSearchStatus       = room.RouteResponse{Status: "quick_search_status"}.WithStruct("")
+	messageQuickSearchReady        = room.RouteResponse{Status: "quick_search_ready"}.WithStruct("")
+	messageQuickSearchAcceptStatus = room.RouteResponse{Status: "quick_search_accept_status"}.WithStruct("")
+	messageQuickSearchDone         = room.RouteResponse{Status: "quick_search_done"}.WithStruct("")
+	messageQuickSearchFailed       = room.RouteResponse{Status: "quick_search_failed"}.WithStruct("")
+)
 
 // easyjson:json
 type roomTokenPayload struct {
@@ -149,9 +251,39 @@ type roomTypePayload struct {
 }
 
 // easyjson:json
+type userTokenPayload struct {
+	UserToken room.UserID `json:"user_token"`
+}
+
+// easyjson:json
 type roomInfoPayload struct {
 	RoomToken room.RoomToken `json:"room_token"`
 	RoomType  room.RoomType  `json:"room_type"`
+}
+
+// easyjson:json
+type quickSearchPayload struct {
+	PlayerCount int           `json:"player_count"`
+	RoomType    room.RoomType `json:"room_type"`
+}
+
+func (q *quickSearchPayload) IsValid() bool {
+	return q.PlayerCount <= 4 && q.PlayerCount >= 2 && IsRegisteredType(q.RoomType)
+}
+
+// easyjson:json
+type quickSearchStatusPayload struct {
+	Members []userTokenPayload `json:"members"`
+}
+
+// easyjson:json
+type quickSearchReadyPayload struct {
+	AcceptTimeout int `json:"accept_timeout"`
+}
+
+// easyjson:json
+type quickSearchAcceptPayload struct {
+	Status bool `json:"status"`
 }
 
 func withRoomID(next func(room.IUser, room.IInMessage, room.RoomToken) room.IRouteResponse) room.Route {

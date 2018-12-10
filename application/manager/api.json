@@ -72,7 +72,8 @@
                 "request": {
                     "signal": "quick_search",
                     "payload": {
-                        "player_count": "2|3|4"
+                        "player_count": "2|3|4",
+                        "room_type": ""
                     }
                 }
             },
@@ -96,31 +97,49 @@
                 }
             },
             {
-                "verbose": "game found. Need to accept the invite or send 'no' or take out of time",
+                "verbose": "game found. Need to accept the invite or send 'no' or take out of time. This ",
                 "response": {
                     "status": "quick_search_ready",
                     "payload": {
-                        "players_ready": 4,
                         "accept_timeout": 30
                     }
                 }
             },
             {
-                "verbose": "accept a found game. If time is over or ansver is 'no' - kick. If someone else failed it - back to serch stage",
+                "verbose": "accept a found game",
                 "request": {
                     "signal": "quick_search_accept",
-                    "payload": "yes|no"
-                },
-                "response": {
-                    "case_1": {
-                        "status": "created",
-                        "payload": {
-                            "room_token": ""
-                        }
-                    },
-                    "case_2": {
-                        "status": "failed"
+                    "payload": {
+                        "status": true
                     }
+                }
+            },
+            {
+                "verbose": "intermediate accept status",
+                "response": {
+                    "status": "quick_search_accept_status",
+                    "payload": {
+                        "members": [
+                            {
+                                "user_token": ""
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "verbose": "final stage. Allbody accepted the game",
+                "response": {
+                    "status": "quick_search_done",
+                    "payload": {
+                        "room_token": ""
+                    }
+                }
+            },
+            {
+                "verbose": "someone canceled the game. Turn back to search stage",
+                "response": {
+                    "status": "quick_search_failed"
                 }
             }
         ]

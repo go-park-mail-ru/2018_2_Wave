@@ -1,4 +1,4 @@
-package app
+package manager
 
 import (
 	"Wave/application/room"
@@ -11,11 +11,17 @@ var type2Factory = map[room.RoomType]room.RoomFactory{}
 
 // RegisterRoomType factory
 func RegisterRoomType(roomType room.RoomType, factory room.RoomFactory) error {
-	if _, ok := type2Factory[roomType]; ok {
+	if IsRegisteredType(roomType) {
 		return room.ErrorAlreadyExists
 	}
 	type2Factory[roomType] = factory
 	return nil
+}
+
+// IsRegisteredType - weather the type factory was gegistered
+func IsRegisteredType(roomType room.RoomType) bool {
+	_, ok := type2Factory[roomType]
+	return ok
 }
 
 func init() {
