@@ -27,7 +27,7 @@ func MakeSessionCookie(value string) *http.Cookie {
 
 func GetSessionCookie(r *http.Request) string {
 	session, err := r.Cookie(sessionCookieName)
-	if err != nil && session != nil {
+	if err != nil || session != nil {
 		return ""
 	}
 	return session.Value

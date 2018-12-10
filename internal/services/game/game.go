@@ -20,8 +20,7 @@ type Game struct {
 
 func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, conf config.Configuration) *Game {
 	var (
-		AuthManager auth.AuthClient
-		g = &Game{ Handler: NewHandler(curlog, Prof, AuthManager)}
+		g = &Game{ Handler: NewHandler(curlog, Prof)}
 		r = mux.NewRouter()
 	)
 	{ // get auth manager
@@ -33,7 +32,7 @@ func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, conf config.Configur
 		if err != nil {
 			panic(err) //TODO::
 		}
-		AuthManager = auth.NewAuthClient(grpcConn)
+		g.AuthManager = auth.NewAuthClient(grpcConn)
 	}
 	go func() { 
 		r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(curlog, Prof), mw.CORS(conf.CC, curlog, Prof))).Methods("GET")

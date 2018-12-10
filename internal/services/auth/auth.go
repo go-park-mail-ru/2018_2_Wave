@@ -93,3 +93,19 @@ func (authm *AuthManager) Delete(ctx context.Context, cookie *auth.Cookie) (*aut
 
 	return &auth.Bool{Resp: true}, nil
 }
+
+func (authm *AuthManager) Info(ctx context.Context, cookie *auth.Cookie) (*auth.UserInfo, error) {
+	username := ""
+	if err := authm.DB.Database.QueryRow(`
+		SELECT username
+		FROM (
+			SELECT uid
+			FROM session
+			WHERE cookie=$1
+		) u
+		INNER JOIN userinfo USING(uid)
+	`, cookie.CookieValue).Scan(&username); err != nil {
+		return nil, err
+	}
+	return &auth.UserInfo{Username: username}, nil
+}
