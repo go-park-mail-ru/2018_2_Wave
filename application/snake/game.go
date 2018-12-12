@@ -134,5 +134,5 @@ func (g *game) spawnFood() {
 		return
 	}
 	newFood('h', g.world, pos[0]).
-		SetLifetime(3*time.Second)
+		SetLifetime(20*time.Second)
 }
