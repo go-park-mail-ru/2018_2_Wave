@@ -268,7 +268,7 @@ type quickSearchPayload struct {
 }
 
 func (q *quickSearchPayload) IsValid() bool {
-	return q.PlayerCount <= 4 && q.PlayerCount >= 2 && IsRegisteredType(q.RoomType)
+	return q.PlayerCount <= 4 && q.PlayerCount >= 1 && IsRegisteredType(q.RoomType)
 }
 
 // easyjson:json
