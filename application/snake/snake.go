@@ -35,6 +35,9 @@ func (s *snakeNode) OnColided(o core.IObject) {
 		s.snake.pushBack(f.GetLetter())
 		f.Destroy()
 	}
+	if _, ok := o.(*snakeNode); ok && s.bHead {
+		s.snake.destroy()
+	}
 	if _, ok := o.(*wall); ok {
 		s.snake.destroy()
 	}
@@ -116,7 +119,11 @@ func (s *snake) pushBack(letter rune) {
 
 func (s *snake) setHead(letter rune, direction core.Direction, position core.Vec2i) {
 	newHead := newSnakeNode(letter, s, position)
+	newHead.bHead = true
 	newHead.direction = direction
+	if len(s.body) > 0 {
+		s.body[0].bHead = true
+	}
 	s.body = append([]*snakeNode{newHead}, s.body...)
 }
 
