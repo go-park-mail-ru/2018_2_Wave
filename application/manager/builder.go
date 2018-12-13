@@ -24,10 +24,11 @@ type formerUser struct {
 }
 
 type former struct {
-	users []formerUser
-	stage formingStage
-	rType room.RoomType
-	aim   int
+	users   []formerUser
+	stage   formingStage
+	rType   room.RoomType
+	aim     int
+	counter *room.Counter
 
 	onUserRemoved func(*former, room.IUser)
 	onUserAdded   func(*former, room.IUser)
@@ -45,6 +46,7 @@ func (f *former) AddUser(u room.IUser) {
 	}
 
 	f.users = append(f.users, formerUser{u, false})
+	f.counter.Add(u.GetID())
 	if f.onUserAdded != nil {
 		f.onUserAdded(f, u)
 	}
@@ -109,6 +111,11 @@ func (f *former) StopAccepting() {
 	}
 }
 
+func (f *former) GetUserSerial(u room.IUser) int64 {
+	c, _ := f.counter.GetUserCounter(u)
+	return c
+}
+
 func (f *former) IsFormed() bool {
 	return len(f.users) >= f.aim
 }
@@ -117,6 +124,7 @@ func (f *former) removeUser(u room.IUser) {
 	for i, expectant := range f.users {
 		if expectant.IUser == u {
 			f.users = append(f.users[:i], f.users[i+1:]...)
+			f.counter.Delete(u.GetID())
 
 			if f.onUserRemoved != nil {
 				f.onUserRemoved(f, u)
@@ -201,6 +209,7 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 	f := &former{
 		aim:      players,
 		rType:    roomType,
+		counter:  room.NewCounter(room.FillGaps),
 		onFailed: b.OnFailed,
 		onUserAdded: func(f *former, u room.IUser) {
 			b.u2f[u] = f

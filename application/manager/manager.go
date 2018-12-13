@@ -191,8 +191,9 @@ func (m *Manager) onQSAdded(f *former, u room.IUser) {
 func (m *Manager) onQSStatus(f *former) {
 	p := &QSStatusPayload{}
 	for _, u := range f.users {
-		p.Members = append(p.Members, userTokenPayload{
-			UserToken: u.GetID(),
+		p.Members = append(p.Members, QSStatusMemberPayload{
+			UserToken:  u.GetID(),
+			UserSerial: f.GetUserSerial(u),
 		})
 	}
 

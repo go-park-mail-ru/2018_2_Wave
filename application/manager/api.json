@@ -90,7 +90,8 @@
                     "payload": {
                         "members": [ 
                             {
-                                "user_token": ""
+                                "user_token": "",
+                                "user_serial": 1
                             }
                         ]
                     }

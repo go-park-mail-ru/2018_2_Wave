@@ -4,15 +4,7 @@ import (
 	lg "Wave/internal/logger"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
-)
-
-type NumerationType int
-
-const (
-	Counting NumerationType = iota
-	FillGaps
 )
 
 type Route func(IUser, IInMessage) IRouteResponse
@@ -35,11 +27,8 @@ type Room struct {
 	CancelBroadcast chan interface{}
 	task            chan func()
 
-	Step time.Duration
-
-	userCounterMap  map[UserID]int64
-	UserCounterType NumerationType
-	userCounter     int64
+	Step    time.Duration
+	counter *Counter
 }
 
 func NewRoom(id RoomToken, tp RoomType, step time.Duration) *Room {
@@ -49,11 +38,11 @@ func NewRoom(id RoomToken, tp RoomType, step time.Duration) *Room {
 		Ticker:          time.NewTicker(step),
 		Routes:          map[string]Route{},
 		Users:           map[UserID]IUser{},
-		userCounterMap:  map[UserID]int64{},
 		broadcast:       make(chan IRouteResponse, 150),
 		CancelRoom:      make(chan interface{}, 1),
 		CancelBroadcast: make(chan interface{}, 1),
 		task:            make(chan func(), 150),
+		counter:         NewCounter(Counting),
 		Step:            step,
 	}
 	return r
@@ -107,12 +96,9 @@ func (r *Room) AddUser(u IUser) (err error) {
 	}
 	r.doTask(func() {
 		if _, ok := r.Users[u.GetID()]; !ok {
-			counter := r.getNextCounter()
-
 			r.Users[u.GetID()] = u
-			r.userCounterMap[u.GetID()] = counter
+			r.counter.Add(u.GetID())
 			r.log("user added", u.GetID())
-
 			if r.OnUserAdded != nil {
 				r.OnUserAdded(u)
 			}
@@ -130,7 +116,7 @@ func (r *Room) RemoveUser(u IUser) (err error) {
 	r.doTask(func() {
 		if _, ok := r.Users[u.GetID()]; ok {
 			delete(r.Users, u.GetID())
-			delete(r.userCounterMap, u.GetID())
+			r.counter.Delete(u.GetID())
 			if r.OnUserRemoved != nil {
 				r.log("user removed", u.GetID())
 				r.OnUserRemoved(u)
@@ -185,28 +171,21 @@ func (r *Room) Broadcast(rs IRouteResponse) error {
 }
 
 func (r *Room) GetUserCounter(u IUser) (counter int64, err error) {
-	if u == nil {
-		return 0, ErrorNil
-	}
 	r.doTask(func() {
-		ok := false
-		counter, ok = r.userCounterMap[u.GetID()]
-		if !ok {
-			err = ErrorNotExists
-		}
+		counter, err = r.counter.GetUserCounter(u)
 	})
 	return counter, err
 }
 
 func (r *Room) GetTokenCounter(t UserID) (counter int64, err error) {
 	r.doTask(func() {
-		ok := false
-		counter, ok = r.userCounterMap[t]
-		if !ok {
-			err = ErrorNotExists
-		}
+		counter, err = r.counter.GetTokenCounter(t)
 	})
 	return counter, err
+}
+
+func (r *Room) SetCounterType(CounterType NumerationType) {
+	r.counter.UserCounterType = CounterType
 }
 
 // ----------------|
@@ -232,19 +211,4 @@ func (r *Room) doTask(t func()) {
 		t()
 	}
 	wg.Wait()
-}
-
-func (r *Room) getNextCounter() int64 {
-	if r.UserCounterType == FillGaps {
-		set := make([]bool, r.userCounter+1)
-		for _, c := range r.userCounterMap {
-			set[c] = true
-		}
-		for i, ok := range set {
-			if !ok {
-				return int64(i)
-			}
-		}
-	}
-	return atomic.AddInt64(&r.userCounter, 1)
 }

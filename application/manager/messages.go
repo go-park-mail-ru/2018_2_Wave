@@ -33,6 +33,12 @@ type roomInfoPayload struct {
 }
 
 // easyjson:json
+type QSStatusMemberPayload struct {
+	UserToken  room.UserID `json:"user_token"`
+	UserSerial int64       `json:"user_serial"`
+}
+
+// easyjson:json
 type QSPayload struct {
 	PlayerCount int           `json:"player_count"`
 	RoomType    room.RoomType `json:"room_type"`
@@ -44,7 +50,7 @@ func (q *QSPayload) IsValid() bool {
 
 // easyjson:json
 type QSStatusPayload struct {
-	Members []userTokenPayload `json:"members"`
+	Members []QSStatusMemberPayload `json:"members"`
 }
 
 // easyjson:json
