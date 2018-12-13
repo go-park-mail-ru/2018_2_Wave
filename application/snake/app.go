@@ -26,6 +26,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 			Y: 10,
 		}),
 	}
+	s.UserCounterType = room.FillGaps
 	s.OnTick = s.onTick
 	s.OnUserRemoved = s.onUserRemoved
 	s.game.OnSnakeDead = s.onSnakeDead

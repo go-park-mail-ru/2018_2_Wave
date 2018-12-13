@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+type NumerationType int
+
+const (
+	Counting NumerationType = iota
+	FillGaps
+)
+
 type Route func(IUser, IInMessage) IRouteResponse
 
 // Room - default IRoom
@@ -30,8 +37,9 @@ type Room struct {
 
 	Step time.Duration
 
-	userCounterMap map[UserID]int64
-	userCounter    int64
+	userCounterMap  map[UserID]int64
+	UserCounterType NumerationType
+	userCounter     int64
 }
 
 func NewRoom(id RoomToken, tp RoomType, step time.Duration) *Room {
@@ -99,7 +107,7 @@ func (r *Room) AddUser(u IUser) (err error) {
 	}
 	r.doTask(func() {
 		if _, ok := r.Users[u.GetID()]; !ok {
-			counter := atomic.AddInt64(&r.userCounter, 1)
+			counter := r.getNextCounter()
 
 			r.Users[u.GetID()] = u
 			r.userCounterMap[u.GetID()] = counter
@@ -224,4 +232,19 @@ func (r *Room) doTask(t func()) {
 		t()
 	}
 	wg.Wait()
+}
+
+func (r *Room) getNextCounter() int64 {
+	if r.UserCounterType == FillGaps {
+		set := make([]bool, r.userCounter+1)
+		for _, c := range r.userCounterMap {
+			set[c] = true
+		}
+		for i, ok := range set {
+			if !ok {
+				return int64(i)
+			}
+		}
+	}
+	return atomic.AddInt64(&r.userCounter, 1)
 }
