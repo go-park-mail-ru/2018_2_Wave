@@ -26,7 +26,7 @@ func NewWorld(size Vec2i) *World {
 
 func (w *World) Tick(dt time.Duration) {
 	w.scene.Tick()
-	// w.scene.PrintDebug()
+	w.scene.PrintDebug()
 }
 
 // ----------------|
@@ -72,12 +72,12 @@ func (w *World) RemoveObject(o IObject) error {
 // ----------------| scene functions
 
 // FindGap of @length
-func (w *World) FindGap(length int) (res []Vec2i, dir Direction, err error) {
+func (w *World) FindGap(length int, dir Direction) (res []Vec2i, err error) {
 	if w.scene != nil {
-		return w.scene.FindGap(length)
+		return w.scene.FindGap(length, dir)
 	}
 	// TODO:: log
-	return nil, NoDirection, nil
+	return nil, room.ErrorNil
 }
 
 func (w *World) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {

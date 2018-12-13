@@ -67,7 +67,8 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 	}
 
 	// create a snake object and find a spwn area
-	poss, dir, err := g.world.FindGap(length)
+	dir := core.Right
+	poss, err := g.world.FindGap(length, dir)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func (g *game) GetGameInfo() *gameInfo {
 // ----------------| game mode logic
 
 func (g *game) spawnFood() {
-	pos, _, err := g.world.FindGap(1)
+	pos, err := g.world.FindGap(1, core.NoDirection)
 	if err != nil {
 		return
 	}
