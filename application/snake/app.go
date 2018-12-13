@@ -43,6 +43,10 @@ func (a *App) onTick(dt time.Duration) {
 		info = a.game.GetGameInfo()
 		msg  = room.MessageTick.WithStruct(info)
 	)
+	for i, s := range info.Snakes {
+		serial, _ := a.GetTokenCounter(s.UserToken)
+		info.Snakes[i].Serial = serial
+	}
 	a.Broadcast(msg)
 }
 

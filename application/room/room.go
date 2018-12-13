@@ -3,6 +3,8 @@ package room
 import (
 	lg "Wave/internal/logger"
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -24,8 +26,13 @@ type Room struct {
 	broadcast       chan IRouteResponse
 	CancelRoom      chan interface{}
 	CancelBroadcast chan interface{}
+	task            chan func()
 
 	Step time.Duration
+
+	userCounterMap   map[UserID]int64
+	userCounter      int64
+	userCounterMutex sync.Mutex
 }
 
 func NewRoom(id RoomToken, tp RoomType, step time.Duration) *Room {
@@ -38,6 +45,7 @@ func NewRoom(id RoomToken, tp RoomType, step time.Duration) *Room {
 		broadcast:       make(chan IRouteResponse, 150),
 		CancelRoom:      make(chan interface{}, 1),
 		CancelBroadcast: make(chan interface{}, 1),
+		task:            make(chan func(), 150),
 		Step:            step,
 	}
 	return r
@@ -55,6 +63,8 @@ func (r *Room) Run() error {
 			if r.OnTick != nil {
 				r.OnTick(r.Step)
 			}
+		case clb := <-r.task:
+			clb()
 		case <-r.CancelRoom:
 			return nil
 		}
@@ -83,34 +93,45 @@ func (r *Room) runBroadcast() {
 	}
 }
 
-func (r *Room) AddUser(u IUser) error {
+func (r *Room) AddUser(u IUser) (err error) {
 	if u == nil {
 		return ErrorNil
 	}
-	if _, ok := r.Users[u.GetID()]; !ok {
-		r.Users[u.GetID()] = u
-		r.log("user added", u.GetID())
-		if r.OnUserAdded != nil {
-			r.OnUserAdded(u)
+	r.doTask(func() {
+		if _, ok := r.Users[u.GetID()]; !ok {
+			counter := atomic.AddInt64(&r.userCounter, 1)
+
+			r.Users[u.GetID()] = u
+			r.userCounterMap[u.GetID()] = counter
+			r.log("user added", u.GetID())
+
+			if r.OnUserAdded != nil {
+				r.OnUserAdded(u)
+			}
+			return
 		}
-		return nil
-	}
-	return ErrorAlreadyExists
+		err = ErrorAlreadyExists
+	})
+	return err
 }
 
-func (r *Room) RemoveUser(u IUser) error {
+func (r *Room) RemoveUser(u IUser) (err error) {
 	if u == nil {
 		return ErrorNil
 	}
-	if _, ok := r.Users[u.GetID()]; ok {
-		delete(r.Users, u.GetID())
-		if r.OnUserRemoved != nil {
-			r.log("user removed", u.GetID())
-			r.OnUserRemoved(u)
+	r.doTask(func() {
+		if _, ok := r.Users[u.GetID()]; ok {
+			delete(r.Users, u.GetID())
+			delete(r.userCounterMap, u.GetID())
+			if r.OnUserRemoved != nil {
+				r.log("user removed", u.GetID())
+				r.OnUserRemoved(u)
+			}
+			return
 		}
-		return nil
-	}
-	return ErrorNotExists
+		err = ErrorNotExists
+	})
+	return err
 }
 
 func (r *Room) OnDisconnected(u IUser) {
@@ -155,6 +176,31 @@ func (r *Room) Broadcast(rs IRouteResponse) error {
 	return nil
 }
 
+func (r *Room) GetUserCounter(u IUser) (counter int64, err error) {
+	if u == nil {
+		return 0, ErrorNil
+	}
+	r.doTask(func() {
+		ok := false
+		counter, ok = r.userCounterMap[u.GetID()]
+		if !ok {
+			err = ErrorNotExists
+		}
+	})
+	return counter, err
+}
+
+func (r *Room) GetTokenCounter(t UserID) (counter int64, err error) {
+	r.doTask(func() {
+		ok := false
+		counter, ok = r.userCounterMap[t]
+		if !ok {
+			err = ErrorNotExists
+		}
+	})
+	return counter, err
+}
+
 // ----------------|
 
 func (r *Room) log(data ...interface{}) {
@@ -168,4 +214,13 @@ func (r *Room) log(data ...interface{}) {
 	} else {
 		fmt.Println(data...)
 	}
+}
+func (r *Room) doTask(t func()) {
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	r.task <- func() {
+		defer wg.Done()
+		t()
+	}
+	wg.Wait()
 }
