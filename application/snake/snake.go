@@ -66,7 +66,7 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 		movement: direction,
 	}
 	l := 'a'
-	for i := len(points) - 1; i >= 0; i-- {
+	for i := range points {
 		s.setHead(l, direction, points[i])
 		l++
 	}

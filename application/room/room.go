@@ -30,9 +30,8 @@ type Room struct {
 
 	Step time.Duration
 
-	userCounterMap   map[UserID]int64
-	userCounter      int64
-	userCounterMutex sync.Mutex
+	userCounterMap map[UserID]int64
+	userCounter    int64
 }
 
 func NewRoom(id RoomToken, tp RoomType, step time.Duration) *Room {
@@ -42,6 +41,7 @@ func NewRoom(id RoomToken, tp RoomType, step time.Duration) *Room {
 		Ticker:          time.NewTicker(step),
 		Routes:          map[string]Route{},
 		Users:           map[UserID]IUser{},
+		userCounterMap:  map[UserID]int64{},
 		broadcast:       make(chan IRouteResponse, 150),
 		CancelRoom:      make(chan interface{}, 1),
 		CancelBroadcast: make(chan interface{}, 1),
@@ -63,8 +63,6 @@ func (r *Room) Run() error {
 			if r.OnTick != nil {
 				r.OnTick(r.Step)
 			}
-		case clb := <-r.task:
-			clb()
 		case <-r.CancelRoom:
 			return nil
 		}
@@ -87,6 +85,8 @@ func (r *Room) runBroadcast() {
 			for _, u := range r.Users {
 				r.SendMessageTo(u, rs)
 			}
+		case clb := <-r.task:
+			clb()
 		case <-r.CancelBroadcast:
 			return
 		}
@@ -215,6 +215,7 @@ func (r *Room) log(data ...interface{}) {
 		fmt.Println(data...)
 	}
 }
+
 func (r *Room) doTask(t func()) {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

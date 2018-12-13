@@ -39,15 +39,12 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 
 func (a *App) onTick(dt time.Duration) {
 	a.game.Tick(dt)
-	var (
-		info = a.game.GetGameInfo()
-		msg  = room.MessageTick.WithStruct(info)
-	)
+	info := a.game.GetGameInfo()
 	for i, s := range info.Snakes {
 		serial, _ := a.GetTokenCounter(s.UserToken)
 		info.Snakes[i].Serial = serial
 	}
-	a.Broadcast(msg)
+	a.Broadcast(room.MessageTick.WithStruct(info))
 }
 
 func (a *App) onUserRemoved(u room.IUser) {
