@@ -34,7 +34,7 @@ type roomInfoPayload struct {
 
 // easyjson:json
 type QSPayload struct {
-	PlayerCount int           `json:"player_count,string"`
+	PlayerCount int           `json:"player_count"`
 	RoomType    room.RoomType `json:"room_type"`
 }
 

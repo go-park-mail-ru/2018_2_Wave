@@ -72,7 +72,7 @@
                 "request": {
                     "signal": "quick_search",
                     "payload": {
-                        "player_count": "1|2|3|4",
+                        "player_count": 2,
                         "room_type": ""
                     }
                 }
