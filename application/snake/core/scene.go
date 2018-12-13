@@ -16,7 +16,7 @@ type scene struct {
 	objectMap  map[uint64]IObject
 	size       Vec2i
 	collisions []collision
-	mu		   sync.RWMutex
+	mu         sync.RWMutex
 }
 
 func newScene(size Vec2i) *scene {
@@ -81,13 +81,14 @@ func (s *scene) RemoveObject(o IObject) error {
 func (s *scene) FindGap(length int) (res []Vec2i, dir Direction, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	iteration := 0
-FIND_POSITION: {
+FIND_POSITION:
+	{
 		if iteration++; iteration > 300 {
 			return nil, NoDirection, room.ErrorNotFound
 		}
-	
+
 		position := Vec2i{
 			X: rand.Intn(s.size.X),
 			Y: rand.Intn(s.size.Y),
@@ -107,7 +108,7 @@ FIND_POSITION: {
 func (s *scene) PrintDebug() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	res := ""
 	for y := s.size.Y - 1; y >= 0; y-- {
 		for x := 0; x < s.size.X; x++ {

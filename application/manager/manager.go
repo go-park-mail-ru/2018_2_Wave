@@ -35,11 +35,11 @@ const RoomType = "manager"
 // New applicarion room
 func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Profiler) *Manager {
 	m := &Manager{
-		Room:   room.NewRoom(id, RoomType, step),
-		rooms:  map[room.RoomToken]room.IRoom{},
+		Room:    room.NewRoom(id, RoomType, step),
+		rooms:   map[room.RoomToken]room.IRoom{},
 		builder: newBuilder(),
-		prof:   prof,
-		db:     db,
+		prof:    prof,
+		db:      db,
 	}
 	m.Routes["lobby_list"] = m.onGetLobbyList
 	m.Routes["lobby_create"] = withRoomType(m.onLobbyCreate)
@@ -56,7 +56,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Pr
 	m.builder.OnFormed = m.onQSReady
 	m.builder.OnFailed = m.onQSFailed
 	m.builder.OnDone = m.onQSDone
-	m.builder.acceptTime = 30/*s*/
+	m.builder.acceptTime = 30 /*s*/
 
 	return m
 }

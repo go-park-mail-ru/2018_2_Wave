@@ -33,6 +33,7 @@ func newSnakeNode(letter rune, s *snake, position core.Vec2i) *snakeNode {
 func (s *snakeNode) OnColided(o core.IObject) {
 	if f, ok := o.(*food); ok {
 		s.snake.pushBack(f.GetLetter())
+		s.snake.score++
 		f.Destroy()
 	}
 	if _, ok := o.(*snakeNode); ok && s.bHead {
@@ -50,6 +51,7 @@ type snake struct {
 	world    *core.World    // game world
 	body     []*snakeNode   // body elements
 	movement core.Direction // next step direction
+	score    int            // game score
 
 	tickTime time.Duration // time to tick
 	leftTime time.Duration // left time for a next tick
