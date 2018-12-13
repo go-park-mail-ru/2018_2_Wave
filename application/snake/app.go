@@ -13,7 +13,7 @@ type App struct {
 	game       *game
 }
 
-const RoomType room.RoomType = "snake_game"
+const RoomType room.RoomType = "snake"
 
 // ----------------|
 

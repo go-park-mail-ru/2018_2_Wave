@@ -24,14 +24,14 @@ type Handler struct {
 	Prof *metrics.Profiler
 	AuthManager auth.AuthClient
 
-	wsApp *manager.App
+	wsApp *manager.Manager
 	upgrader websocket.Upgrader
 }
 
 func NewHandler(LG *logger.Logger, Prof *metrics.Profiler) *Handler{
 	return &Handler {
-		wsApp: func() *manager.App {
-			wsApp := manager.New("app", wsAppTickRate, nil, Prof)
+		wsApp: func() *manager.Manager {
+			wsApp := manager.New("", wsAppTickRate, nil, Prof)
 			wsApp.CreateLobby(snake.RoomType, "snake")
 			go wsApp.Run()
 			return wsApp

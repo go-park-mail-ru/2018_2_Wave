@@ -97,6 +97,12 @@
                 }
             },
             {
+                "verbose": "you was removed from the search",
+                "response": {
+                    "status": "quick_search_kick"
+                }
+            },
+            {
                 "verbose": "game found. Need to accept the invite or send 'no' or take out of time. This ",
                 "response": {
                     "status": "quick_search_ready",

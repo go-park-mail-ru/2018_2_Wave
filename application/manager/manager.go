@@ -10,12 +10,12 @@ import (
 
 //go:generate easyjson .
 
-// App - main service room
+// Manager - main service room
 /* - creates and store other rooms
  * - contains ALL online users
  * - provides all service functions
  */
-type App struct {
+type Manager struct {
 	*room.Room // the room super
 	rooms      map[room.RoomToken]room.IRoom
 	db         interface{}
@@ -25,7 +25,7 @@ type App struct {
 	lastUserID int64
 	idsMutex   sync.Mutex
 
-	former *roomsFormer
+	builder *builder
 }
 
 const RoomType = "manager"
@@ -33,65 +33,67 @@ const RoomType = "manager"
 // ----------------|
 
 // New applicarion room
-func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Profiler) *App {
-	a := &App{
+func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Profiler) *Manager {
+	m := &Manager{
 		Room:   room.NewRoom(id, RoomType, step),
 		rooms:  map[room.RoomToken]room.IRoom{},
-		former: newRoomsFormer(),
+		builder: newBuilder(),
 		prof:   prof,
 		db:     db,
 	}
-	a.Routes["lobby_list"] = a.onGetLobbyList
-	a.Routes["lobby_create"] = withRoomType(a.onLobbyCreate)
-	a.Routes["lobby_delete"] = withRoomID(a.onLobbyDelete)
+	m.Routes["lobby_list"] = m.onGetLobbyList
+	m.Routes["lobby_create"] = withRoomType(m.onLobbyCreate)
+	m.Routes["lobby_delete"] = withRoomID(m.onLobbyDelete)
 
-	a.Routes["add_to_room"] = withRoomID(a.onAddToRoom)
-	a.Routes["remove_from_room"] = withRoomID(a.onRemoveFromRoom)
+	m.Routes["add_to_room"] = withRoomID(m.onAddToRoom)
+	m.Routes["remove_from_room"] = withRoomID(m.onRemoveFromRoom)
 
-	a.Routes["quick_search"] = a.onQuickSearch
-	a.Routes["quick_search_abort"] = a.onQuickSearchAbort
-	a.Routes["quick_search_accept"] = a.onQuickSearchAccept
-	a.former.OnUserAdded = a.onQuickSearchStatus
-	a.former.OnUserRemoved = a.onQuickSearchStatus
-	a.former.OnFormed = a.onQuickSearchReady
-	a.former.OnDone = a.onQuickSearchDone
+	m.Routes["quick_search"] = m.onQSBegin
+	m.Routes["quick_search_abort"] = m.onQSAbort
+	m.Routes["quick_search_accept"] = m.onQSAccept
+	m.builder.OnUserAdded = m.onQSAdded
+	m.builder.OnUserRemoved = m.onQSRemoved
+	m.builder.OnFormed = m.onQSReady
+	m.builder.OnFailed = m.onQSFailed
+	m.builder.OnDone = m.onQSDone
+	m.builder.acceptTime = 30/*s*/
 
-	return a
+	return m
 }
 
 // ----------------| methods
 
 // GetNextUserID returns next user id
-func (a *App) GetNextUserID() room.UserID {
-	a.idsMutex.Lock()
-	defer a.idsMutex.Unlock()
+func (m *Manager) GetNextUserID() room.UserID {
+	m.idsMutex.Lock()
+	defer m.idsMutex.Unlock()
 
-	a.lastUserID++
-	return room.UserID(strconv.FormatInt(a.lastUserID, 36))
+	m.lastUserID++
+	return room.UserID(strconv.FormatInt(m.lastUserID, 36))
 }
 
 // GetNextRoomID returns next room id
-func (a *App) GetNextRoomID() room.RoomToken {
-	a.idsMutex.Lock()
-	defer a.idsMutex.Unlock()
+func (m *Manager) GetNextRoomID() room.RoomToken {
+	m.idsMutex.Lock()
+	defer m.idsMutex.Unlock()
 
-	a.lastRoomID++
-	return room.RoomToken(strconv.FormatInt(a.lastRoomID, 36))
+	m.lastRoomID++
+	return room.RoomToken(strconv.FormatInt(m.lastRoomID, 36))
 }
 
 // CreateLobby -
-func (a *App) CreateLobby(room_type room.RoomType, room_token room.RoomToken) (room.IRoom, error) {
+func (m *Manager) CreateLobby(room_type room.RoomType, room_token room.RoomToken) (room.IRoom, error) {
 	if factory, ok := type2Factory[room_type]; ok {
-		r := factory(room_token, a.Step, a.db)
+		r := factory(room_token, m.Step, m.db)
 		if r == nil {
 			return nil, room.ErrorNil
 		}
-		a.rooms[room_token] = r
+		m.rooms[room_token] = r
 		go r.Run()
 
 		// profiler
-		if a.prof != nil {
-			a.prof.ActiveRooms.Inc()
+		if m.prof != nil {
+			m.prof.ActiveRooms.Inc()
 		}
 
 		return r, nil
@@ -101,9 +103,9 @@ func (a *App) CreateLobby(room_type room.RoomType, room_token room.RoomToken) (r
 
 // ----------------| handlers
 
-func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponse {
+func (m *Manager) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	data := []roomInfoPayload{}
-	for _, r := range a.rooms {
+	for _, r := range m.rooms {
 		data = append(data, roomInfoPayload{
 			RoomToken: r.GetID(),
 			RoomType:  r.GetType(),
@@ -112,8 +114,8 @@ func (a *App) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteRespon
 	return room.MessageOK.WithStruct(data)
 }
 
-func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType) room.IRouteResponse {
-	r, err := a.CreateLobby(cmd, a.GetNextRoomID())
+func (m *Manager) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType) room.IRouteResponse {
+	r, err := m.CreateLobby(cmd, m.GetNextRoomID())
 	if err != nil {
 		return nil
 	}
@@ -122,28 +124,28 @@ func (a *App) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomType)
 	})
 }
 
-func (a *App) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
-	if r, ok := a.rooms[cmd]; ok {
+func (m *Manager) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
+	if r, ok := m.rooms[cmd]; ok {
 		r.Stop()
-		delete(a.rooms, cmd)
+		delete(m.rooms, cmd)
 
 		// profiler
-		if a.prof != nil {
-			a.prof.ActiveRooms.Dec()
+		if m.prof != nil {
+			m.prof.ActiveRooms.Dec()
 		}
 	}
 	return nil
 }
 
-func (a *App) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
-	if r, ok := a.rooms[cmd]; ok {
+func (m *Manager) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
+	if r, ok := m.rooms[cmd]; ok {
 		u.AddToRoom(r)
 	}
 	return nil
 }
 
-func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
-	if r, ok := a.rooms[cmd]; ok {
+func (m *Manager) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
+	if r, ok := m.rooms[cmd]; ok {
 		u.RemoveFromRoom(r)
 	}
 	return nil
@@ -151,140 +153,87 @@ func (a *App) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomTo
 
 // ------| quick serarch
 
-func (a *App) onQuickSearch(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	p := quickSearchPayload{}
+func (m *Manager) onQSBegin(u room.IUser, im room.IInMessage) room.IRouteResponse {
+	p := &QSPayload{}
 	if err := im.ToStruct(p); err != nil {
 		return nil
 	}
 	if !p.IsValid() {
 		return nil
 	}
-	a.former.AddUser(u, p.RoomType, p.PlayerCount)
+	m.builder.AddUser(u, p.RoomType, p.PlayerCount)
 	return nil
 }
 
-func (a *App) onQuickSearchAbort(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	a.former.RemoveUser(u)
+func (m *Manager) onQSAbort(u room.IUser, im room.IInMessage) room.IRouteResponse {
+	m.builder.RemoveUser(u)
 	return nil
 }
 
-func (a *App) onQuickSearchAccept(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	p := quickSearchAcceptPayload{}
+func (m *Manager) onQSAccept(u room.IUser, im room.IInMessage) room.IRouteResponse {
+	p := &QSAcceptPayload{}
 	if err := im.ToStruct(p); err != nil {
 		return nil
 	}
-
-	// remove the user from former and continue the search
-	if p.Status == false {
-		f, ok := a.former.GetUserFormer(u)
-		if !ok {
-			return nil
-		}
-		a.former.RemoveUser(u)
-
-		for _, u := range f.users {
-			a.SendMessageTo(u, messageQuickSearchFailed)
-		}
-	}
-	// accept the game 
-	a.former.Accept(u)
+	m.builder.Accept(u, p.Status)
 	return nil
 }
 
-func (a *App) onQuickSearchStatus(f *roomFormer) {
-	p := quickSearchStatusPayload{}
+func (m *Manager) onQSRemoved(f *former, u room.IUser) {
+	m.SendMessageTo(u, messageQSKick)
+	m.onQSStatus(f)
+}
+
+func (m *Manager) onQSAdded(f *former, u room.IUser) {
+	m.onQSStatus(f)
+}
+
+func (m *Manager) onQSStatus(f *former) {
+	p := &QSStatusPayload{}
 	for _, u := range f.users {
 		p.Members = append(p.Members, userTokenPayload{
 			UserToken: u.GetID(),
 		})
 	}
 
-	om := messageQuickSearchStatus.WithStruct(p)
+	om := messageQSStatus.WithStruct(p)
 	for _, u := range f.users {
-		a.SendMessageTo(u, om)
+		m.SendMessageTo(u, om)
 	}
 }
 
-func (a *App) onQuickSearchReady(f *roomFormer) {
-	p := quickSearchReadyPayload{
-		AcceptTimeout: 30,
+func (m *Manager) onQSReady(f *former) {
+	p := &QSReadyPayload{
+		AcceptTimeout: m.builder.acceptTime,
 	}
-	om := messageQuickSearchReady.WithStruct(p)
+	om := messageQSReady.WithStruct(p)
 	for _, u := range f.users {
-		a.SendMessageTo(u, om)
+		m.SendMessageTo(u, om)
 	}
 }
 
-func (a *App) onQuickSearchDone(f *roomFormer) {
-	r, err := a.CreateLobby(f.roomType, a.GetNextRoomID())
+func (m *Manager) onQSDone(f *former) {
+	r, err := m.CreateLobby(f.rType, m.GetNextRoomID())
 	if err != nil {
 		return // TODO::
 	}
 
-	om := messageQuickSearchDone.WithStruct(roomTokenPayload{
+	om := messageQSDone.WithStruct(roomTokenPayload{
 		RoomToken: r.GetID(),
 	})
 	for _, u := range f.users {
-		a.SendMessageTo(u, om)
+		m.SendMessageTo(u, om)
 		u.AddToRoom(r)
 	}
 }
 
+func (m *Manager) onQSFailed(f *former) {
+	for _, u := range f.users {
+		m.SendMessageTo(u, messageQSFailed)
+	}
+}
+
 // ----------------| helper functions
-
-var (
-	messageQuickSearchStatus       = room.RouteResponse{Status: "quick_search_status"}.WithStruct("")
-	messageQuickSearchReady        = room.RouteResponse{Status: "quick_search_ready"}.WithStruct("")
-	messageQuickSearchAcceptStatus = room.RouteResponse{Status: "quick_search_accept_status"}.WithStruct("")
-	messageQuickSearchDone         = room.RouteResponse{Status: "quick_search_done"}.WithStruct("")
-	messageQuickSearchFailed       = room.RouteResponse{Status: "quick_search_failed"}.WithStruct("")
-)
-
-// easyjson:json
-type roomTokenPayload struct {
-	RoomToken room.RoomToken `json:"room_token"`
-}
-
-// easyjson:json
-type roomTypePayload struct {
-	RoomType room.RoomType `json:"room_type"`
-}
-
-// easyjson:json
-type userTokenPayload struct {
-	UserToken room.UserID `json:"user_token"`
-}
-
-// easyjson:json
-type roomInfoPayload struct {
-	RoomToken room.RoomToken `json:"room_token"`
-	RoomType  room.RoomType  `json:"room_type"`
-}
-
-// easyjson:json
-type quickSearchPayload struct {
-	PlayerCount int           `json:"player_count"`
-	RoomType    room.RoomType `json:"room_type"`
-}
-
-func (q *quickSearchPayload) IsValid() bool {
-	return q.PlayerCount <= 4 && q.PlayerCount >= 1 && IsRegisteredType(q.RoomType)
-}
-
-// easyjson:json
-type quickSearchStatusPayload struct {
-	Members []userTokenPayload `json:"members"`
-}
-
-// easyjson:json
-type quickSearchReadyPayload struct {
-	AcceptTimeout int `json:"accept_timeout"`
-}
-
-// easyjson:json
-type quickSearchAcceptPayload struct {
-	Status bool `json:"status"`
-}
 
 func withRoomID(next func(room.IUser, room.IInMessage, room.RoomToken) room.IRouteResponse) room.Route {
 	return func(u room.IUser, im room.IInMessage) room.IRouteResponse {

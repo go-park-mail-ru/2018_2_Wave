@@ -143,9 +143,6 @@ type userTokenPayload struct {
 }
 
 func (u *User) getRoom(name RoomToken) (IRoom, bool) {
-	if name == "" {
-		name = "app"
-	}
 	r, ok := u.Rooms[name]
 	return r, ok
 }

@@ -42,6 +42,9 @@ func (s *scene) Tick() {
 
 // assign the object th the scene
 func (s *scene) AddObject(o IObject) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.isPlaced(o) {
 		return room.ErrorAlreadyExists
 	}
@@ -51,6 +54,9 @@ func (s *scene) AddObject(o IObject) error {
 }
 
 func (s *scene) RemoveObject(o IObject) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if o = s.actualiser(o); o == nil {
 		return room.ErrorNotExists
 	}
@@ -75,7 +81,7 @@ func (s *scene) RemoveObject(o IObject) error {
 func (s *scene) FindGap(length int) (res []Vec2i, dir Direction, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
+	
 	iteration := 0
 FIND_POSITION: {
 		if iteration++; iteration > 300 {
@@ -99,6 +105,9 @@ FIND_POSITION: {
 }
 
 func (s *scene) PrintDebug() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	
 	res := ""
 	for y := s.size.Y - 1; y >= 0; y-- {
 		for x := 0; x < s.size.X; x++ {
