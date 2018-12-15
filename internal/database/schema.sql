@@ -8,6 +8,8 @@ CREATE TABLE userinfo (
     password    VARCHAR(60)     NOT NULL,
     score       INT             DEFAULT 0,
     avatar      TEXT            DEFAULT '/img/avatars/default'
+
+    appid       BIGSERIAL,
 );
 
 CREATE TABLE session (

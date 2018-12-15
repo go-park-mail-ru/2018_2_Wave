@@ -12,7 +12,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	//"github.com/gorilla/handlers"
+	"github.com/gorilla/handlers"
 
 	"google.golang.org/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -70,9 +70,16 @@ func main() {
 
 	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.OptionsPreflight(conf.CC, curlog, prof))).Methods("OPTIONS")
 	r.HandleFunc("/session",  mw.Chain(API.LogoutOPTHandler, mw.OptionsPreflight(conf.CC, curlog, prof))).Methods("OPTIONS")
+	r.HandleFunc("/me/apps",  mw.Chain(API.DeleteAppOPTHandler, mw.OptionsPreflight(conf.CC, curlog, prof))).Methods("OPTIONS") //+
+
+	r.HandleFunc("/apps", mw.Chain(API.ShowAppsGETHandler, mw.CORS(conf.CC, curlog, prof))).Methods("GET") //+
+	r.HandleFunc("/me/apps", mw.Chain(API.AddAppPOSTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST") //+
+	r.HandleFunc("/me/apps",  mw.Chain(API.DeleteAppDELETEHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("DELETE") //+
+	r.HandleFunc("/apps/popular", mw.Chain(API.ShowAppsPopularGETHandler, mw.CORS(conf.CC, curlog, prof))).Methods("GET") //+
+	r.HandleFunc("/apps/{name}", mw.Chain(API.AppGETHandler, mw.CORS(conf.CC, curlog, prof))).Methods("GET") //+
 
 	curlog.Sugar.Infow("starting api server on " + conf.SC.Host + conf.SC.Port,
 		"source", "main.go",)
 
-	http.ListenAndServe(conf.SC.Port, r)//handlers.RecoveryHandler()(r))
+	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }

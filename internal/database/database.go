@@ -400,3 +400,145 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 
 	return board, nil
 }
+
+func (model *DatabaseModel) GetApps() (apps models.Applications) {
+	rows, _ := model.Database.Queryx(`
+		SELECT name, thumbnail
+		FROM app
+	`)
+	defer rows.Close()
+
+	for rows.Next() {
+		temp := models.Application{}
+		if err := rows.Scan(&temp.Name, &temp.Description, &temp.Price); err != nil {
+
+			model.LG.Sugar.Infow(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetApps",
+			)
+
+			return models.Applications{}
+		}
+
+		apps.Applications = append(apps.Applications, temp)
+	}
+
+	return apps
+}
+
+func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
+	rows, _ := model.Database.Queryx(`
+		SELECT name, thumbnail
+		FROM app
+		ORDER BY installations;
+	`)
+	defer rows.Close()
+
+	for rows.Next() {
+		temp := models.Application{}
+		if err := rows.Scan(&temp.Name, &temp.Description, &temp.Price); err != nil {
+
+			model.LG.Sugar.Infow(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetPopularApps",
+			)
+
+			return models.Applications{}
+		}
+
+		apps.Applications = append(apps.Applications, temp)
+	}
+
+	return apps
+}
+
+func (model *DatabaseModel) GetApp(name string) (app models.Application) {
+	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
+		row := model.Database.QueryRowx(`
+			SELECT name, description, thumbnail
+			FROM app
+			WHERE name=$1;
+		`, name)
+		err := row.Scan(&app.Name, &app.Description, &app.Thumbnail)
+
+		if err != nil {
+
+			model.LG.Sugar.Infow(
+				"GetApp failed, scan error",
+				"source", "database.go",
+				"who", "GetApp",
+			)
+
+			return models.Application{}
+		}
+
+		model.LG.Sugar.Infow(
+			"GetApp succeded",
+			"source", "database.go",
+			"who", "GetApp",
+		)
+
+		return app
+	} else if problem != nil {
+
+		model.LG.Sugar.Infow(
+			"Present failed",
+			"source", "database.go",
+			"who", "GetApp",
+		)
+
+		return models.Application{}
+	}
+
+	model.LG.Sugar.Infow(
+		"GetApp failed, app doesn't exist",
+		"source", "database.go",
+		"who", "GetApp",
+	)
+
+	return models.Application{}
+}
+
+func (model *DatabaseModel) AddApp(cookie string, appname string) {
+	// increment installations
+	model.Database.MustExec(`
+		UPDATE app
+		SET installations=installations+1
+		WHERE name=$1;
+	`, appname)
+
+	model.Database.MustExec(`
+		INSERT INTO userapp(uid, appid)
+		VALUES(
+			(SELECT session.uid FROM session
+			JOIN userinfo
+			ON session.uid=userinfo.uid
+			WHERE cookie=$1)
+			,
+			(SELECT appid FROM app
+			WHERE name=$2)
+		);
+	`, cookie, appname)
+}
+
+func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
+	// decrement installations
+	model.Database.MustExec(`
+		UPDATE app
+		SET installations=installations-1
+		WHERE name=$1;
+	`, appname)
+
+	model.Database.MustExec(`
+		DELETE
+		FROM userapp
+		WHERE uid=(SELECT session.uid FROM session
+			JOIN userinfo
+			ON session.uid=userinfo.uid
+			WHERE cookie=$1)
+		AND appid=(SELECT appid FROM app
+			WHERE name=$2);
+	`, cookie, appname)
+}

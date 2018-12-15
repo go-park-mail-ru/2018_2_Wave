@@ -499,3 +499,120 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 		"who", "LogoutOPTHandler",)
 
 }
+
+/******************** Applications ********************/
+
+func (h *Handler) DeleteAppOPTHandler(rw http.ResponseWriter, r *http.Request) {
+
+	h.LG.Sugar.Infow("/apps succeded",
+		"source", "api.go",
+		"who", "AddAppOPTHandler",)
+
+}
+
+func (h *Handler) ShowAppsGETHandler(rw http.ResponseWriter, r *http.Request) {
+	var apps models.Applications
+	apps = h.DB.GetApps()
+
+	payload, _ := apps.MarshalJSON()
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps succeded",
+	"source", "api.go",
+	"who", "ShowAppsGETHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
+
+func (h *Handler) ShowAppsPopularGETHandler(rw http.ResponseWriter, r *http.Request) {
+	var apps models.Applications
+	apps = h.DB.GetPopularApps()
+
+	payload, _ := apps.MarshalJSON()
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps succeded",
+	"source", "api.go",
+	"who", "ShowAppsGETHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
+
+func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	app := h.DB.GetApp(vars["name"])
+
+	if reflect.DeepEqual(models.Application{}, app) {
+		rw.WriteHeader(http.StatusNotFound)
+
+		h.LG.Sugar.Infow("/apps/{name} failed",
+		"source", "api.go",
+		"who", "AppGETHandler",)
+
+		h.Prof.HitsStats.
+		WithLabelValues("404", "NOT FOUND").
+		Add(1)
+
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	payload, _ := app.MarshalJSON()
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps/{name} succeded",
+		"source", "api.go",
+		"who", "AppGETHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
+
+func (h *Handler) AddAppPOSTHandler(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
+	appname := r.FormValue("name")
+
+	h.DB.AddApp(cookie, appname)
+	rw.WriteHeader(http.StatusOK)
+
+	h.LG.Sugar.Infow("/apps succeded",
+	"source", "api.go",
+	"who", "AddAppPOSTHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
+
+func (h *Handler) DeleteAppDELETEHandler(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
+	appname := r.FormValue("name")
+
+	h.DB.DeleteApp(cookie, appname)
+	rw.WriteHeader(http.StatusOK)
+
+	h.LG.Sugar.Infow("/apps succeded",
+	"source", "api.go",
+	"who", "DeleteAppOPTHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
