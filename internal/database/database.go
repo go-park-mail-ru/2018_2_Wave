@@ -424,12 +424,18 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 		apps.Applications = append(apps.Applications, temp)
 	}
 
+	model.LG.Sugar.Infow(
+		"GetApps succeded",
+		"source", "database.go",
+		"who", "GetApps",
+	)
+
 	return apps
 }
 
 func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name, thumbnail
+		SELECT name, thumbnail, installations
 		FROM app
 		ORDER BY installations;
 	`)
@@ -451,13 +457,19 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 		apps.Applications = append(apps.Applications, temp)
 	}
 
+	model.LG.Sugar.Infow(
+		"GetPopularApps succeded",
+		"source", "database.go",
+		"who", "GetPopularApps",
+	)
+
 	return apps
 }
 
 func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`
-			SELECT name, description, thumbnail
+			SELECT name, thumbnail, description
 			FROM app
 			WHERE name=$1;
 		`, name)
@@ -521,6 +533,12 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 			WHERE name=$2)
 		);
 	`, cookie, appname)
+
+	model.LG.Sugar.Infow(
+		"AddApp succeded",
+		"source", "database.go",
+		"who", "AddApp",
+	)
 }
 
 func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
@@ -541,4 +559,10 @@ func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
 		AND appid=(SELECT appid FROM app
 			WHERE name=$2);
 	`, cookie, appname)
+
+	model.LG.Sugar.Infow(
+		"DeleteApp succeded",
+		"source", "database.go",
+		"who", "DeleteApp",
+	)
 }
