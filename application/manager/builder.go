@@ -242,10 +242,15 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 				if expectant != f {
 					continue
 				}
+				// remove the former
 				ff = append(ff[:i], ff[i+1:]...)
 				b.formers[roomType] = ff
 				if b.OnDone != nil {
 					b.OnDone(f)
+				}
+				// remove users
+				for _, u := range f.users {
+					delete(b.u2f, u)
 				}
 				return
 			}
