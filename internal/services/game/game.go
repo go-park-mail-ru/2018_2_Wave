@@ -4,14 +4,14 @@ import (
 	"Wave/internal/config"
 	"Wave/internal/logger"
 	"Wave/internal/metrics"
-	"Wave/internal/services/auth/proto"
 	mw "Wave/internal/middleware"
+	auth "Wave/internal/services/auth/proto"
 
 	"net/http"
 
-	"google.golang.org/grpc"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 )
 
 type Game struct {
@@ -20,7 +20,7 @@ type Game struct {
 
 func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, conf config.Configuration) *Game {
 	var (
-		g = &Game{ Handler: NewHandler(curlog, Prof)}
+		g = &Game{Handler: NewHandler(curlog, Prof)}
 		r = mux.NewRouter()
 	)
 	{ // get auth manager

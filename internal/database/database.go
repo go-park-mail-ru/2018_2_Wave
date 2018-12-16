@@ -403,7 +403,7 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 
 func (model *DatabaseModel) GetApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name, thumbnail
+		SELECT name, cover
 		FROM app
 	`)
 	defer rows.Close()
@@ -435,7 +435,7 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name, thumbnail, installations
+		SELECT name, cover, installations
 		FROM app
 		ORDER BY installations;
 	`)
@@ -469,11 +469,11 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`
-			SELECT name, thumbnail, description
+			SELECT name, cover, description
 			FROM app
 			WHERE name=$1;
 		`, name)
-		err := row.Scan(&app.Name, &app.Description, &app.Thumbnail)
+		err := row.Scan(&app.Name, &app.Description, &app.Cover)
 
 		if err != nil {
 

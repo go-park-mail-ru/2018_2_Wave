@@ -5,7 +5,7 @@ import (
 	"Wave/internal/database"
 	lg "Wave/internal/logger"
 	au "Wave/internal/services/auth"
-	"Wave/internal/services/auth/proto"
+	auth "Wave/internal/services/auth/proto"
 
 	"net"
 
@@ -15,10 +15,9 @@ import (
 const (
 	confPath = "./configs/conf.json"
 
-	logPath    = "./logs/"
-	logFile = "auth-serv-log"
+	logPath = "../.././logs/"
+	logFile = "auth.log"
 )
-
 
 func main() {
 	conf := config.Configure(confPath)
@@ -29,15 +28,15 @@ func main() {
 	if err != nil {
 
 		curlog.Sugar.Infow("can't listen on port",
-		"source", "main.go",)
+			"source", "main.go")
 
 	}
 
 	server := grpc.NewServer()
 	auth.RegisterAuthServer(server, au.NewAuthManager(curlog, db))
 
-	curlog.Sugar.Infow("starting grpc server on " + conf.AC.Host + conf.AC.Port,
-		"source", "main.go",)
+	curlog.Sugar.Infow("starting grpc server on "+conf.AC.Host+conf.AC.Port,
+		"source", "main.go")
 
 	server.Serve(lis)
 }

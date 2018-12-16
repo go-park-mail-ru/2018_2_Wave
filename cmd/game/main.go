@@ -5,7 +5,7 @@ import (
 	lg "Wave/internal/logger"
 	mc "Wave/internal/metrics"
 	gm "Wave/internal/services/game"
-	"Wave/internal/services/game/proto"
+	game "Wave/internal/services/game/proto"
 
 	"net"
 
@@ -15,8 +15,8 @@ import (
 const (
 	confPath = "./configs/conf.json"
 
-	logPath    = "./logs/"
-	logFile = "game-serv-log"
+	logPath = "../.././logs/"
+	logFile = "game.log"
 )
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 
 		curlog.Sugar.Infow("can't listen on port",
-		"source", "main.go",)
+			"source", "main.go")
 
 	}
 

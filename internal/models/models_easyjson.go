@@ -4,6 +4,7 @@ package models
 
 import (
 	json "encoding/json"
+
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -766,8 +767,8 @@ func easyjsonD2b7633eDecodeWaveInternalModels8(in *jlexer.Lexer, out *Applicatio
 		switch key {
 		case "name":
 			out.Name = string(in.String())
-		case "thumbnail":
-			out.Thumbnail = string(in.String())
+		case "cover":
+			out.Cover = string(in.String())
 		case "description":
 			out.Description = string(in.String())
 		case "installations":
@@ -799,14 +800,14 @@ func easyjsonD2b7633eEncodeWaveInternalModels8(out *jwriter.Writer, in Applicati
 		out.String(string(in.Name))
 	}
 	{
-		const prefix string = ",\"thumbnail\":"
+		const prefix string = ",\"cover\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Thumbnail))
+		out.String(string(in.Cover))
 	}
 	{
 		const prefix string = ",\"description\":"
