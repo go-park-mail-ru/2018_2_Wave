@@ -8,6 +8,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.0.0
 	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
+	github.com/posener/wstest v0.0.0-20180217133618-28272a7ea048
 	github.com/prometheus/client_golang v0.9.2
 	github.com/segmentio/ksuid v1.0.2
 	go.uber.org/atomic v1.3.2 // indirect

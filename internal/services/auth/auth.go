@@ -67,7 +67,7 @@ func (authm *AuthManager) Create(ctx context.Context, credentials *auth.Credenti
 			`, credentials.Username, cookie)
 
 			authm.DB.LG.Sugar.Infow(
-				"signup succeded",
+				"signup succeeded",
 				"source", "auth.go",
 				"who", "Create",
 			)
@@ -93,7 +93,7 @@ func (authm *AuthManager) Delete(ctx context.Context, cookie *auth.Cookie) (*aut
 	`, cookie.CookieValue)
 
 	authm.LG.Sugar.Infow(
-		"logout succeded",
+		"logout succeeded",
 		"source", "auth.go",
 		"who", "Delete",
 	)

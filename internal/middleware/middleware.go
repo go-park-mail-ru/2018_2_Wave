@@ -37,7 +37,7 @@ func CORS(CC config.CORSConfiguration, curlog *lg.Logger, prof *mc.Profiler) Mid
 			rw.Header().Set("Access-Control-Allow-Methods", strings.Join(CC.Methods, ", "))
 
 			curlog.Sugar.Infow(
-				"CORS succeded",
+				"CORS succeeded",
 				"source", "middleware.go",
 				"who", "CORS",
 			)
@@ -78,7 +78,7 @@ func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger, prof *mc.P
 			rw.WriteHeader(http.StatusOK)
 
 			curlog.Sugar.Infow(
-				"preflight succeded",
+				"preflight succeeded",
 				"source", "middleware.go",
 				"who", "OptionsPreflight",
 			)
@@ -115,7 +115,7 @@ func Auth(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 			}
 
 			curlog.Sugar.Infow(
-				"auth check succeded",
+				"auth check succeeded",
 				"source", "middleware.go",
 				"who", "Auth",
 			)
@@ -132,7 +132,7 @@ func WebSocketHeadersCheck(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 				r.Header.Get("Upgrade") == "websocket" &&
 				r.Header.Get("Sec-Websocket-Version") == "13" {
 
-				curlog.Sugar.Infow("websocket headers check succeded",
+				curlog.Sugar.Infow("websocket headers check succeeded",
 					"source", "middleware.go",
 					"who", "WebSocketHeadersCheck")
 

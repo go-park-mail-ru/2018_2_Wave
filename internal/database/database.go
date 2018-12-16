@@ -48,7 +48,7 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	}
 
 	postgr.LG.Sugar.Infow(
-		"PostgreSQL connection establishment succeded",
+		"PostgreSQL connection establishment succeeded",
 		"source", "database.go",
 		"who", "New",
 	)
@@ -139,7 +139,7 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 			`, credentials.Username, cookie)
 
 			model.LG.Sugar.Infow(
-				"login succeded, cookie set",
+				"login succeeded, cookie set",
 				"source", "database.go",
 				"who", "LogIn",
 			)
@@ -196,7 +196,7 @@ func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExte
 	}
 
 	model.LG.Sugar.Infow(
-		"getmyprofile succeded",
+		"getmyprofile succeeded",
 		"source", "database.go",
 		"who", "GetMyProfile",
 	)
@@ -225,7 +225,7 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 		}
 
 		model.LG.Sugar.Infow(
-			"getprofile succeded",
+			"getprofile succeeded",
 			"source", "database.go",
 			"who", "GetProfile",
 		)
@@ -277,7 +277,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				`, profile.Username, cookie)
 
 				model.LG.Sugar.Infow(
-					"update profile succeded, username updated",
+					"update profile succeeded, username updated",
 					"source", "database.go",
 					"who", "UpdateProfile",
 				)
@@ -313,7 +313,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			`, hashedPsswd, cookie)
 
 			model.LG.Sugar.Infow(
-				"update profile succeded, password updated",
+				"update profile succeeded, password updated",
 				"source", "database.go",
 				"who", "UpdateProfile",
 			)
@@ -340,7 +340,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 		`, profile.Avatar, cookie)
 
 		model.LG.Sugar.Infow(
-			"update profile succeded, avatar updated",
+			"update profile succeeded, avatar updated",
 			"source", "database.go",
 			"who", "UpdateProfile",
 		)
@@ -425,7 +425,7 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 	}
 
 	model.LG.Sugar.Infow(
-		"GetApps succeded",
+		"GetApps succeeded",
 		"source", "database.go",
 		"who", "GetApps",
 	)
@@ -458,7 +458,7 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	}
 
 	model.LG.Sugar.Infow(
-		"GetPopularApps succeded",
+		"GetPopularApps succeeded",
 		"source", "database.go",
 		"who", "GetPopularApps",
 	)
@@ -487,7 +487,7 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 		}
 
 		model.LG.Sugar.Infow(
-			"GetApp succeded",
+			"GetApp succeeded",
 			"source", "database.go",
 			"who", "GetApp",
 		)
@@ -535,7 +535,7 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 	`, cookie, appname)
 
 	model.LG.Sugar.Infow(
-		"AddApp succeded",
+		"AddApp succeeded",
 		"source", "database.go",
 		"who", "AddApp",
 	)
@@ -561,7 +561,7 @@ func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
 	`, cookie, appname)
 
 	model.LG.Sugar.Infow(
-		"DeleteApp succeded",
+		"DeleteApp succeeded",
 		"source", "database.go",
 		"who", "DeleteApp",
 	)

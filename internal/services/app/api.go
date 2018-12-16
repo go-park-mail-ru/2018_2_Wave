@@ -71,7 +71,7 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 		return false, ""
     }
 
-	h.LG.Sugar.Infow("upload succeded",
+	h.LG.Sugar.Infow("upload succeeded",
 		"source", "api.go",
 		"who", "uploadHandler",)
 
@@ -186,7 +186,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusCreated)
 
-	h.LG.Sugar.Infow("/users succeded",
+	h.LG.Sugar.Infow("/users succeeded",
 		"source", "api.go",
 		"who", "RegisterPOSTHandler",)
 
@@ -218,7 +218,7 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	payload, _ := profile.MarshalJSON()
 	fmt.Fprintln(rw, string(payload))
 
-	h.LG.Sugar.Infow("/users/me succeded",
+	h.LG.Sugar.Infow("/users/me succeeded",
 		"source", "api.go",
 		"who", "MeGETHandler",)
 
@@ -286,7 +286,7 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.LG.Sugar.Infow("/users/me succeded, user profile updated",
+	h.LG.Sugar.Infow("/users/me succeeded, user profile updated",
 	"source", "api.go",
 	"who", "EditMePUTHandler",)
 
@@ -337,7 +337,7 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 	payload, _ := profile.MarshalJSON()
 	fmt.Fprintln(rw, string(payload))
 
-	h.LG.Sugar.Infow("/users/{name} succeded",
+	h.LG.Sugar.Infow("/users/{name} succeeded",
 		"source", "api.go",
 		"who", "UserGETHandler",)
 
@@ -374,7 +374,7 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	payload, _ := leaders.MarshalJSON()
 	fmt.Fprintln(rw, string(payload))
 
-	h.LG.Sugar.Infow("/users/leaders succeded",
+	h.LG.Sugar.Infow("/users/leaders succeeded",
 	"source", "api.go",
 	"who", "LeadersGETHandler",)
 
@@ -433,7 +433,7 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusOK)
 
-	h.LG.Sugar.Infow("/session succeded",
+	h.LG.Sugar.Infow("/session succeeded",
 		"source", "api.go",
 		"who", "LoginPOSTHandler",)
 
@@ -471,7 +471,7 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	http.SetCookie(rw, misc.MakeSessionCookie(""))
 	rw.WriteHeader(http.StatusOK)
 
-	h.LG.Sugar.Infow("/session succeded",
+	h.LG.Sugar.Infow("/session succeeded",
 		"source", "api.go",
 		"who", "LogoutDELETEHandler",)
 
@@ -486,7 +486,7 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
-	h.LG.Sugar.Infow("/users/me succeded",
+	h.LG.Sugar.Infow("/users/me succeeded",
 		"source", "api.go",
 		"who", "EditMeOPTHandler",)
 
@@ -494,7 +494,7 @@ func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
-	h.LG.Sugar.Infow("/session succeded",
+	h.LG.Sugar.Infow("/session succeeded",
 		"source", "api.go",
 		"who", "LogoutOPTHandler",)
 
@@ -504,7 +504,7 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) DeleteAppOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
-	h.LG.Sugar.Infow("/apps succeded",
+	h.LG.Sugar.Infow("/apps succeeded",
 		"source", "api.go",
 		"who", "AddAppOPTHandler",)
 
@@ -518,7 +518,7 @@ func (h *Handler) ShowAppsGETHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	fmt.Fprintln(rw, string(payload))
 
-	h.LG.Sugar.Infow("/apps succeded",
+	h.LG.Sugar.Infow("/apps succeeded",
 	"source", "api.go",
 	"who", "ShowAppsGETHandler",)
 
@@ -537,7 +537,7 @@ func (h *Handler) ShowAppsPopularGETHandler(rw http.ResponseWriter, r *http.Requ
 	rw.WriteHeader(http.StatusOK)
 	fmt.Fprintln(rw, string(payload))
 
-	h.LG.Sugar.Infow("/apps succeded",
+	h.LG.Sugar.Infow("/apps succeeded",
 	"source", "api.go",
 	"who", "ShowAppsGETHandler",)
 
@@ -570,7 +570,7 @@ func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 	payload, _ := app.MarshalJSON()
 	fmt.Fprintln(rw, string(payload))
 
-	h.LG.Sugar.Infow("/apps/{name} succeded",
+	h.LG.Sugar.Infow("/apps/{name} succeeded",
 		"source", "api.go",
 		"who", "AppGETHandler",)
 
@@ -588,7 +588,7 @@ func (h *Handler) AddAppPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	h.DB.AddApp(cookie, appname)
 	rw.WriteHeader(http.StatusOK)
 
-	h.LG.Sugar.Infow("/apps succeded",
+	h.LG.Sugar.Infow("/apps succeeded",
 	"source", "api.go",
 	"who", "AddAppPOSTHandler",)
 
@@ -606,7 +606,7 @@ func (h *Handler) DeleteAppDELETEHandler(rw http.ResponseWriter, r *http.Request
 	h.DB.DeleteApp(cookie, appname)
 	rw.WriteHeader(http.StatusOK)
 
-	h.LG.Sugar.Infow("/apps succeded",
+	h.LG.Sugar.Infow("/apps succeeded",
 	"source", "api.go",
 	"who", "DeleteAppOPTHandler",)
 
