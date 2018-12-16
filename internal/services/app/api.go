@@ -19,8 +19,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 	"golang.org/x/net/context"
-
-	_ "github.com/lib/pq"
 )
 
 type Handler struct {
@@ -31,19 +29,18 @@ type Handler struct {
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
-	log.Println("hey")
 	file, _, err := r.FormFile("avatar")
-	log.Println("gurl")
-	defer file.Close()
 
-	if err != nil {
+	if err != nil || file == nil {
 
-		h.LG.Sugar.Infow("upload failed, unable to read from FormFile, default avatar set",
+		h.LG.Sugar.Infow("upload failed, unable to read from FormFile or avatar not provided, default avatar set",
 		"source", "api.go",
 		"who", "uploadHandler",)
 
         return true, "/img/avatars/default"
 	}
+
+	defer file.Close()
 
 	prefix := "/img/avatars/"
 	hash := ksuid.New()
@@ -91,6 +88,8 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/******************** Register POST ********************/
+
 func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	user := models.UserEdit{
 		Username: r.FormValue("username"),
@@ -99,7 +98,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	isCreated, avatarPath := h.uploadHandler(r)
 
-	if isCreated && avatarPath != "" {
+	if isCreated {
 		user.Avatar = avatarPath
 	} else if !isCreated {
 		fr := models.ForbiddenRequest{
@@ -125,11 +124,30 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 			context.Background(),
 			&auth.Credentials{
 			Username: user.Username,
-			Password: user.Username,
+			Password: user.Password,
 			Avatar: user.Avatar,
 		})
 
 	if err != nil {
+		if err.Error() == "rpc error: code = Unknown desc = validation failed" {
+			fr := models.ForbiddenRequest{
+				Reason: "Bad username or/and password",
+			}
+
+			payload, _ := fr.MarshalJSON()
+			rw.WriteHeader(http.StatusForbidden)
+			fmt.Fprintln(rw, string(payload))
+
+			h.LG.Sugar.Infow("/users failed, bad username or/and password.",
+			"source", "api.go",
+			"who", "RegisterPOSTHandler",)
+
+			h.Prof.HitsStats.
+			WithLabelValues("403", "FORBIDDEN").
+			Add(1)
+
+			return
+		}
 
 		rw.WriteHeader(http.StatusInternalServerError)
 
@@ -143,7 +161,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	// or validation failed
+
 	if cookie.CookieValue == "" {
 		fr := models.ForbiddenRequest{
 			Reason: "Username already in use.",
@@ -179,6 +197,8 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/******************** Me GET ********************/
+
 func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 
@@ -209,6 +229,8 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/******************** Edit PUT ********************/
+
 func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 
@@ -219,11 +241,11 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	isCreated, avatarPath := h.uploadHandler(r)
 
-	if isCreated && avatarPath != "" {
+	if isCreated && avatarPath != "/img/avatars/default" {
 		user.Avatar = avatarPath
 	} else if !isCreated {
 		fr := models.ForbiddenRequest{
-			Reason: "Update didn't happend, shitty avatar.",
+			Reason: "Bad avatar.",
 		}
 
 		payload, _ := fr.MarshalJSON()
@@ -241,11 +263,12 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.DB.UpdateProfile(user, cookie)
+	log.Println(user.Avatar)
+	err := h.DB.UpdateProfile(user, cookie)
 
 	if err != nil {
 		fr := models.ForbiddenRequest{
-			Reason: "Update didn't happend, shitty username and/or password.",
+			Reason: "Bad new username or/and password.",
 		}
 
 		payload, _ := fr.MarshalJSON()
@@ -275,6 +298,8 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	return
 }
+
+/******************** User {name} GET ********************/
 
 func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -323,6 +348,8 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/******************** Leaders GET ********************/
+
 func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	c, _ := strconv.Atoi(vars["count"])
@@ -358,13 +385,15 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/******************** Login POST ********************/
+
 func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	user := models.UserCredentials{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
 	}
 
-	cookie, err := h.DB.LogIn(user)
+	cookie, err := h.DB.Login(user)
 
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -382,14 +411,14 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	if cookie == "" {
 		fr := models.ForbiddenRequest{
-			Reason: "Incorrect password/username.",
+			Reason: "Incorrect password or/and username.",
 		}
 
 		payload, _ := fr.MarshalJSON()
 		rw.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(rw, string(payload))
 
-		h.LG.Sugar.Infow("/session failed, incorrect password/username",
+		h.LG.Sugar.Infow("/session failed, incorrect password or/and username",
 		"source", "api.go",
 		"who", "LoginPOSTHandler",)
 
@@ -414,6 +443,8 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	return
 }
+
+/******************** Logout DELETE ********************/
 
 func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
@@ -451,6 +482,8 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/******************** OPTIONS ********************/
+
 func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/users/me succeded",
@@ -465,4 +498,121 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 		"source", "api.go",
 		"who", "LogoutOPTHandler",)
 
+}
+
+/******************** Applications ********************/
+
+func (h *Handler) DeleteAppOPTHandler(rw http.ResponseWriter, r *http.Request) {
+
+	h.LG.Sugar.Infow("/apps succeded",
+		"source", "api.go",
+		"who", "AddAppOPTHandler",)
+
+}
+
+func (h *Handler) ShowAppsGETHandler(rw http.ResponseWriter, r *http.Request) {
+	var apps models.Applications
+	apps = h.DB.GetApps()
+
+	payload, _ := apps.MarshalJSON()
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps succeded",
+	"source", "api.go",
+	"who", "ShowAppsGETHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
+
+func (h *Handler) ShowAppsPopularGETHandler(rw http.ResponseWriter, r *http.Request) {
+	var apps models.Applications
+	apps = h.DB.GetPopularApps()
+
+	payload, _ := apps.MarshalJSON()
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps succeded",
+	"source", "api.go",
+	"who", "ShowAppsGETHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
+
+func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	app := h.DB.GetApp(vars["name"])
+
+	if reflect.DeepEqual(models.Application{}, app) {
+		rw.WriteHeader(http.StatusNotFound)
+
+		h.LG.Sugar.Infow("/apps/{name} failed",
+		"source", "api.go",
+		"who", "AppGETHandler",)
+
+		h.Prof.HitsStats.
+		WithLabelValues("404", "NOT FOUND").
+		Add(1)
+
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	payload, _ := app.MarshalJSON()
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps/{name} succeded",
+		"source", "api.go",
+		"who", "AppGETHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
+
+func (h *Handler) AddAppPOSTHandler(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
+	appname := r.FormValue("name")
+
+	h.DB.AddApp(cookie, appname)
+	rw.WriteHeader(http.StatusOK)
+
+	h.LG.Sugar.Infow("/apps succeded",
+	"source", "api.go",
+	"who", "AddAppPOSTHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
+}
+
+func (h *Handler) DeleteAppDELETEHandler(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
+	appname := r.FormValue("name")
+
+	h.DB.DeleteApp(cookie, appname)
+	rw.WriteHeader(http.StatusOK)
+
+	h.LG.Sugar.Infow("/apps succeded",
+	"source", "api.go",
+	"who", "DeleteAppOPTHandler",)
+
+	h.Prof.HitsStats.
+	WithLabelValues("200", "OK").
+	Add(1)
+
+	return
 }

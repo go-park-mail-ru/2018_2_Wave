@@ -13,10 +13,13 @@ start_bot.sh
 logs/
 
 # binaries
-wave-serv
+build/
 
 # avatars
 img/avatars/
 
 # init scripts
 init.sh
+
+#macos
+.DS_Store

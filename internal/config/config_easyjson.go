@@ -195,90 +195,7 @@ func (v *GameConfiguration) UnmarshalJSON(data []byte) error {
 func (v *GameConfiguration) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6615c02eDecodeWaveInternalConfig1(l, v)
 }
-func easyjson6615c02eDecodeWaveInternalConfig2(in *jlexer.Lexer, out *GRPCConfiguration) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "host":
-			out.Host = string(in.String())
-		case "port":
-			out.Port = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson6615c02eEncodeWaveInternalConfig2(out *jwriter.Writer, in GRPCConfiguration) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"host\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Host))
-	}
-	{
-		const prefix string = ",\"port\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Port))
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v GRPCConfiguration) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson6615c02eEncodeWaveInternalConfig2(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v GRPCConfiguration) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeWaveInternalConfig2(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *GRPCConfiguration) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeWaveInternalConfig2(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *GRPCConfiguration) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeWaveInternalConfig2(l, v)
-}
-func easyjson6615c02eDecodeWaveInternalConfig3(in *jlexer.Lexer, out *Configuration) {
+func easyjson6615c02eDecodeWaveInternalConfig2(in *jlexer.Lexer, out *Configuration) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -302,7 +219,7 @@ func easyjson6615c02eDecodeWaveInternalConfig3(in *jlexer.Lexer, out *Configurat
 		case "cors":
 			(out.CC).UnmarshalEasyJSON(in)
 		case "auth":
-			(out.Auth).UnmarshalEasyJSON(in)
+			(out.AC).UnmarshalEasyJSON(in)
 		case "game":
 			(out.Game).UnmarshalEasyJSON(in)
 		default:
@@ -315,7 +232,7 @@ func easyjson6615c02eDecodeWaveInternalConfig3(in *jlexer.Lexer, out *Configurat
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeWaveInternalConfig3(out *jwriter.Writer, in Configuration) {
+func easyjson6615c02eEncodeWaveInternalConfig2(out *jwriter.Writer, in Configuration) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -347,7 +264,7 @@ func easyjson6615c02eEncodeWaveInternalConfig3(out *jwriter.Writer, in Configura
 		} else {
 			out.RawString(prefix)
 		}
-		(in.Auth).MarshalEasyJSON(out)
+		(in.AC).MarshalEasyJSON(out)
 	}
 	{
 		const prefix string = ",\"game\":"
@@ -365,27 +282,27 @@ func easyjson6615c02eEncodeWaveInternalConfig3(out *jwriter.Writer, in Configura
 // MarshalJSON supports json.Marshaler interface
 func (v Configuration) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6615c02eEncodeWaveInternalConfig3(&w, v)
+	easyjson6615c02eEncodeWaveInternalConfig2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Configuration) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeWaveInternalConfig3(w, v)
+	easyjson6615c02eEncodeWaveInternalConfig2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Configuration) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6615c02eDecodeWaveInternalConfig3(&r, v)
+	easyjson6615c02eDecodeWaveInternalConfig2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Configuration) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6615c02eDecodeWaveInternalConfig3(l, v)
+	easyjson6615c02eDecodeWaveInternalConfig2(l, v)
 }
-func easyjson6615c02eDecodeWaveInternalConfig4(in *jlexer.Lexer, out *CORSConfiguration) {
+func easyjson6615c02eDecodeWaveInternalConfig3(in *jlexer.Lexer, out *CORSConfiguration) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -485,7 +402,7 @@ func easyjson6615c02eDecodeWaveInternalConfig4(in *jlexer.Lexer, out *CORSConfig
 		in.Consumed()
 	}
 }
-func easyjson6615c02eEncodeWaveInternalConfig4(out *jwriter.Writer, in CORSConfiguration) {
+func easyjson6615c02eEncodeWaveInternalConfig3(out *jwriter.Writer, in CORSConfiguration) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -568,23 +485,106 @@ func easyjson6615c02eEncodeWaveInternalConfig4(out *jwriter.Writer, in CORSConfi
 // MarshalJSON supports json.Marshaler interface
 func (v CORSConfiguration) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6615c02eEncodeWaveInternalConfig4(&w, v)
+	easyjson6615c02eEncodeWaveInternalConfig3(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v CORSConfiguration) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6615c02eEncodeWaveInternalConfig4(w, v)
+	easyjson6615c02eEncodeWaveInternalConfig3(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *CORSConfiguration) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson6615c02eDecodeWaveInternalConfig3(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *CORSConfiguration) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson6615c02eDecodeWaveInternalConfig3(l, v)
+}
+func easyjson6615c02eDecodeWaveInternalConfig4(in *jlexer.Lexer, out *AuthConfiguration) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "host":
+			out.Host = string(in.String())
+		case "port":
+			out.Port = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson6615c02eEncodeWaveInternalConfig4(out *jwriter.Writer, in AuthConfiguration) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"host\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Host))
+	}
+	{
+		const prefix string = ",\"port\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Port))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v AuthConfiguration) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson6615c02eEncodeWaveInternalConfig4(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v AuthConfiguration) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson6615c02eEncodeWaveInternalConfig4(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *AuthConfiguration) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjson6615c02eDecodeWaveInternalConfig4(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *CORSConfiguration) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *AuthConfiguration) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6615c02eDecodeWaveInternalConfig4(l, v)
 }

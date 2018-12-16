@@ -24,7 +24,7 @@ func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, conf config.Configur
 		r = mux.NewRouter()
 	)
 	{ // get auth manager
-		Auth := conf.Auth
+		Auth := conf.AC
 		grpcConn, err := grpc.Dial(
 			Auth.Host+Auth.Port,
 			grpc.WithInsecure(),
@@ -34,9 +34,9 @@ func NewGame(curlog *logger.Logger, Prof *metrics.Profiler, conf config.Configur
 		}
 		g.AuthManager = auth.NewAuthClient(grpcConn)
 	}
-	go func() { 
+	go func() {
 		r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(curlog, Prof), mw.CORS(conf.CC, curlog, Prof))).Methods("GET")
-		http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r)) 
+		http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r))
 	}()
 	return g
 }

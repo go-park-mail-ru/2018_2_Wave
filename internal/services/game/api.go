@@ -3,7 +3,7 @@ package game
 import (
 	"Wave/internal/logger"
 	"Wave/internal/metrics"
-	"Wave/internal/services/misc"
+	"Wave/internal/misc"
 	"Wave/internal/services/auth/proto"
 
 	"time"

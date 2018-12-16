@@ -8,10 +8,6 @@ import (
 type Profiler struct {
 	HitsStats   prometheus.CounterVec
 	ActiveRooms prometheus.Gauge
-	Routines    prometheus.Gauge
-	CPUUsage    prometheus.Gauge
-	MemUsage    prometheus.Gauge
-	DiskUsage   prometheus.Gauge
 }
 
 func Construct() *Profiler {
