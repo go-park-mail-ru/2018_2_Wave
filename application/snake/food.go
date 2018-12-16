@@ -2,6 +2,7 @@ package snake
 
 import (
 	"Wave/application/snake/core"
+	"time"
 )
 
 // anaconda's snack X)
@@ -20,6 +21,13 @@ func newFood(letter rune, world *core.World, position core.Vec2i) *food {
 	world.AddObject(f)
 	f.SetPos(position)
 	return f
+}
+
+func (p *food) SetLifetime(left time.Duration) {
+	go func() {
+		time.Sleep(left)
+		p.Destroy()
+	}()
 }
 
 func (p *food) GetLetter() rune { return p.letter }

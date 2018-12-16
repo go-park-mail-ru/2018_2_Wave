@@ -33,7 +33,11 @@ func newSnakeNode(letter rune, s *snake, position core.Vec2i) *snakeNode {
 func (s *snakeNode) OnColided(o core.IObject) {
 	if f, ok := o.(*food); ok {
 		s.snake.pushBack(f.GetLetter())
+		s.snake.score++
 		f.Destroy()
+	}
+	if _, ok := o.(*snakeNode); ok && s.bHead {
+		s.snake.destroy()
 	}
 	if _, ok := o.(*wall); ok {
 		s.snake.destroy()
@@ -47,6 +51,7 @@ type snake struct {
 	world    *core.World    // game world
 	body     []*snakeNode   // body elements
 	movement core.Direction // next step direction
+	score    int            // game score
 
 	tickTime time.Duration // time to tick
 	leftTime time.Duration // left time for a next tick
@@ -61,7 +66,7 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 		movement: direction,
 	}
 	l := 'a'
-	for i := len(points) - 1; i >= 0; i-- {
+	for i := range points {
 		s.setHead(l, direction, points[i])
 		l++
 	}
@@ -116,7 +121,11 @@ func (s *snake) pushBack(letter rune) {
 
 func (s *snake) setHead(letter rune, direction core.Direction, position core.Vec2i) {
 	newHead := newSnakeNode(letter, s, position)
+	newHead.bHead = true
 	newHead.direction = direction
+	if len(s.body) > 0 {
+		s.body[0].bHead = true
+	}
 	s.body = append([]*snakeNode{newHead}, s.body...)
 }
 

@@ -3,6 +3,7 @@ package game
 import (
 	"Wave/internal/logger"
 	"Wave/internal/metrics"
+	"Wave/internal/misc"
 	"Wave/internal/services/auth/proto"
 
 	"time"
@@ -23,14 +24,14 @@ type Handler struct {
 	Prof *metrics.Profiler
 	AuthManager auth.AuthClient
 
-	wsApp *app.App
+	wsApp *manager.Manager
 	upgrader websocket.Upgrader
 }
 
-func NewHandler(LG *logger.Logger, Prof *metrics.Profiler, AuthManager auth.AuthClient) *Handler{
+func NewHandler(LG *logger.Logger, Prof *metrics.Profiler) *Handler{
 	return &Handler {
-		wsApp: func() *app.App {
-			wsApp := app.New("app", wsAppTickRate, nil, Prof)
+		wsApp: func() *manager.Manager {
+			wsApp := manager.New("", wsAppTickRate, nil, Prof)
 			wsApp.CreateLobby(snake.RoomType, "snake")
 			go wsApp.Run()
 			return wsApp
@@ -44,7 +45,6 @@ func NewHandler(LG *logger.Logger, Prof *metrics.Profiler, AuthManager auth.Auth
 		},
 		LG: LG,
 		Prof: Prof,
-		AuthManager: AuthManager,
 	}
 }
 
@@ -53,9 +53,23 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	if h.AuthManager == nil {
+		panic("empty auth manager")
+	}
 
 	go func() {
-		user := room.NewUser(h.wsApp.GetNextUserID(), ws)
+		var (
+			cookie        = misc.GetSessionCookie(r)
+			userInfo, err = h.AuthManager.Info(r.Context(), &auth.Cookie{CookieValue: cookie})
+			username room.UserID
+		)
+		if err != nil {
+			username = h.wsApp.GetNextUserID()
+		} else {
+			username = room.UserID(userInfo.Username)
+		}
+
+		user := room.NewUser(username, ws)
 		user.LG = h.LG
 		user.AddToRoom(h.wsApp)
 		user.Listen()

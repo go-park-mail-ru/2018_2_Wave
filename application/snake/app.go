@@ -13,7 +13,7 @@ type App struct {
 	game       *game
 }
 
-const RoomType room.RoomType = "snake_game"
+const RoomType room.RoomType = "snake"
 
 // ----------------|
 
@@ -22,10 +22,11 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 	s := &App{
 		Room: room.NewRoom(id, RoomType, step),
 		game: newGame(core.Vec2i{
-			X: 130,
-			Y: 10,
+			X: 60,
+			Y: 40,
 		}),
 	}
+	s.SetCounterType(room.FillGaps)
 	s.OnTick = s.onTick
 	s.OnUserRemoved = s.onUserRemoved
 	s.game.OnSnakeDead = s.onSnakeDead
@@ -39,11 +40,12 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 
 func (a *App) onTick(dt time.Duration) {
 	a.game.Tick(dt)
-	var (
-		info = a.game.GetGameInfo()
-		msg  = room.MessageTick.WithStruct(info)
-	)
-	a.Broadcast(msg)
+	info := a.game.GetGameInfo()
+	for i, s := range info.Snakes {
+		serial, _ := a.GetTokenCounter(s.UserToken)
+		info.Snakes[i].Serial = serial
+	}
+	a.Broadcast(room.MessageTick.WithStruct(info))
 }
 
 func (a *App) onUserRemoved(u room.IUser) {

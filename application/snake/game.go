@@ -65,10 +65,15 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 	if _, ok := g.user2snake[u]; ok {
 		return nil, room.ErrorAlreadyExists
 	}
-	var ( // create a snake object and find a spwn area
-		poss, dir = g.world.FindGap(length)
-		snake     = newSnake(g.world, poss, dir)
-	)
+
+	// create a snake object and find a spwn area
+	dir := core.Right
+	poss, err := g.world.FindGap(length, dir)
+	if err != nil {
+		return nil, err
+	}
+	snake := newSnake(g.world, poss, dir)
+
 	g.user2snake[u] = snake
 	snake.onDestoyed = func() {
 		delete(g.user2snake, u)
@@ -97,7 +102,10 @@ func (g *game) GetGameInfo() *gameInfo {
 	gi := &gameInfo{SceneSize: g.world.GetWorldInfo().SceneSize}
 	// snakes
 	for u, s := range g.user2snake {
-		si := snakeInfo{UID: u.GetID()}
+		si := snakeInfo{
+			UserToken: u.GetID(),
+			Score:     s.score,
+		}
 		for _, bn := range s.body {
 			si.Snake = append(si.Snake, objectInfo{
 				Letter:   bn.letter,
@@ -125,6 +133,10 @@ func (g *game) GetGameInfo() *gameInfo {
 // ----------------| game mode logic
 
 func (g *game) spawnFood() {
-	pos, _ := g.world.FindGap(1)
-	newFood('h', g.world, pos[0])
+	pos, err := g.world.FindGap(1, core.NoDirection)
+	if err != nil {
+		return
+	}
+	newFood('h', g.world, pos[0]).
+		SetLifetime(20 * time.Second)
 }

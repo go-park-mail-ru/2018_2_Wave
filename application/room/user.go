@@ -2,6 +2,7 @@ package room
 
 import (
 	lg "Wave/internal/logger"
+	json "encoding/json"
 
 	"github.com/gorilla/websocket"
 )
@@ -62,13 +63,19 @@ func (u *User) Listen() error {
 		}
 	}()
 
-	u.LG.Sugar.Infof("User started: id=", u.GetID())
+	u.LG.Sugar.Infof("User started: id=%s", u.GetID())
+	defer func() {
+		u.LG.Sugar.Infof("User stopped: id=%s", u.GetID())
+	}()
 
 	go u.sendWorker()
 
 	// send current user_id
-	u.Conn.WriteJSON(&userTokenPayload{
-		UserToken: u.GetID(),
+	u.Consume(&OutMessage{
+		Status: "STATUS_TOKEN",
+		Payload: &userTokenPayload{
+			UserToken: u.GetID(),
+		},
 	})
 
 	for { // stops when connection closes
@@ -87,25 +94,25 @@ func (u *User) Listen() error {
 			u.Consume(&OutMessage{
 				RoomToken: m.GetRoomID(),
 				Status:    StatusError,
-				Payload:   []byte("Wrong message"),
+				Payload:   "Wrong message",
 			})
 			continue
 		}
 
 		// log input
-		// if u.LG != nil {
-		// 	data, _ := json.Marshal(m)
-		// 	u.LG.Sugar.Infof("in_message: %v", string(data))
-		// }
+		if u.LG != nil {
+			data, _ := json.Marshal(m)
+			u.LG.Sugar.Infof("in_message: %v", string(data))
+		}
 
 		// apply the message to a room
-		if r, ok := u.Rooms[m.GetRoomID()]; ok {
+		if r, ok := u.getRoom(m.GetRoomID()); ok {
 			r.ApplyMessage(u, m)
 		} else {
 			u.Consume(&OutMessage{
 				RoomToken: m.GetRoomID(),
 				Status:    StatusError,
-				Payload:   []byte("Unknown room:" + m.GetRoomID()),
+				Payload:   "Unknown room:" + m.GetRoomID(),
 			})
 			continue
 		}
@@ -133,6 +140,11 @@ func (u *User) Consume(m IOutMessage) error {
 // easyjson:json
 type userTokenPayload struct {
 	UserToken UserID `json:"user_token"`
+}
+
+func (u *User) getRoom(name RoomToken) (IRoom, bool) {
+	r, ok := u.Rooms[name]
+	return r, ok
 }
 
 func (u *User) sendWorker() {

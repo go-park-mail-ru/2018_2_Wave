@@ -40,7 +40,8 @@
                 },
                 "players": [ 
                     { 
-                        "user_token" : "", 
+                        "user_token": "", 
+                        "user_serial": 0,
                         "score": 1500,
                         "snake": [
                             {

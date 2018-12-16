@@ -16,7 +16,7 @@ type scene struct {
 	objectMap  map[uint64]IObject
 	size       Vec2i
 	collisions []collision
-	mu		   sync.RWMutex
+	mu         sync.RWMutex
 }
 
 func newScene(size Vec2i) *scene {
@@ -42,6 +42,9 @@ func (s *scene) Tick() {
 
 // assign the object th the scene
 func (s *scene) AddObject(o IObject) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.isPlaced(o) {
 		return room.ErrorAlreadyExists
 	}
@@ -51,6 +54,9 @@ func (s *scene) AddObject(o IObject) error {
 }
 
 func (s *scene) RemoveObject(o IObject) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if o = s.actualiser(o); o == nil {
 		return room.ErrorNotExists
 	}
@@ -72,28 +78,38 @@ func (s *scene) RemoveObject(o IObject) error {
 	return room.ErrorNotExists
 }
 
-func (s *scene) FindGap(length int) (res []Vec2i, dir Direction) {
+func (s *scene) FindGap(length int, dir Direction) (res []Vec2i, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	delta := dir.GetDelta()
+	iteration := 0
 FIND_POSITION:
-	position := Vec2i{
-		X: rand.Intn(s.size.X),
-		Y: rand.Intn(s.size.Y),
-	}
-	for i := 0; i < length; i++ {
-		o := s.at(position)
-		if o == nil || !o.isEmpty() {
-			goto FIND_POSITION
+	{
+		if iteration++; iteration > 300 {
+			return nil, room.ErrorNotFound
 		}
-		res = append(res, position)
-		// o.
-		position.X++
+
+		position := Vec2i{
+			X: rand.Intn(s.size.X),
+			Y: rand.Intn(s.size.Y),
+		}
+		for i := 0; i < length; i++ {
+			o := s.at(position)
+			if o == nil || !o.isEmpty() {
+				goto FIND_POSITION
+			}
+			res = append(res, position)
+			position = position.Sum(delta)
+		}
+		return res, nil
 	}
-	return res, Right
 }
 
 func (s *scene) PrintDebug() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	res := ""
 	for y := s.size.Y - 1; y >= 0; y-- {
 		for x := 0; x < s.size.X; x++ {
@@ -123,6 +139,9 @@ func (s *scene) actualiser(o IObject) IObject {
 }
 
 func (s *scene) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if o = s.actualiser(o); o != nil {
 		currPosition, err := s.validatePosition(o.GetPos())
 		if err != nil {

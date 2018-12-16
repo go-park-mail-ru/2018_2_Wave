@@ -14,6 +14,10 @@ message Credentials {
   string avatar = 3;
 }
 
+message UserInfo {
+  string username = 1;
+}
+
 message Bool {
   bool resp = 1;
 }
@@ -21,4 +25,5 @@ message Bool {
 service Auth {
     rpc Create (Credentials) returns (Cookie) {}
     rpc Delete (Cookie) returns (Bool) {}
+    rpc Info   (Cookie) returns (UserInfo) {}
 }
