@@ -4,10 +4,8 @@ import (
 	"Wave/internal/config"
 	"Wave/internal/cors"
 	lg "Wave/internal/logger"
-	"Wave/internal/models"
 	mc "Wave/internal/metrics"
 
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -28,8 +26,8 @@ func CORS(CC config.CORSConfiguration, curlog *lg.Logger, prof *mc.Profiler) Mid
 				)
 
 				prof.HitsStats.
-				WithLabelValues("403", "FORBIDDEN").
-				Add(1)
+					WithLabelValues("403", "FORBIDDEN").
+					Add(1)
 
 				return
 			}
@@ -67,8 +65,8 @@ func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger, prof *mc.P
 				)
 
 				prof.HitsStats.
-				WithLabelValues("403", "FORBIDDEN").
-				Add(1)
+					WithLabelValues("403", "FORBIDDEN").
+					Add(1)
 
 				return
 			}
@@ -86,8 +84,8 @@ func OptionsPreflight(CC config.CORSConfiguration, curlog *lg.Logger, prof *mc.P
 			)
 
 			prof.HitsStats.
-			WithLabelValues("200", "OK").
-			Add(1)
+				WithLabelValues("200", "OK").
+				Add(1)
 
 			return
 		}
@@ -100,13 +98,6 @@ func Auth(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 			cookie, err := r.Cookie("session")
 
 			if err != nil || cookie.Value == "" {
-				fr := models.ForbiddenRequest{
-					Reason: "Not authorized.",
-				}
-
-				payload, _ := fr.MarshalJSON()
-				rw.WriteHeader(http.StatusUnauthorized)
-				fmt.Fprintln(rw, string(payload))
 
 				curlog.Sugar.Infow(
 					"auth check failed",
@@ -114,9 +105,11 @@ func Auth(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 					"who", "Auth",
 				)
 
+				rw.WriteHeader(http.StatusUnauthorized)
+
 				prof.HitsStats.
-				WithLabelValues("401", "UNAUTHORIZED").
-				Add(1)
+					WithLabelValues("401", "UNAUTHORIZED").
+					Add(1)
 
 				return
 			}
@@ -136,8 +129,8 @@ func WebSocketHeadersCheck(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 	return func(hf http.HandlerFunc) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			if r.Header.Get("Connection") == "Upgrade" &&
-			r.Header.Get("Upgrade") == "websocket" &&
-			r.Header.Get("Sec-Websocket-Version") == "13" {
+				r.Header.Get("Upgrade") == "websocket" &&
+				r.Header.Get("Sec-Websocket-Version") == "13" {
 
 				curlog.Sugar.Infow("websocket headers check succeded",
 					"source", "middleware.go",
@@ -154,8 +147,8 @@ func WebSocketHeadersCheck(curlog *lg.Logger, prof *mc.Profiler) Middleware {
 				"who", "WebSocketHeadersCheck")
 
 			prof.HitsStats.
-			WithLabelValues("417", "EXPECTATION FAILED").
-			Add(1)
+				WithLabelValues("417", "EXPECTATION FAILED").
+				Add(1)
 
 			return
 		}

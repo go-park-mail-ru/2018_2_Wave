@@ -26,7 +26,7 @@ type DatabaseModel struct {
 
 func New(lg_ *lg.Logger) *DatabaseModel {
 	postgr := &DatabaseModel{
-		LG:     lg_,
+		LG: lg_,
 	}
 
 	var err error
@@ -35,15 +35,16 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	dbpassword := os.Getenv("WAVE_DB_PASSWORD")
 	dbname := os.Getenv("WAVE_DB_NAME")
 
-	postgr.Database, err = sqlx.Connect("postgres", "user=" + dbuser + " password=" + dbpassword + " dbname='" + dbname + "' " + "sslmode=disable")
+	postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
 
 	if err != nil {
-		postgr.LG.Sugar.Panicw(
+		postgr.LG.Sugar.Infow(
 			"PostgreSQL connection establishment failed",
 			"source", "database.go",
 			"who", "New",
 		)
-		panic(err)
+
+		os.Exit(1)
 	}
 
 	postgr.LG.Sugar.Infow(
@@ -58,7 +59,7 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 func (model *DatabaseModel) Present(tableName string, colName string, target string) (fl bool, err error) {
 	var exists string
 	row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " +
-	tableName + " WHERE " + colName + "='" + target + "');")
+		tableName + " WHERE " + colName + "='" + target + "');")
 	err = row.Scan(&exists)
 
 	if err != nil {
@@ -104,7 +105,7 @@ func ValidatePassword(target string) bool {
 	return true
 }
 
-func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie string, err error) {
+func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie string, err error) {
 	if isPresent, problem := model.Present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
 		var psswd string
 
@@ -117,11 +118,13 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 		err := row.Scan(&psswd)
 
 		if err != nil {
-			model.LG.Sugar.Panicw(
+
+			model.LG.Sugar.Infow(
 				"Scan failed",
 				"source", "database.go",
 				"who", "LogIn",
 			)
+
 			return "", err
 		}
 
@@ -151,16 +154,6 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 
 			return "", nil
 		}
-	} else if !isPresent && problem == nil {
-
-		model.LG.Sugar.Infow(
-			"login failed, no such user",
-			"source", "database.go",
-			"who", "LogIn",
-		)
-
-		return "", nil
-
 	} else if problem != nil {
 
 		model.LG.Sugar.Infow(
@@ -180,24 +173,6 @@ func (model *DatabaseModel) LogIn(credentials models.UserCredentials) (cookie st
 
 	return "", nil
 }
-
-/*
-func (model *DatabaseModel) LogOut(cookie string) error {
-	model.Database.QueryRowx(`
-		DELETE
-		FROM session
-		WHERE cookie=$1;
-	`, cookie)
-
-	model.LG.Sugar.Infow(
-		"logout succeded",
-		"source", "database.go",
-		"who", "LogOut",
-	)
-
-	return nil
-}
-*/
 
 func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExtended, err error) {
 	row := model.Database.QueryRowx(`
@@ -265,25 +240,18 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 		)
 
 		return models.UserExtended{}, err
-	} else if !isPresent {
-
-		model.LG.Sugar.Infow(
-			"getprofile failed, user doesn't exist",
-			"source", "database.go",
-			"who", "GetProfile",
-		)
-
-		return models.UserExtended{}, nil
 	}
+
+	model.LG.Sugar.Infow(
+		"getprofile failed, user doesn't exist",
+		"source", "database.go",
+		"who", "GetProfile",
+	)
 
 	return models.UserExtended{}, nil
 }
 
-func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string) (bool, error) {
-	changedU := false
-	changedP := false
-	changedA := false
-
+func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string) error {
 	if profile.Username != "" {
 		isPresent, problem := model.Present(UserInfoTable, UsernameCol, profile.Username)
 		if problem != nil {
@@ -293,7 +261,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				"who", "UpdateProfile",
 			)
 
-			return false, problem
+			return problem
 		}
 		if !isPresent {
 			if ValidateUname(profile.Username) {
@@ -313,8 +281,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 					"source", "database.go",
 					"who", "UpdateProfile",
 				)
-				changedU = true
-
 			} else {
 
 				model.LG.Sugar.Infow(
@@ -322,8 +288,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 					"source", "database.go",
 					"who", "UpdateProfile",
 				)
-
-				changedU = false
 			}
 		}
 		if isPresent {
@@ -332,8 +296,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				"source", "database.go",
 				"who", "UpdateProfile",
 			)
-
-			changedU = false
 		}
 	}
 
@@ -355,8 +317,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				"source", "database.go",
 				"who", "UpdateProfile",
 			)
-
-			changedP = true
 		} else {
 
 			model.LG.Sugar.Infow(
@@ -364,8 +324,6 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				"source", "database.go",
 				"who", "UpdateProfile",
 			)
-
-			changedP = false
 		}
 	}
 
@@ -386,15 +344,9 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			"source", "database.go",
 			"who", "UpdateProfile",
 		)
-
-		changedA = true
 	}
 
-	if changedU || changedP || changedA {
-		return true, nil
-	}
-
-	return false, nil
+	return nil
 }
 
 func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Leaders, err error) {
@@ -447,4 +399,170 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 	}
 
 	return board, nil
+}
+
+func (model *DatabaseModel) GetApps() (apps models.Applications) {
+	rows, _ := model.Database.Queryx(`
+		SELECT name, cover
+		FROM app
+	`)
+	defer rows.Close()
+
+	for rows.Next() {
+		temp := models.Application{}
+		if err := rows.Scan(&temp.Name, &temp.Description, &temp.Price); err != nil {
+
+			model.LG.Sugar.Infow(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetApps",
+			)
+
+			return models.Applications{}
+		}
+
+		apps.Applications = append(apps.Applications, temp)
+	}
+
+	model.LG.Sugar.Infow(
+		"GetApps succeded",
+		"source", "database.go",
+		"who", "GetApps",
+	)
+
+	return apps
+}
+
+func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
+	rows, _ := model.Database.Queryx(`
+		SELECT name, cover, installations
+		FROM app
+		ORDER BY installations;
+	`)
+	defer rows.Close()
+
+	for rows.Next() {
+		temp := models.Application{}
+		if err := rows.Scan(&temp.Name, &temp.Description, &temp.Price); err != nil {
+
+			model.LG.Sugar.Infow(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetPopularApps",
+			)
+
+			return models.Applications{}
+		}
+
+		apps.Applications = append(apps.Applications, temp)
+	}
+
+	model.LG.Sugar.Infow(
+		"GetPopularApps succeded",
+		"source", "database.go",
+		"who", "GetPopularApps",
+	)
+
+	return apps
+}
+
+func (model *DatabaseModel) GetApp(name string) (app models.Application) {
+	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
+		row := model.Database.QueryRowx(`
+			SELECT name, cover, description
+			FROM app
+			WHERE name=$1;
+		`, name)
+		err := row.Scan(&app.Name, &app.Description, &app.Cover)
+
+		if err != nil {
+
+			model.LG.Sugar.Infow(
+				"GetApp failed, scan error",
+				"source", "database.go",
+				"who", "GetApp",
+			)
+
+			return models.Application{}
+		}
+
+		model.LG.Sugar.Infow(
+			"GetApp succeded",
+			"source", "database.go",
+			"who", "GetApp",
+		)
+
+		return app
+	} else if problem != nil {
+
+		model.LG.Sugar.Infow(
+			"Present failed",
+			"source", "database.go",
+			"who", "GetApp",
+		)
+
+		return models.Application{}
+	}
+
+	model.LG.Sugar.Infow(
+		"GetApp failed, app doesn't exist",
+		"source", "database.go",
+		"who", "GetApp",
+	)
+
+	return models.Application{}
+}
+
+func (model *DatabaseModel) AddApp(cookie string, appname string) {
+	// increment installations
+	model.Database.MustExec(`
+		UPDATE app
+		SET installations=installations+1
+		WHERE name=$1;
+	`, appname)
+
+	model.Database.MustExec(`
+		INSERT INTO userapp(uid, appid)
+		VALUES(
+			(SELECT session.uid FROM session
+			JOIN userinfo
+			ON session.uid=userinfo.uid
+			WHERE cookie=$1)
+			,
+			(SELECT appid FROM app
+			WHERE name=$2)
+		);
+	`, cookie, appname)
+
+	model.LG.Sugar.Infow(
+		"AddApp succeded",
+		"source", "database.go",
+		"who", "AddApp",
+	)
+}
+
+func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
+	// decrement installations
+	model.Database.MustExec(`
+		UPDATE app
+		SET installations=installations-1
+		WHERE name=$1;
+	`, appname)
+
+	model.Database.MustExec(`
+		DELETE
+		FROM userapp
+		WHERE uid=(SELECT session.uid FROM session
+			JOIN userinfo
+			ON session.uid=userinfo.uid
+			WHERE cookie=$1)
+		AND appid=(SELECT appid FROM app
+			WHERE name=$2);
+	`, cookie, appname)
+
+	model.LG.Sugar.Infow(
+		"DeleteApp succeded",
+		"source", "database.go",
+		"who", "DeleteApp",
+	)
 }

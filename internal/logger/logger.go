@@ -11,15 +11,10 @@ type Logger struct {
 	Sugar *zap.SugaredLogger
 }
 
-const (
-	path    = "./logs/"
-	logFile = "wavelog"
-)
-
-func logfileExists() bool {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.Mkdir(path, 0755)
-		_, err := os.OpenFile(path+logFile, os.O_CREATE|os.O_APPEND, 0777)
+func logfileExists(logPath, logFile string) bool {
+	if _, err := os.Stat(logPath); os.IsNotExist(err) {
+		os.Mkdir(logPath, 0755)
+		_, err := os.OpenFile(logPath+logFile, os.O_CREATE|os.O_APPEND, 0777)
 		if err != nil {
 			return false
 		}
@@ -31,22 +26,24 @@ func logfileExists() bool {
 	return false
 }
 
-func Construct() *Logger {
-	if !logfileExists() {
+func Construct(logPath, logFile string) *Logger {
+	if !logfileExists(logPath, logFile) {
 		return &Logger{}
 	}
 
-	rawJSON := []byte(`{
-	"level": "debug",
-	"encoding": "json",
-	"outputPaths": ["stdout", "./logs/wavelog"],
-	"errorOutputPaths": ["stderr"],
-	"encoderConfig": {
-	  "messageKey": "message",
-	  "levelKey": "level",
-	  "levelEncoder": "lowercase"
-	}
-  }`)
+	JSON := (`{
+		"level": "debug",
+		"encoding": "json",
+		"outputPaths": ["stdout", "` + logPath + logFile + `"],
+		"errorOutputPaths": ["stderr"],
+		"encoderConfig": {
+		  "messageKey": "message",
+		  "levelKey": "level",
+		  "levelEncoder": "lowercase"
+		}
+	  }`)
+
+	rawJSON := []byte(JSON)
 
 	var cfg zap.Config
 	var err error

@@ -22,8 +22,8 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 	s := &App{
 		Room: room.NewRoom(id, RoomType, step),
 		game: newGame(core.Vec2i{
-			X: 130,
-			Y: 10,
+			X: 60,
+			Y: 40,
 		}),
 	}
 	s.SetCounterType(room.FillGaps)
