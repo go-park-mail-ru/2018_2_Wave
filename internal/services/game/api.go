@@ -17,7 +17,7 @@ import (
 )
 
 // TODO:: get the value from configuration files
-const wsAppTickRate = 500 * time.Millisecond
+const wsAppTickRate = 16 * time.Millisecond
 
 type Handler struct {
 	LG *logger.Logger

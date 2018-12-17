@@ -62,7 +62,7 @@ type snake struct {
 func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
 	s := &snake{
 		world:    w,
-		tickTime: 200 * time.Millisecond,
+		tickTime: 100 * time.Millisecond,
 		movement: direction,
 	}
 	l := 'a'
