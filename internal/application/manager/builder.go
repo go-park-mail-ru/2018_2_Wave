@@ -60,10 +60,14 @@ func (f *former) AddUser(u room.IUser) {
 }
 
 func (f *former) RemoveUser(u room.IUser) {
-	if f.stage != stageForming {
+	if f.stage == stageForming {
+		f.removeUser(u)
 		return
 	}
-	f.removeUser(u)
+	if f.stage == stageAccepting {
+		f.Accept(u, false)
+		return
+	}
 }
 
 func (f *former) Accept(u room.IUser, bAccept bool) {

@@ -41,6 +41,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Pr
 		prof:    prof,
 		db:      db,
 	}
+	m.OnUserRemoved = m.onUserRemoved
 	m.Routes["lobby_list"] = m.onGetLobbyList
 	m.Routes["lobby_create"] = withRoomType(m.onLobbyCreate)
 	m.Routes["lobby_delete"] = withRoomID(m.onLobbyDelete)
@@ -102,6 +103,10 @@ func (m *Manager) CreateLobby(room_type room.RoomType, room_token room.RoomToken
 }
 
 // ----------------| handlers
+
+func (m *Manager) onUserRemoved(u room.IUser) {
+	m.builder.RemoveUser(u) // kick from quick serach
+}
 
 func (m *Manager) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	data := []roomInfoPayload{}
