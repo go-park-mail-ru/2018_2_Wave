@@ -1,6 +1,6 @@
 package manager
 
-import "Wave/application/room"
+import "Wave/internal/application/room"
 
 var (
 	messageQSAcceptStatus = room.RouteResponse{Status: "quick_search_accept_status"}.WithStruct("")

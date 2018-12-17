@@ -1,7 +1,7 @@
 package manager
 
 import (
-	"Wave/application/room"
+	"Wave/internal/application/room"
 	"sync"
 	"time"
 )

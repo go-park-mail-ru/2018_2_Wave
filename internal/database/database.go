@@ -6,6 +6,7 @@ import (
 	"Wave/internal/models"
 	"os"
 	"strconv"
+	"github.com/namsral/flag"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -24,17 +25,22 @@ type DatabaseModel struct {
 	LG       *lg.Logger
 }
 
+var a = flag.String("", "", "")
+
 func New(lg_ *lg.Logger) *DatabaseModel {
-	postgr := &DatabaseModel{
-		LG: lg_,
-	}
-
-	var err error
-
-	dbuser := os.Getenv("WAVE_DB_USER")
-	dbpassword := os.Getenv("WAVE_DB_PASSWORD")
-	dbname := os.Getenv("WAVE_DB_NAME")
-
+	var (
+		postgr = &DatabaseModel{
+			LG: lg_,
+		}
+		dbuser string
+		dbpassword string
+		dbname string
+		err error
+	)
+	flag.StringVar(&dbuser, "WAVE_DB_USER", "Wave", "")
+	flag.StringVar(&dbname, "WAVE_DB_NAME", "Wave", "")
+	flag.StringVar(&dbpassword, "WAVE_DB_PASSWORD", "Wave", "")
+	
 	postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
 
 	if err != nil {

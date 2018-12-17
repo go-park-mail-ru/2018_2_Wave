@@ -1,8 +1,8 @@
 package snake
 
 import (
-	"Wave/application/room"
-	"Wave/application/snake/core"
+	"Wave/internal/application/room"
+	"Wave/internal/application/snake/core"
 )
 
 type objectInfo struct {

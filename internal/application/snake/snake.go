@@ -3,7 +3,7 @@ package snake
 import (
 	"time"
 
-	"Wave/application/snake/core"
+	"Wave/internal/application/snake/core"
 )
 
 // ----------------| snake node

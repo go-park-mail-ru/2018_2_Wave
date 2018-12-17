@@ -11,9 +11,9 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"Wave/application/manager"
-	"Wave/application/room"
-	"Wave/application/snake"
+	"Wave/internal/application/manager"
+	"Wave/internal/application/room"
+	"Wave/internal/application/snake"
 )
 
 // TODO:: get the value from configuration files

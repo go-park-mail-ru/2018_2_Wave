@@ -1,7 +1,7 @@
 package core
 
 import (
-	"Wave/application/room"
+	"Wave/internal/application/room"
 	"time"
 )
 
