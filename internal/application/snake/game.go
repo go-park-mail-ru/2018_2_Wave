@@ -64,7 +64,7 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 
 	// create a snake object and find a spwn area
 	dir := core.Right
-	poss, err := g.world.FindGap(length, dir)
+	poss, err := g.world.FindArea(length, dir, 3)
 	if err != nil {
 		return nil, err
 	}
