@@ -42,6 +42,14 @@ func (s *snakeNode) OnColided(o core.IObject) {
 	if _, ok := o.(*wall); ok {
 		s.snake.destroy()
 	}
+	if b, ok := o.(*booster); ok {
+		s.snake.tickFactor *= b.Factor
+		go func() {
+			time.Sleep(b.Duration)
+			s.snake.tickFactor /= b.Factor
+		}()
+		b.Destroy()
+	}
 }
 
 // ----------------| snake
