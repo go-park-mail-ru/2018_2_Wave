@@ -14,9 +14,12 @@ type booster struct {
 const typeBooster = "booster"
 
 func newBooster(world *core.World, position core.Vec2i) *booster {
-	return &booster{
-		item:     *newItem(typeBooster, world, position),
+	b := &booster{
+		item:     *newItem(typeBooster),
 		Factor:   1.5,
 		Duration: 3,
 	}
+	world.AddObject(b)
+	b.SetPos(position)
+	return b
 }

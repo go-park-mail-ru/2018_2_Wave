@@ -14,7 +14,7 @@ const typeFood = "food"
 
 func newFood(letter rune, world *core.World, position core.Vec2i) *food {
 	f := &food{
-		item:   *newItem(typeFood, world, position),
+		item:   *newItem(typeFood),
 		letter: letter,
 	}
 	world.AddObject(f)

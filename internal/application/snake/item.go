@@ -9,11 +9,8 @@ type item struct {
 	core.Object // base object
 }
 
-func newItem(Type core.ObjectType, world *core.World, position core.Vec2i) *item {
-	i := &item{*core.NewObject(Type)}
-	world.AddObject(i)
-	i.SetPos(position)
-	return i
+func newItem(Type core.ObjectType) *item {
+	return &item{*core.NewObject(Type)}
 }
 
 func (i *item) SetLifetime(left time.Duration) {
