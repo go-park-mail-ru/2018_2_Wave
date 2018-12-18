@@ -52,9 +52,7 @@ type snake struct {
 	body     []*snakeNode   // body elements
 	movement core.Direction // next step direction
 	score    int            // game score
-
-	tickTime time.Duration // time to tick
-	leftTime time.Duration // left time for a next tick
+	ticker   core.Ticker
 
 	onDestoyed func() // to remove the snake from the game
 }
@@ -62,9 +60,9 @@ type snake struct {
 func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
 	s := &snake{
 		world:    w,
-		tickTime: 200 * time.Millisecond,
 		movement: direction,
 	}
+	s.ticker = core.MakeTicker(s.moveNext, 200*time.Millisecond)
 	l := 'a'
 	for i := range points {
 		s.setHead(l, direction, points[i])
@@ -74,11 +72,7 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 }
 
 func (s *snake) Tick(dt time.Duration) {
-	s.leftTime -= dt
-	if s.leftTime <= 0 {
-		s.leftTime += s.tickTime
-		s.moveNext()
-	}
+	s.ticker.Tick(dt)
 }
 
 func (s *snake) SetDirection(d core.Direction) {
@@ -99,7 +93,7 @@ func (s *snake) destroy() {
 	}
 }
 
-func (s *snake) moveNext() {
+func (s *snake) moveNext(dt time.Duration) {
 	var (
 		delta         = s.movement.GetDelta()
 		nextPosition  = s.body[0].GetPos().Sum(delta)
