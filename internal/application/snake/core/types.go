@@ -1,9 +1,14 @@
 package core
 
+import (
+	"time"
+)
+
 // ----------------| vector
 
 type Vec2i struct {
-	X, Y int
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 func (v Vec2i) Sum(o Vec2i) Vec2i {
@@ -65,6 +70,33 @@ func (d Direction) GetDelta() (res Vec2i) {
 		res.X++
 	}
 	return res
+}
+
+// ----------------|
+
+type Ticker struct {
+	clb         func(time.Duration)
+	accumulated time.Duration
+	tickTime    time.Duration
+}
+
+func MakeTicker(clb func(time.Duration), tickTime time.Duration) Ticker {
+	return Ticker{
+		clb:      clb,
+		tickTime: tickTime,
+	}
+}
+
+func (t *Ticker) Tick(dt time.Duration) {
+	t.accumulated += dt
+	for {
+		if t.accumulated > t.tickTime {
+			if t.clb != nil {
+				t.clb(t.tickTime)
+			}
+			t.accumulated -= t.tickTime
+		}
+	}
 }
 
 // ----------------|

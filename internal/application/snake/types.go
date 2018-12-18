@@ -22,4 +22,5 @@ type gameInfo struct {
 	Snakes    []snakeInfo  `json:"snakes"`
 	Food      []objectInfo `json:"food"`
 	Walls     []core.Vec2i `json:"walls"`
+	Boosters  []core.Vec2i `json:"boosters"`
 }

@@ -11,8 +11,8 @@ type game struct {
 	world      *core.World
 	walls      *walls
 
-	leftToFood    time.Duration
-	foodSpawnRate time.Duration
+	foodTicker  core.Ticker
+	boostTicker core.Ticker
 
 	OnSnakeDead func(room.IUser)
 }
@@ -21,9 +21,10 @@ func newGame(worldSize core.Vec2i) *game {
 	g := &game{
 		user2snake:    map[room.IUser]*snake{},
 		world:         core.NewWorld(worldSize),
-		foodSpawnRate: 2 * time.Second,
 	}
 	g.walls = newWalls(g.world)
+	g.foodTicker = core.MakeTicker(g.spawnFood, 2*time.Second)
+	g.boostTicker = core.MakeTicker(g.spawnBooster, 30*time.Second)
 	return g
 }
 
@@ -35,13 +36,8 @@ func (g *game) Tick(dt time.Duration) {
 		s.Tick(dt)
 	}
 	g.world.Tick(dt)
-
-	// tick food generator
-	if g.leftToFood <= 0 {
-		g.leftToFood += g.foodSpawnRate
-		g.spawnFood()
-	}
-	g.leftToFood -= dt
+	g.foodTicker.Tick(dt)
+	g.boostTicker.Tick(dt)
 }
 
 // ----------------| controller interface
@@ -114,13 +110,16 @@ func (g *game) GetGameInfo() *gameInfo {
 		}
 		gi.Snakes = append(gi.Snakes, si)
 	}
-	// food
+	// food && boosters
 	for _, o := range g.world.GetObjects() {
 		if i, ok := o.(*food); ok {
 			gi.Food = append(gi.Food, objectInfo{
 				Letter:   i.GetLetter(),
 				Position: i.GetPos(),
 			})
+		}
+		if i, ok := o.(*booster); ok {
+			gi.Boosters = append(gi.Boosters, i.GetPos())
 		}
 	}
 	// walls
@@ -132,11 +131,20 @@ func (g *game) GetGameInfo() *gameInfo {
 
 // ----------------| game mode logic
 
-func (g *game) spawnFood() {
+func (g *game) spawnFood(time.Duration) {
 	pos, err := g.world.FindGap(1, core.NoDirection)
 	if err != nil {
 		return
 	}
 	newFood('h', g.world, pos[0]).
+		SetLifetime(20 * time.Second)
+}
+
+func (g *game) spawnBooster(time.Duration) {
+	pos, err := g.world.FindGap(1, core.NoDirection)
+	if err != nil {
+		return
+	}
+	newBooster(g.world, pos[0]).
 		SetLifetime(20 * time.Second)
 }
