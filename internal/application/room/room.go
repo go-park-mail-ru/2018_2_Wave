@@ -11,12 +11,13 @@ type Route func(IUser, IInMessage) IRouteResponse
 
 // Room - default IRoom
 type Room struct {
-	ID     RoomToken        // room ID
-	Type   RoomType         // room type
-	Ticker *time.Ticker     // room tick
-	Routes map[string]Route // signal -> handler
-	Users  map[UserID]IUser // room users
-	LG     *lg.Logger
+	ID      RoomToken        // room ID
+	Type    RoomType         // room type
+	Ticker  *time.Ticker     // room tick
+	Routes  map[string]Route // signal -> handler
+	Users   map[UserID]IUser // room users
+	LG      *lg.Logger       // logger
+	Manager IRoomManager     // just a boss
 
 	OnTick        func(time.Duration)
 	OnUserAdded   func(IUser)
@@ -186,6 +187,10 @@ func (r *Room) GetTokenCounter(t UserID) (counter int64, err error) {
 
 func (r *Room) SetCounterType(CounterType NumerationType) {
 	r.counter.UserCounterType = CounterType
+}
+
+func (r *Room) IsAbleToRemove(IUser) bool {
+	return true
 }
 
 // ----------------|

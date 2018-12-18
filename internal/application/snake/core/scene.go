@@ -111,7 +111,7 @@ FIND_POSITION:
 }
 
 func (s *scene) FindGap(length int, dir Direction) (res []Vec2i, err error) {
-	return s.FindArea(length, dir, 0)	
+	return s.FindArea(length, dir, 0)
 }
 
 func (s *scene) PrintDebug() {

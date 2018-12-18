@@ -16,7 +16,7 @@ import "time"
 type RoomToken string
 type UserID string
 type RoomType string
-type RoomFactory func(id RoomToken, step time.Duration, db interface{}) IRoom
+type RoomFactory func(id RoomToken, step time.Duration, _ IRoomManager, db interface{}) IRoom
 
 // IInMessage - message from a user
 type IInMessage interface {
@@ -62,4 +62,12 @@ type IRoom interface {
 	RemoveUser(IUser) error               // remove  the user from the room
 	OnDisconnected(IUser)                 // inform the room the user was disconnected
 	ApplyMessage(IUser, IInMessage) error // send message to the room
+
+	IsAbleToRemove(IUser) bool
+}
+
+// IRoomManager -
+type IRoomManager interface {
+	CreateLobby(RoomType, RoomToken) (IRoom, error)
+	RemoveLobby(RoomToken, IUser) error
 }

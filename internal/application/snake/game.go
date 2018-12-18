@@ -19,8 +19,8 @@ type game struct {
 
 func newGame(worldSize core.Vec2i) *game {
 	g := &game{
-		user2snake:    map[room.IUser]*snake{},
-		world:         core.NewWorld(worldSize),
+		user2snake: map[room.IUser]*snake{},
+		world:      core.NewWorld(worldSize),
 	}
 	g.walls = newWalls(g.world)
 	g.foodTicker = core.MakeTicker(g.spawnFood, 2*time.Second)

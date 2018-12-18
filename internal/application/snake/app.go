@@ -18,7 +18,7 @@ const RoomType room.RoomType = "snake"
 // ----------------|
 
 // New snake app
-func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
+func New(id room.RoomToken, step time.Duration, m room.IRoomManager, db interface{}) room.IRoom {
 	s := &App{
 		Room: room.NewRoom(id, RoomType, step),
 		game: newGame(core.Vec2i{
@@ -28,6 +28,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 	}
 	s.SetCounterType(room.FillGaps)
 	s.OnTick = s.onTick
+	s.Manager = m
 	s.OnUserRemoved = s.onUserRemoved
 	s.game.OnSnakeDead = s.onSnakeDead
 	s.Routes["game_action"] = s.onGameAction
@@ -38,6 +39,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 
 // ----------------| handlers
 
+// <- STATUS_TICK
 func (a *App) onTick(dt time.Duration) {
 	a.game.Tick(dt)
 	info := a.game.GetGameInfo()
@@ -52,7 +54,7 @@ func (a *App) onUserRemoved(u room.IUser) {
 	a.game.DeleteSnake(u)
 }
 
-// receive game action (control)
+// -> game_action
 func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	ac := &gameAction{}
 	if im.ToStruct(ac) != nil {
@@ -72,20 +74,52 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse
 	return nil
 }
 
-// place the user into a game scene and allow him play
+// -> game_play
 func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	a.game.CreateSnake(u, 6)
 	return nil
 }
 
-// exit from the game
+// -> game_exit
 func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	a.game.DeleteSnake(u)
+
+	if len(a.game.user2snake) == 0 {
+		a.exit()
+	}
 	return nil
 }
 
+// <- STATUS_DEAD | win
 func (a *App) onSnakeDead(u room.IUser) {
-	a.SendMessageTo(u, messageDead)
+	serial, _ := a.GetUserCounter(u)
+	a.Broadcast(messageDead.WithStruct(&playerPayload{
+		UserName:   u.GetName(),
+		UserToken:  u.GetID(),
+		UserSerial: serial,
+	}))
+
+	if len(a.game.user2snake) <= 1 {
+		if len(a.game.user2snake) == 1 {
+			var w room.IUser
+			for w = range a.game.user2snake {
+			}
+
+			serial, _ := a.GetUserCounter(w)
+			a.Broadcast(messageDead.WithStruct(&playerPayload{
+				UserName:   w.GetName(),
+				UserToken:  w.GetID(),
+				UserSerial: serial,
+			}))
+		}
+		a.exit()
+	}
+}
+
+func (a *App) exit() {
+	if a.Manager != nil {
+		a.Manager.RemoveLobby(a.GetID(), nil)
+	}
 }
 
 // ----------------| helpers
@@ -93,6 +127,12 @@ func (a *App) onSnakeDead(u room.IUser) {
 // easyjson:json
 type gameAction struct {
 	ActionName string `json:"action"`
+}
+
+type playerPayload struct {
+	UserName   string      `json:"user_name"`
+	UserToken  room.UserID `json:"user_token"`
+	UserSerial int64       `json:"user_serial"`
 }
 
 var (

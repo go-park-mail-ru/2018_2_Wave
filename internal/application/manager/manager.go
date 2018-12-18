@@ -84,13 +84,13 @@ func (m *Manager) GetNextRoomID() room.RoomToken {
 }
 
 // CreateLobby -
-func (m *Manager) CreateLobby(room_type room.RoomType, room_token room.RoomToken) (room.IRoom, error) {
-	if factory, ok := type2Factory[room_type]; ok {
-		r := factory(room_token, m.Step, m.db)
+func (m *Manager) CreateLobby(roomType room.RoomType, roomToken room.RoomToken) (room.IRoom, error) {
+	if factory, ok := type2Factory[roomType]; ok {
+		r := factory(roomToken, m.Step, m, m.db)
 		if r == nil {
 			return nil, room.ErrorNil
 		}
-		m.rooms[room_token] = r
+		m.rooms[roomToken] = r
 		go r.Run()
 
 		// profiler
@@ -101,6 +101,24 @@ func (m *Manager) CreateLobby(room_type room.RoomType, room_token room.RoomToken
 		return r, nil
 	}
 	return nil, room.ErrorNotExists
+}
+
+// RemoveLobby - 
+func (m *Manager) RemoveLobby(roomToken room.RoomToken, u room.IUser) error {
+	if r, ok := m.rooms[roomToken]; ok {
+		if r.IsAbleToRemove(u) {
+			r.Stop()
+			delete(m.rooms, roomToken)
+
+			// profiler
+			if m.prof != nil {
+				m.prof.ActiveRooms.Dec()
+			}
+			return nil
+		}
+		return room.ErrorForbiden
+	}
+	return room.ErrorNotFound
 }
 
 // ----------------| handlers
@@ -131,15 +149,7 @@ func (m *Manager) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomT
 }
 
 func (m *Manager) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
-	if r, ok := m.rooms[cmd]; ok {
-		r.Stop()
-		delete(m.rooms, cmd)
-
-		// profiler
-		if m.prof != nil {
-			m.prof.ActiveRooms.Dec()
-		}
-	}
+	m.RemoveLobby(cmd, u)
 	return nil
 }
 

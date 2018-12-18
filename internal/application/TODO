@@ -24,7 +24,7 @@ SNAKE:
     ✔ food lifetime @done(18-12-18 16:16)
     ✔ send lifitime into front @done(18-12-18 16:16)
     ✔ score @done(18-12-18 16:16)
-    ☐ exit when no players left
-    ☐ exit when one player left
+    ✔ exit when no players left @started(18-12-18 17:28) @done(18-12-18 19:08) @lasted(1h40m1s)
+    ✔ exit when one player left @done(18-12-18 19:08)
     ✔ add a user name field into a snake payload @started(18-12-18 16:55) @done(18-12-18 17:26) @lasted(31m21s)
     ✔ split user added and user removed api events @started(18-12-18 16:46) @done(18-12-18 16:54) @lasted(8m4s)

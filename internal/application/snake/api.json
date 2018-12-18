@@ -25,7 +25,20 @@
             "room_token": "",
             "status": "STATUS_DEAD",
             "payload": {
-                "user_token": ""
+                "user_name": "",
+                "user_token": "",
+                "user_serial": 1
+            }
+        }
+    },
+    {
+        "broadcast": {
+            "room_token": "",
+            "status": "win",
+            "payload": {
+                "user_name": "",
+                "user_token": "",
+                "user_serial": 1
             }
         }
     },
@@ -40,8 +53,9 @@
                 },
                 "players": [ 
                     { 
-                        "user_token": "", 
-                        "user_serial": 0,
+                        "user_name": "",
+                        "user_token": "",
+                        "user_serial": 1,
                         "score": 1500,
                         "snake": [
                             {
