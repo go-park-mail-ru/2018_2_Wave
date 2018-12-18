@@ -21,15 +21,10 @@ SNAKE:
     ✔ FindGap() recursive to loop @started(18-11-28 15:26) @done(18-11-28 15:32) @lasted(6m50s)
     ✔ fix snake uppend @started(18-11-28 15:09) @done(18-11-28 15:25) @lasted(16m46s)
         right now we have too week anomaly safety
-    ☐ food lifetime
-    ☐ send lifitime into front
-    ☐ score
-    rooms:
-        ☐ n - lobby
-        ☐ heep
-    modes:
-        ☐ clasic:
-            ☐ 
-        ☐ advanced:
-            ☐ 
-
+    ✔ food lifetime @done(18-12-18 16:16)
+    ✔ send lifitime into front @done(18-12-18 16:16)
+    ✔ score @done(18-12-18 16:16)
+    ☐ exit when no players left
+    ☐ exit when one player left
+    ☐ add a user name field into a snake payload
+    ☐ split user added and user removed api events
