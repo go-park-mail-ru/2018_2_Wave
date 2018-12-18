@@ -186,14 +186,14 @@ func (m *Manager) onQSAccept(u room.IUser, im room.IInMessage) room.IRouteRespon
 
 func (m *Manager) onQSRemoved(f *former, u room.IUser) {
 	m.SendMessageTo(u, messageQSKick)
-	m.onQSStatus(f)
+	m.onQSStatus(f, messageQSRemoved)
 }
 
 func (m *Manager) onQSAdded(f *former, u room.IUser) {
-	m.onQSStatus(f)
+	m.onQSStatus(f, messageQSAdded)
 }
 
-func (m *Manager) onQSStatus(f *former) {
+func (m *Manager) onQSStatus(f *former, om *room.RouteResponse) {
 	p := &QSStatusPayload{}
 	for _, u := range f.users {
 		p.Members = append(p.Members, QSStatusMemberPayload{
@@ -201,8 +201,7 @@ func (m *Manager) onQSStatus(f *former) {
 			UserSerial: f.GetUserSerial(u),
 		})
 	}
-
-	om := messageQSStatus.WithStruct(p)
+	om = om.WithStruct(p)
 	for _, u := range f.users {
 		m.SendMessageTo(u, om)
 	}
