@@ -90,6 +90,7 @@
                     "payload": {
                         "members": [ 
                             {
+                                "user_name": "",
                                 "user_token": "",
                                 "user_serial": 1
                             }
@@ -104,6 +105,7 @@
                     "payload": {
                         "members": [ 
                             {
+                                "user_name": "",
                                 "user_token": "",
                                 "user_serial": 1
                             }
@@ -142,7 +144,9 @@
                     "payload": {
                         "members": [
                             {
-                                "user_token": ""
+                                "user_name": "",
+                                "user_token": "",
+                                "user_serial": 1
                             }
                         ]
                     }

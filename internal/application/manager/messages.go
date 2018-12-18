@@ -35,6 +35,7 @@ type roomInfoPayload struct {
 
 // easyjson:json
 type QSStatusMemberPayload struct {
+	UserName   string      `json:"user_name"`
 	UserToken  room.UserID `json:"user_token"`
 	UserSerial int64       `json:"user_serial"`
 }

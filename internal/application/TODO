@@ -26,5 +26,5 @@ SNAKE:
     ✔ score @done(18-12-18 16:16)
     ☐ exit when no players left
     ☐ exit when one player left
-    ☐ add a user name field into a snake payload
+    ✔ add a user name field into a snake payload @started(18-12-18 16:55) @done(18-12-18 17:26) @lasted(31m21s)
     ✔ split user added and user removed api events @started(18-12-18 16:46) @done(18-12-18 16:54) @lasted(8m4s)

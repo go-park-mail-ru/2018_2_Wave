@@ -9,6 +9,7 @@ import (
 
 type User struct {
 	ID    UserID
+	Name  string
 	Rooms map[RoomToken]IRoom
 	Conn  *websocket.Conn
 	LG    *lg.Logger
@@ -29,6 +30,10 @@ func NewUser(ID UserID, Conn *websocket.Conn) *User {
 }
 
 // ----------------| IUser interface
+
+func (u *User) GetName() string {
+	return u.Name
+}
 
 func (u *User) GetID() UserID {
 	return u.ID

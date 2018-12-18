@@ -43,6 +43,7 @@ type IRouteResponse interface {
 
 // IUser - client websocket wrapper
 type IUser interface {
+	GetName() string
 	GetID() UserID              // User id
 	AddToRoom(IRoom) error      // order to add self into the room
 	RemoveFromRoom(IRoom) error // order to romve self from the room

@@ -54,6 +54,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Pr
 	m.Routes["quick_search_accept"] = m.onQSAccept
 	m.builder.OnUserAdded = m.onQSAdded
 	m.builder.OnUserRemoved = m.onQSRemoved
+	m.builder.OnAcceped = m.onQSAcceptStatus
 	m.builder.OnFormed = m.onQSReady
 	m.builder.OnFailed = m.onQSFailed
 	m.builder.OnDone = m.onQSDone
@@ -158,6 +159,7 @@ func (m *Manager) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.Ro
 
 // ------| quick serarch
 
+// -> quick_search
 func (m *Manager) onQSBegin(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	p := &QSPayload{}
 	if err := im.ToStruct(p); err != nil {
@@ -170,11 +172,13 @@ func (m *Manager) onQSBegin(u room.IUser, im room.IInMessage) room.IRouteRespons
 	return nil
 }
 
+// -> quick_search_abort
 func (m *Manager) onQSAbort(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	m.builder.RemoveUser(u)
 	return nil
 }
 
+// -> quick_search_accept
 func (m *Manager) onQSAccept(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	p := &QSAcceptPayload{}
 	if err := im.ToStruct(p); err != nil {
@@ -184,13 +188,20 @@ func (m *Manager) onQSAccept(u room.IUser, im room.IInMessage) room.IRouteRespon
 	return nil
 }
 
+// <- quick_search_removed | quick_search_kick
 func (m *Manager) onQSRemoved(f *former, u room.IUser) {
 	m.SendMessageTo(u, messageQSKick)
 	m.onQSStatus(f, messageQSRemoved)
 }
 
+// <- quick_search_added
 func (m *Manager) onQSAdded(f *former, u room.IUser) {
 	m.onQSStatus(f, messageQSAdded)
+}
+
+// <- quick_search_accept_status
+func (m *Manager) onQSAcceptStatus(f *former, u room.IUser) {
+	m.onQSStatus(f, messageQSAcceptStatus)
 }
 
 func (m *Manager) onQSStatus(f *former, om *room.RouteResponse) {
@@ -198,6 +209,7 @@ func (m *Manager) onQSStatus(f *former, om *room.RouteResponse) {
 	for _, u := range f.users {
 		p.Members = append(p.Members, QSStatusMemberPayload{
 			UserToken:  u.GetID(),
+			UserName:   u.GetName(),
 			UserSerial: f.GetUserSerial(u),
 		})
 	}
@@ -207,6 +219,7 @@ func (m *Manager) onQSStatus(f *former, om *room.RouteResponse) {
 	}
 }
 
+// <- quick_search_ready
 func (m *Manager) onQSReady(f *former) {
 	p := &QSReadyPayload{
 		AcceptTimeout: m.builder.acceptTime,
@@ -217,6 +230,7 @@ func (m *Manager) onQSReady(f *former) {
 	}
 }
 
+// <- quick_search_done
 func (m *Manager) onQSDone(f *former) {
 	r, err := m.CreateLobby(f.rType, m.GetNextRoomID())
 	if err != nil {
@@ -232,6 +246,7 @@ func (m *Manager) onQSDone(f *former) {
 	}
 }
 
+// <- quick_search_failed
 func (m *Manager) onQSFailed(f *former) {
 	for _, u := range f.users {
 		m.SendMessageTo(u, messageQSFailed)

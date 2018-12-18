@@ -32,6 +32,7 @@ type former struct {
 
 	onUserRemoved func(*former, room.IUser)
 	onUserAdded   func(*former, room.IUser)
+	onAcceped     func(*former, room.IUser)
 	onFormed      func(*former)
 	onFailed      func(*former)
 	onDone        func(*former)
@@ -83,6 +84,9 @@ func (f *former) Accept(u room.IUser, bAccept bool) {
 		if expectant.IUser == u && bAccept {
 			f.users[i].bAccepted = true
 			accepted++
+			if f.onAcceped != nil {
+				f.onAcceped(f, u)
+			}
 		} else if expectant.IUser == u {
 			f.removeUser(u)
 			f.stage = stageForming
@@ -147,6 +151,7 @@ type builder struct {
 
 	OnUserRemoved func(*former, room.IUser)
 	OnUserAdded   func(*former, room.IUser)
+	OnAcceped     func(*former, room.IUser)
 	OnFormed      func(*former)
 	OnFailed      func(*former)
 	OnDone        func(*former)
@@ -211,10 +216,11 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 
 	// create a new former
 	f := &former{
-		aim:      players,
-		rType:    roomType,
-		counter:  room.NewCounter(room.FillGaps),
-		onFailed: b.OnFailed,
+		aim:       players,
+		rType:     roomType,
+		counter:   room.NewCounter(room.FillGaps),
+		onFailed:  b.OnFailed,
+		onAcceped: b.OnAcceped,
 		onUserAdded: func(f *former, u room.IUser) {
 			b.u2f[u] = f
 			if b.OnUserAdded != nil {
