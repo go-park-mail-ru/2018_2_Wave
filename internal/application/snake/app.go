@@ -61,13 +61,13 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse
 
 	switch ac.ActionName {
 	case "move_left":
-		a.withSnake(u, func(s *snake) { s.movement = core.Left })
+		a.withSnake(u, func(s *snake) { s.SetDirection(core.Left) })
 	case "move_right":
-		a.withSnake(u, func(s *snake) { s.movement = core.Right })
+		a.withSnake(u, func(s *snake) { s.SetDirection(core.Right) })
 	case "move_up":
-		a.withSnake(u, func(s *snake) { s.movement = core.Up })
+		a.withSnake(u, func(s *snake) { s.SetDirection(core.Up) })
 	case "move_down":
-		a.withSnake(u, func(s *snake) { s.movement = core.Down })
+		a.withSnake(u, func(s *snake) { s.SetDirection(core.Down) })
 	}
 	return nil
 }

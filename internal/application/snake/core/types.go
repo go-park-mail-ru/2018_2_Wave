@@ -13,11 +13,22 @@ func (v Vec2i) Sum(o Vec2i) Vec2i {
 	}
 }
 
+func (v Vec2i) Diff(o Vec2i) Vec2i {
+	return Vec2i{
+		X: v.X - o.X,
+		Y: v.Y - o.Y,
+	}
+}
+
 func (v Vec2i) Mult(o int) Vec2i {
 	return Vec2i{
 		X: v.X * o,
 		Y: v.Y * o,
 	}
+}
+
+func (v Vec2i) IsZero() bool {
+	return v.X == 0 && v.Y == 0
 }
 
 // ----------------| direction
