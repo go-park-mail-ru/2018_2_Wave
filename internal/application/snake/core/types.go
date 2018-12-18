@@ -95,6 +95,8 @@ func (t *Ticker) Tick(dt time.Duration) {
 				t.clb(t.tickTime)
 			}
 			t.accumulated -= t.tickTime
+		} else {
+			break
 		}
 	}
 }
