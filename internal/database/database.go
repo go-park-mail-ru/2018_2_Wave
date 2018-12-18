@@ -40,7 +40,8 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	flag.StringVar(&dbuser, "WAVE_DB_USER", "Wave", "")
 	flag.StringVar(&dbname, "WAVE_DB_NAME", "Wave", "")
 	flag.StringVar(&dbpassword, "WAVE_DB_PASSWORD", "Wave", "")
-	
+	flag.Parse()
+
 	postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
 
 	if err != nil {
