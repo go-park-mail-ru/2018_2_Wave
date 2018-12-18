@@ -99,6 +99,10 @@ func (t *Ticker) Tick(dt time.Duration) {
 	}
 }
 
+func (t *Ticker) SetTickTime(tickTime time.Duration) {
+	t.tickTime = tickTime
+}
+
 // ----------------|
 
 type WorldInfo struct {

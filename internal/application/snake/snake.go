@@ -52,17 +52,22 @@ type snake struct {
 	body     []*snakeNode   // body elements
 	movement core.Direction // next step direction
 	score    int            // game score
-	ticker   core.Ticker
+
+	ticker     core.Ticker   // movement ticker
+	baseTick   time.Duration // base tick time
+	tickFactor float64       // length factor
 
 	onDestoyed func() // to remove the snake from the game
 }
 
 func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
 	s := &snake{
-		world:    w,
-		movement: direction,
+		world:      w,
+		movement:   direction,
+		baseTick:   200 * time.Millisecond,
+		tickFactor: 0.8,
 	}
-	s.ticker = core.MakeTicker(s.moveNext, 200*time.Millisecond)
+	s.ticker = core.MakeTicker(s.moveNext, s.baseTick)
 	l := 'a'
 	for i := range points {
 		s.setHead(l, direction, points[i])
@@ -119,6 +124,7 @@ func (s *snake) pushBack(letter rune) {
 		newTail.direction = direction
 
 		s.body = append(s.body, newTail)
+		s.onLengthChanged()
 	}
 }
 
@@ -130,6 +136,7 @@ func (s *snake) setHead(letter rune, direction core.Direction, position core.Vec
 		s.body[0].bHead = true
 	}
 	s.body = append([]*snakeNode{newHead}, s.body...)
+	s.onLengthChanged()
 }
 
 func (s *snake) getTail() *snakeNode {
@@ -137,4 +144,12 @@ func (s *snake) getTail() *snakeNode {
 		return s.body[len(s.body)-1]
 	}
 	return nil
+}
+
+func (s *snake) onLengthChanged() {
+	if len(s.body) > 0 {
+		factor := s.tickFactor * float64(len(s.body))
+		time := s.baseTick * time.Duration(factor)
+		s.ticker.SetTickTime(time)
+	}
 }
