@@ -106,7 +106,7 @@ func (a *App) onSnakeDead(u room.IUser) {
 			}
 
 			serial, _ := a.GetUserCounter(w)
-			a.Broadcast(messageDead.WithStruct(&playerPayload{
+			a.Broadcast(messageWin.WithStruct(&playerPayload{
 				UserName:   w.GetName(),
 				UserToken:  w.GetID(),
 				UserSerial: serial,
@@ -136,6 +136,7 @@ type playerPayload struct {
 }
 
 var (
+	messageWin            = room.RouteResponse{Status: "win"}.WithStruct("")
 	messageDead           = room.RouteResponse{Status: "STATUS_DEAD"}.WithStruct("")
 	messageNoSnake        = room.RouteResponse{Status: room.StatusError}.WithReason("No snake")
 	messageAlreadyPlays   = room.RouteResponse{Status: room.StatusError}.WithReason("already plays")

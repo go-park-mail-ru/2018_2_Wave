@@ -2,6 +2,7 @@ package manager
 
 import (
 	"Wave/internal/application/room"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -158,10 +159,24 @@ type builder struct {
 }
 
 func newBuilder() *builder {
-	return &builder{
+	b := &builder{
 		formers: make(map[room.RoomType][]*former),
 		u2f:     make(map[room.IUser]*former),
 	}
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+
+			b.mu.Lock()
+			fmt.Print("|")
+			for u := range b.u2f {
+				fmt.Print(u.GetID())
+			}
+			fmt.Println("|")
+			b.mu.Unlock()
+		}
+	}()
+	return b
 }
 
 func (b *builder) AddUser(u room.IUser, roomType room.RoomType, players int) {
@@ -170,6 +185,8 @@ func (b *builder) AddUser(u room.IUser, roomType room.RoomType, players int) {
 	// if not searches
 	if _, ok := b.u2f[u]; !ok {
 		b.getFormer(roomType, players).AddUser(u)
+	} else {
+		println("user already exists")
 	}
 }
 
@@ -193,6 +210,8 @@ func (b *builder) removeUser(u room.IUser) {
 	// if searches
 	if f, ok := b.u2f[u]; ok {
 		f.RemoveUser(u)
+	} else {
+		println("user not found")
 	}
 }
 
@@ -260,8 +279,9 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 				}
 				// remove users
 				for _, u := range f.users {
-					delete(b.u2f, u)
+					delete(b.u2f, u.IUser)
 				}
+				fmt.Printf("%#v", b.u2f)
 				return
 			}
 		},

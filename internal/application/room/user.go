@@ -107,7 +107,7 @@ func (u *User) Listen() error {
 		// log input
 		if u.LG != nil {
 			data, _ := json.Marshal(m)
-			u.LG.Sugar.Infof("in_message: %v", string(data))
+			u.LG.Sugar.Infof("in_message: %v %v", u.GetID(), string(data))
 		}
 
 		// apply the message to a room
