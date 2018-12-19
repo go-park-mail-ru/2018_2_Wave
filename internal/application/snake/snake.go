@@ -91,7 +91,7 @@ func (s *snake) Tick(dt time.Duration) {
 func (s *snake) SetDirection(d core.Direction) {
 	curr := s.movement.GetDelta()
 	next := d.GetDelta()
-	if curr.Diff(next).IsZero() {
+	if curr.Sum(next).IsZero() {
 		return
 	}
 	s.movement = d
