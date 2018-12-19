@@ -211,7 +211,21 @@ func (m *Manager) onQSAdded(f *former, u room.IUser) {
 
 // <- quick_search_accept_status
 func (m *Manager) onQSAcceptStatus(f *former, u room.IUser) {
-	m.onQSStatus(f, messageQSAcceptStatus)
+	p := &QSStatusPayload{}
+	for _, u := range f.users {
+		if !u.bAccepted {
+			continue
+		}
+		p.Members = append(p.Members, QSStatusMemberPayload{
+			UserToken:  u.GetID(),
+			UserName:   u.GetName(),
+			UserSerial: f.GetUserSerial(u),
+		})
+	}
+	om := messageQSAcceptStatus.WithStruct(p)
+	for _, u := range f.users {
+		m.SendMessageTo(u, om)
+	}
 }
 
 func (m *Manager) onQSStatus(f *former, om *room.RouteResponse) {
