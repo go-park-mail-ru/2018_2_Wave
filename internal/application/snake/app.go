@@ -76,7 +76,7 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse
 
 // -> game_play
 func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	a.game.CreateSnake(u, 6)
+	a.game.CreateSnake(u, 3)
 	return nil
 }
 
