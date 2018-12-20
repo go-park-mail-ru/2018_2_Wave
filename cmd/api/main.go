@@ -6,7 +6,7 @@ import (
 	lg "Wave/internal/logger"
 	mc "Wave/internal/metrics"
 	mw "Wave/internal/middleware"
-	api "Wave/internal/services/app"
+	"Wave/internal/services/api"
 	auth "Wave/internal/services/auth/proto"
 
 	"net/http"
@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	confPath = "./configs/conf.json"
+	confPath = "./conf.json"
 
-	logPath = "../.././logs/"
+	logPath = "./logs/"
 	logFile = "api.log"
 )
 

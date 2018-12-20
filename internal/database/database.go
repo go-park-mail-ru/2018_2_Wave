@@ -410,7 +410,7 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Name, &temp.Description, &temp.Price); err != nil {
+		if err := rows.Scan(&temp.Name, &temp.Cover); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
@@ -443,7 +443,7 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Name, &temp.Description, &temp.Price); err != nil {
+		if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Installations); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
@@ -473,7 +473,7 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 			FROM app
 			WHERE name=$1;
 		`, name)
-		err := row.Scan(&app.Name, &app.Description, &app.Cover)
+		err := row.Scan(&app.Name, &app.Cover, &app.Description)
 
 		if err != nil {
 
