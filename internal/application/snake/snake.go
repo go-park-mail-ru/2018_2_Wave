@@ -1,9 +1,10 @@
 package snake
 
 import (
+	"math"
 	"time"
 
-	"Wave/application/snake/core"
+	"Wave/internal/application/snake/core"
 )
 
 // ----------------| snake node
@@ -42,6 +43,14 @@ func (s *snakeNode) OnColided(o core.IObject) {
 	if _, ok := o.(*wall); ok {
 		s.snake.destroy()
 	}
+	if b, ok := o.(*booster); ok {
+		s.snake.tickFactor *= b.Factor
+		go func() {
+			time.Sleep(b.Duration)
+			s.snake.tickFactor /= b.Factor
+		}()
+		b.Destroy()
+	}
 }
 
 // ----------------| snake
@@ -53,18 +62,21 @@ type snake struct {
 	movement core.Direction // next step direction
 	score    int            // game score
 
-	tickTime time.Duration // time to tick
-	leftTime time.Duration // left time for a next tick
+	ticker     core.Ticker   // movement ticker
+	baseTick   time.Duration // base tick time
+	tickFactor float64       // length factor
 
 	onDestoyed func() // to remove the snake from the game
 }
 
 func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *snake {
 	s := &snake{
-		world:    w,
-		tickTime: 200 * time.Millisecond,
-		movement: direction,
+		world:      w,
+		movement:   direction,
+		baseTick:   100 * time.Millisecond,
+		tickFactor: 0.9,
 	}
+	s.ticker = core.MakeTicker(s.moveNext, s.baseTick)
 	l := 'a'
 	for i := range points {
 		s.setHead(l, direction, points[i])
@@ -74,11 +86,16 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 }
 
 func (s *snake) Tick(dt time.Duration) {
-	s.leftTime -= dt
-	if s.leftTime <= 0 {
-		s.leftTime += s.tickTime
-		s.moveNext()
+	s.ticker.Tick(dt)
+}
+
+func (s *snake) SetDirection(d core.Direction) {
+	curr := s.movement.GetDelta()
+	next := d.GetDelta()
+	if curr.Sum(next).IsZero() {
+		return
 	}
+	s.movement = d
 }
 
 func (s *snake) destroy() {
@@ -90,7 +107,7 @@ func (s *snake) destroy() {
 	}
 }
 
-func (s *snake) moveNext() {
+func (s *snake) moveNext(dt time.Duration) {
 	var (
 		delta         = s.movement.GetDelta()
 		nextPosition  = s.body[0].GetPos().Sum(delta)
@@ -116,6 +133,7 @@ func (s *snake) pushBack(letter rune) {
 		newTail.direction = direction
 
 		s.body = append(s.body, newTail)
+		s.onLengthChanged()
 	}
 }
 
@@ -127,6 +145,7 @@ func (s *snake) setHead(letter rune, direction core.Direction, position core.Vec
 		s.body[0].bHead = true
 	}
 	s.body = append([]*snakeNode{newHead}, s.body...)
+	s.onLengthChanged()
 }
 
 func (s *snake) getTail() *snakeNode {
@@ -134,4 +153,12 @@ func (s *snake) getTail() *snakeNode {
 		return s.body[len(s.body)-1]
 	}
 	return nil
+}
+
+func (s *snake) onLengthChanged() {
+	if len(s.body) > 0 {
+		factor := math.Pow(s.tickFactor, float64(len(s.body)))
+		time := s.baseTick * time.Duration(factor)
+		s.ticker.SetTickTime(time)
+	}
 }

@@ -1,7 +1,7 @@
 package core
 
 import (
-	"Wave/application/room"
+	"Wave/internal/application/room"
 	"Wave/internal/logger"
 
 	"math/rand"
@@ -78,7 +78,7 @@ func (s *scene) RemoveObject(o IObject) error {
 	return room.ErrorNotExists
 }
 
-func (s *scene) FindGap(length int, dir Direction) (res []Vec2i, err error) {
+func (s *scene) FindArea(length int, dir Direction, padding int) (res []Vec2i, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -95,15 +95,23 @@ FIND_POSITION:
 			Y: rand.Intn(s.size.Y),
 		}
 		for i := 0; i < length; i++ {
-			o := s.at(position)
-			if o == nil || !o.isEmpty() {
-				goto FIND_POSITION
+			for x := -padding; x <= padding; x++ {
+				for y := -padding; y <= padding; y++ {
+					o := s.at(position.Sum(Vec2i{x, y}))
+					if o == nil || !o.isEmpty() {
+						goto FIND_POSITION
+					}
+				}
 			}
 			res = append(res, position)
 			position = position.Sum(delta)
 		}
 		return res, nil
 	}
+}
+
+func (s *scene) FindGap(length int, dir Direction) (res []Vec2i, err error) {
+	return s.FindArea(length, dir, 0)
 }
 
 func (s *scene) PrintDebug() {

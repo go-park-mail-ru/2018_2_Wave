@@ -1,8 +1,8 @@
 package snake
 
 import (
-	"Wave/application/room"
-	"Wave/application/snake/core"
+	"Wave/internal/application/room"
+	"Wave/internal/application/snake/core"
 	"time"
 )
 
@@ -18,7 +18,7 @@ const RoomType room.RoomType = "snake"
 // ----------------|
 
 // New snake app
-func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
+func New(id room.RoomToken, step time.Duration, m room.IRoomManager, db interface{}) room.IRoom {
 	s := &App{
 		Room: room.NewRoom(id, RoomType, step),
 		game: newGame(core.Vec2i{
@@ -28,6 +28,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 	}
 	s.SetCounterType(room.FillGaps)
 	s.OnTick = s.onTick
+	s.Manager = m
 	s.OnUserRemoved = s.onUserRemoved
 	s.game.OnSnakeDead = s.onSnakeDead
 	s.Routes["game_action"] = s.onGameAction
@@ -38,6 +39,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}) room.IRoom {
 
 // ----------------| handlers
 
+// <- STATUS_TICK
 func (a *App) onTick(dt time.Duration) {
 	a.game.Tick(dt)
 	info := a.game.GetGameInfo()
@@ -52,7 +54,7 @@ func (a *App) onUserRemoved(u room.IUser) {
 	a.game.DeleteSnake(u)
 }
 
-// receive game action (control)
+// -> game_action
 func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	ac := &gameAction{}
 	if im.ToStruct(ac) != nil {
@@ -61,31 +63,66 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse
 
 	switch ac.ActionName {
 	case "move_left":
-		a.withSnake(u, func(s *snake) { s.movement = core.Left })
+		a.withSnake(u, func(s *snake) { s.SetDirection(core.Left) })
 	case "move_right":
-		a.withSnake(u, func(s *snake) { s.movement = core.Right })
+		a.withSnake(u, func(s *snake) { s.SetDirection(core.Right) })
 	case "move_up":
-		a.withSnake(u, func(s *snake) { s.movement = core.Up })
+		a.withSnake(u, func(s *snake) { s.SetDirection(core.Up) })
 	case "move_down":
-		a.withSnake(u, func(s *snake) { s.movement = core.Down })
+		a.withSnake(u, func(s *snake) { s.SetDirection(core.Down) })
 	}
 	return nil
 }
 
-// place the user into a game scene and allow him play
+// -> game_play
 func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponse {
-	a.game.CreateSnake(u, 6)
+	a.game.CreateSnake(u, 3)
 	return nil
 }
 
-// exit from the game
+// -> game_exit
 func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	a.game.DeleteSnake(u)
+
+	if len(a.game.user2snake) == 0 {
+		a.exit()
+	}
 	return nil
 }
 
+// <- STATUS_DEAD | win
 func (a *App) onSnakeDead(u room.IUser) {
-	a.SendMessageTo(u, messageDead)
+	serial, _ := a.GetUserCounter(u)
+	a.Broadcast(messageDead.WithStruct(&playerPayload{
+		UserName:   u.GetName(),
+		UserToken:  u.GetID(),
+		UserSerial: serial,
+	}))
+
+	if len(a.game.user2snake) <= 1 {
+		if len(a.game.user2snake) == 1 {
+			var w room.IUser
+			for w = range a.game.user2snake {
+			}
+
+			serial, _ := a.GetUserCounter(w)
+			a.Broadcast(messageWin.WithStruct(&playerPayload{
+				UserName:   w.GetName(),
+				UserToken:  w.GetID(),
+				UserSerial: serial,
+			}))
+		}
+		a.exit()
+	}
+}
+
+func (a *App) exit() {
+	for _, u := range a.Users {
+		u.Task(func() { u.RemoveFromRoom(a) })
+	}
+	if a.Manager != nil {
+		a.Manager.RemoveLobby(a.GetID(), nil)
+	}
 }
 
 // ----------------| helpers
@@ -95,7 +132,14 @@ type gameAction struct {
 	ActionName string `json:"action"`
 }
 
+type playerPayload struct {
+	UserName   string      `json:"user_name"`
+	UserToken  room.UserID `json:"user_token"`
+	UserSerial int64       `json:"user_serial"`
+}
+
 var (
+	messageWin            = room.RouteResponse{Status: "win"}.WithStruct("")
 	messageDead           = room.RouteResponse{Status: "STATUS_DEAD"}.WithStruct("")
 	messageNoSnake        = room.RouteResponse{Status: room.StatusError}.WithReason("No snake")
 	messageAlreadyPlays   = room.RouteResponse{Status: room.StatusError}.WithReason("already plays")

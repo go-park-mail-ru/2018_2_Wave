@@ -1,8 +1,8 @@
 package snake
 
 import (
-	"Wave/application/room"
-	"Wave/application/snake/core"
+	"Wave/internal/application/room"
+	"Wave/internal/application/snake/core"
 )
 
 type objectInfo struct {
@@ -22,4 +22,5 @@ type gameInfo struct {
 	Snakes    []snakeInfo  `json:"snakes"`
 	Food      []objectInfo `json:"food"`
 	Walls     []core.Vec2i `json:"walls"`
+	Boosters  []core.Vec2i `json:"boosters"`
 }

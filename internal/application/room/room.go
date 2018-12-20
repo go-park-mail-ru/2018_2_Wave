@@ -11,12 +11,13 @@ type Route func(IUser, IInMessage) IRouteResponse
 
 // Room - default IRoom
 type Room struct {
-	ID     RoomToken        // room ID
-	Type   RoomType         // room type
-	Ticker *time.Ticker     // room tick
-	Routes map[string]Route // signal -> handler
-	Users  map[UserID]IUser // room users
-	LG     *lg.Logger
+	ID      RoomToken        // room ID
+	Type    RoomType         // room type
+	Ticker  *time.Ticker     // room tick
+	Routes  map[string]Route // signal -> handler
+	Users   map[UserID]IUser // room users
+	LG      *lg.Logger       // logger
+	Manager IRoomManager     // just a boss
 
 	OnTick        func(time.Duration)
 	OnUserAdded   func(IUser)
@@ -60,6 +61,8 @@ func (r *Room) Run() error {
 			if r.OnTick != nil {
 				r.OnTick(r.Step)
 			}
+		case clb := <-r.task:
+			clb()
 		case <-r.CancelRoom:
 			return nil
 		}
@@ -82,8 +85,6 @@ func (r *Room) runBroadcast() {
 			for _, u := range r.Users {
 				r.SendMessageTo(u, rs)
 			}
-		case clb := <-r.task:
-			clb()
 		case <-r.CancelBroadcast:
 			return
 		}
@@ -94,42 +95,40 @@ func (r *Room) AddUser(u IUser) (err error) {
 	if u == nil {
 		return ErrorNil
 	}
-	r.doTask(func() {
-		if _, ok := r.Users[u.GetID()]; !ok {
-			r.Users[u.GetID()] = u
-			r.counter.Add(u.GetID())
-			r.log("user added", u.GetID())
-			if r.OnUserAdded != nil {
-				r.OnUserAdded(u)
-			}
-			return
+	if _, ok := r.Users[u.GetID()]; !ok {
+		r.Users[u.GetID()] = u
+		r.counter.Add(u.GetID())
+		r.log("user added", u.GetID())
+		if r.OnUserAdded != nil {
+			r.Async(func() { r.OnUserAdded(u) })
 		}
-		err = ErrorAlreadyExists
-	})
-	return err
+		return nil
+	}
+	return ErrorAlreadyExists
 }
 
 func (r *Room) RemoveUser(u IUser) (err error) {
 	if u == nil {
 		return ErrorNil
 	}
-	r.doTask(func() {
-		if _, ok := r.Users[u.GetID()]; ok {
-			delete(r.Users, u.GetID())
-			r.counter.Delete(u.GetID())
-			if r.OnUserRemoved != nil {
-				r.log("user removed", u.GetID())
-				r.OnUserRemoved(u)
-			}
-			return
+	if _, ok := r.Users[u.GetID()]; ok {
+		delete(r.Users, u.GetID())
+		r.counter.Delete(u.GetID())
+		r.log("user removed", u.GetID())
+		if r.OnUserRemoved != nil {
+			r.Async(func() { r.OnUserRemoved(u) })
 		}
-		err = ErrorNotExists
-	})
-	return err
+		return nil
+	}
+	return ErrorNotExists
 }
 
 func (r *Room) OnDisconnected(u IUser) {
 	r.RemoveUser(u)
+}
+
+func (r *Room) Task(t func()) {
+	r.task <- t
 }
 
 func (r *Room) ApplyMessage(u IUser, im IInMessage) error {
@@ -171,21 +170,19 @@ func (r *Room) Broadcast(rs IRouteResponse) error {
 }
 
 func (r *Room) GetUserCounter(u IUser) (counter int64, err error) {
-	r.doTask(func() {
-		counter, err = r.counter.GetUserCounter(u)
-	})
-	return counter, err
+	return r.counter.GetUserCounter(u)
 }
 
 func (r *Room) GetTokenCounter(t UserID) (counter int64, err error) {
-	r.doTask(func() {
-		counter, err = r.counter.GetTokenCounter(t)
-	})
-	return counter, err
+	return r.counter.GetTokenCounter(t)
 }
 
 func (r *Room) SetCounterType(CounterType NumerationType) {
 	r.counter.UserCounterType = CounterType
+}
+
+func (r *Room) IsAbleToRemove(IUser) bool {
+	return true
 }
 
 // ----------------|
@@ -211,4 +208,8 @@ func (r *Room) doTask(t func()) {
 		t()
 	}
 	wg.Wait()
+}
+
+func (r *Room) Async(t func()) {
+	r.task <- t
 }

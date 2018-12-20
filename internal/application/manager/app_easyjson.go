@@ -3,7 +3,7 @@
 package manager
 
 import (
-	room "Wave/application/room"
+	room "Wave/internal/application/room"
 	json "encoding/json"
 
 	easyjson "github.com/mailru/easyjson"

@@ -1,11 +1,12 @@
 package manager
 
-import "Wave/application/room"
+import "Wave/internal/application/room"
 
 var (
 	messageQSAcceptStatus = room.RouteResponse{Status: "quick_search_accept_status"}.WithStruct("")
 	messageQSFailed       = room.RouteResponse{Status: "quick_search_failed"}.WithStruct("")
-	messageQSStatus       = room.RouteResponse{Status: "quick_search_status"}.WithStruct("")
+	messageQSRemoved      = room.RouteResponse{Status: "quick_search_removed"}.WithStruct("")
+	messageQSAdded        = room.RouteResponse{Status: "quick_search_added"}.WithStruct("")
 	messageQSReady        = room.RouteResponse{Status: "quick_search_ready"}.WithStruct("")
 	messageQSDone         = room.RouteResponse{Status: "quick_search_done"}.WithStruct("")
 	messageQSKick         = room.RouteResponse{Status: "quick_search_kick"}.WithStruct("")
@@ -34,6 +35,7 @@ type roomInfoPayload struct {
 
 // easyjson:json
 type QSStatusMemberPayload struct {
+	UserName   string      `json:"user_name"`
 	UserToken  room.UserID `json:"user_token"`
 	UserSerial int64       `json:"user_serial"`
 }

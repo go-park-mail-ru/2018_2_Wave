@@ -1,7 +1,7 @@
 package manager
 
 import (
-	"Wave/application/room"
+	"Wave/internal/application/room"
 	"sync"
 	"time"
 )
@@ -32,6 +32,7 @@ type former struct {
 
 	onUserRemoved func(*former, room.IUser)
 	onUserAdded   func(*former, room.IUser)
+	onAcceped     func(*former, room.IUser)
 	onFormed      func(*former)
 	onFailed      func(*former)
 	onDone        func(*former)
@@ -60,10 +61,14 @@ func (f *former) AddUser(u room.IUser) {
 }
 
 func (f *former) RemoveUser(u room.IUser) {
-	if f.stage != stageForming {
+	if f.stage == stageForming {
+		f.removeUser(u)
 		return
 	}
-	f.removeUser(u)
+	if f.stage == stageAccepting {
+		f.Accept(u, false)
+		return
+	}
 }
 
 func (f *former) Accept(u room.IUser, bAccept bool) {
@@ -79,6 +84,9 @@ func (f *former) Accept(u room.IUser, bAccept bool) {
 		if expectant.IUser == u && bAccept {
 			f.users[i].bAccepted = true
 			accepted++
+			if f.onAcceped != nil {
+				f.onAcceped(f, u)
+			}
 		} else if expectant.IUser == u {
 			f.removeUser(u)
 			f.stage = stageForming
@@ -143,16 +151,31 @@ type builder struct {
 
 	OnUserRemoved func(*former, room.IUser)
 	OnUserAdded   func(*former, room.IUser)
+	OnAcceped     func(*former, room.IUser)
 	OnFormed      func(*former)
 	OnFailed      func(*former)
 	OnDone        func(*former)
 }
 
 func newBuilder() *builder {
-	return &builder{
+	b := &builder{
 		formers: make(map[room.RoomType][]*former),
 		u2f:     make(map[room.IUser]*former),
 	}
+	// go func() {
+	// 	for {
+	// 		time.Sleep(5 * time.Second)
+
+	// 		b.mu.Lock()
+	// 		fmt.Print("|")
+	// 		for u := range b.u2f {
+	// 			fmt.Print(u.GetID())
+	// 		}
+	// 		fmt.Println("|")
+	// 		b.mu.Unlock()
+	// 	}
+	// }()
+	return b
 }
 
 func (b *builder) AddUser(u room.IUser, roomType room.RoomType, players int) {
@@ -161,6 +184,8 @@ func (b *builder) AddUser(u room.IUser, roomType room.RoomType, players int) {
 	// if not searches
 	if _, ok := b.u2f[u]; !ok {
 		b.getFormer(roomType, players).AddUser(u)
+	} else {
+		println("user already exists")
 	}
 }
 
@@ -184,6 +209,8 @@ func (b *builder) removeUser(u room.IUser) {
 	// if searches
 	if f, ok := b.u2f[u]; ok {
 		f.RemoveUser(u)
+	} else {
+		println("user not found")
 	}
 }
 
@@ -207,10 +234,11 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 
 	// create a new former
 	f := &former{
-		aim:      players,
-		rType:    roomType,
-		counter:  room.NewCounter(room.FillGaps),
-		onFailed: b.OnFailed,
+		aim:       players,
+		rType:     roomType,
+		counter:   room.NewCounter(room.FillGaps),
+		onFailed:  b.OnFailed,
+		onAcceped: b.OnAcceped,
 		onUserAdded: func(f *former, u room.IUser) {
 			b.u2f[u] = f
 			if b.OnUserAdded != nil {
@@ -242,10 +270,15 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 				if expectant != f {
 					continue
 				}
+				// remove the former
 				ff = append(ff[:i], ff[i+1:]...)
 				b.formers[roomType] = ff
 				if b.OnDone != nil {
 					b.OnDone(f)
+				}
+				// remove users
+				for _, u := range f.users {
+					delete(b.u2f, u.IUser)
 				}
 				return
 			}

@@ -11,13 +11,13 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"Wave/application/manager"
-	"Wave/application/room"
-	"Wave/application/snake"
+	"Wave/internal/application/manager"
+	"Wave/internal/application/room"
+	"Wave/internal/application/snake"
 )
 
 // TODO:: get the value from configuration files
-const wsAppTickRate = 500 * time.Millisecond
+const wsAppTickRate = 16 * time.Millisecond
 
 type Handler struct {
 	LG *logger.Logger
@@ -59,17 +59,18 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		var (
-			cookie        = misc.GetSessionCookie(r)
-			userInfo, err = h.AuthManager.Info(r.Context(), &auth.Cookie{CookieValue: cookie})
-			username room.UserID
+			cookie = misc.GetSessionCookie(r)
+			username string
 		)
-		if err != nil {
-			username = h.wsApp.GetNextUserID()
-		} else {
-			username = room.UserID(userInfo.Username)
+		if userInfo, err := h.AuthManager.Info(
+			r.Context(), 
+			&auth.Cookie{CookieValue: cookie},
+		); err != nil {
+			username = userInfo.GetUsername()
 		}
 
-		user := room.NewUser(username, ws)
+		user := room.NewUser(h.wsApp.GetNextUserID(), ws)
+		user.Name = username
 		user.LG = h.LG
 		user.AddToRoom(h.wsApp)
 		user.Listen()

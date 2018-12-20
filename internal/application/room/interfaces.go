@@ -16,7 +16,7 @@ import "time"
 type RoomToken string
 type UserID string
 type RoomType string
-type RoomFactory func(id RoomToken, step time.Duration, db interface{}) IRoom
+type RoomFactory func(id RoomToken, step time.Duration, _ IRoomManager, db interface{}) IRoom
 
 // IInMessage - message from a user
 type IInMessage interface {
@@ -43,12 +43,15 @@ type IRouteResponse interface {
 
 // IUser - client websocket wrapper
 type IUser interface {
+	GetName() string
 	GetID() UserID              // User id
 	AddToRoom(IRoom) error      // order to add self into the room
 	RemoveFromRoom(IRoom) error // order to romve self from the room
 	Listen() error              // Listen to messages
 	StopListening() error       // Stop listening
 	Consume(IOutMessage) error  // Send message to user
+
+	Task(func())
 }
 
 // IRoom - abstruct room inteface
@@ -61,4 +64,13 @@ type IRoom interface {
 	RemoveUser(IUser) error               // remove  the user from the room
 	OnDisconnected(IUser)                 // inform the room the user was disconnected
 	ApplyMessage(IUser, IInMessage) error // send message to the room
+
+	Task(func())
+	IsAbleToRemove(IUser) bool
+}
+
+// IRoomManager -
+type IRoomManager interface {
+	CreateLobby(RoomType, RoomToken) (IRoom, error)
+	RemoveLobby(RoomToken, IUser) error
 }
