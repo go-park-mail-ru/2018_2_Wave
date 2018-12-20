@@ -50,6 +50,8 @@ type IUser interface {
 	Listen() error              // Listen to messages
 	StopListening() error       // Stop listening
 	Consume(IOutMessage) error  // Send message to user
+
+	Task(func())
 }
 
 // IRoom - abstruct room inteface
@@ -63,6 +65,7 @@ type IRoom interface {
 	OnDisconnected(IUser)                 // inform the room the user was disconnected
 	ApplyMessage(IUser, IInMessage) error // send message to the room
 
+	Task(func())
 	IsAbleToRemove(IUser) bool
 }
 

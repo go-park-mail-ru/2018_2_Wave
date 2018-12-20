@@ -155,14 +155,14 @@ func (m *Manager) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomT
 
 func (m *Manager) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
 	if r, ok := m.rooms[cmd]; ok {
-		u.AddToRoom(r)
+		u.Task(func() { u.AddToRoom(r) })
 	}
 	return nil
 }
 
 func (m *Manager) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
 	if r, ok := m.rooms[cmd]; ok {
-		u.RemoveFromRoom(r)
+		u.Task(func() { u.RemoveFromRoom(r) })
 	}
 	return nil
 }
@@ -202,11 +202,13 @@ func (m *Manager) onQSAccept(u room.IUser, im room.IInMessage) room.IRouteRespon
 func (m *Manager) onQSRemoved(f *former, u room.IUser) {
 	m.SendMessageTo(u, messageQSKick)
 	m.onQSStatus(f, messageQSRemoved)
+	println("search removed", u.GetID())
 }
 
 // <- quick_search_added
 func (m *Manager) onQSAdded(f *former, u room.IUser) {
 	m.onQSStatus(f, messageQSAdded)
+	println("search added", u.GetID())
 }
 
 // <- quick_search_accept_status
@@ -226,6 +228,7 @@ func (m *Manager) onQSAcceptStatus(f *former, u room.IUser) {
 	for _, u := range f.users {
 		m.SendMessageTo(u, om)
 	}
+	println("search accept", u.GetID())
 }
 
 func (m *Manager) onQSStatus(f *former, om *room.RouteResponse) {
@@ -252,6 +255,7 @@ func (m *Manager) onQSReady(f *former) {
 	for _, u := range f.users {
 		m.SendMessageTo(u, om)
 	}
+	println("search ready")
 }
 
 // <- quick_search_done
@@ -267,7 +271,9 @@ func (m *Manager) onQSDone(f *former) {
 	for _, u := range f.users {
 		m.SendMessageTo(u, om)
 		u.AddToRoom(r)
+		// u.Task(func() { u.AddToRoom(r) }) // TODO::
 	}
+	println("search done")
 }
 
 // <- quick_search_failed
@@ -275,6 +281,7 @@ func (m *Manager) onQSFailed(f *former) {
 	for _, u := range f.users {
 		m.SendMessageTo(u, messageQSFailed)
 	}
+	println("search failed")
 }
 
 // ----------------| helper functions

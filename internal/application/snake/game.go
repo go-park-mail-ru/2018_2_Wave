@@ -73,11 +73,12 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 	g.user2snake[u] = snake
 	snake.onDestoyed = func() {
 		delete(g.user2snake, u)
-		
+
 		if g.OnSnakeDead != nil {
 			g.OnSnakeDead(u)
 		}
 	}
+	println("snake created", u.GetID())
 	return snake, nil
 }
 

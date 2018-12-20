@@ -117,6 +117,9 @@ func (a *App) onSnakeDead(u room.IUser) {
 }
 
 func (a *App) exit() {
+	for _, u := range a.Users {
+		u.Task(func() { u.RemoveFromRoom(a) })
+	}
 	if a.Manager != nil {
 		a.Manager.RemoveLobby(a.GetID(), nil)
 	}

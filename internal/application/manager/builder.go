@@ -2,7 +2,6 @@ package manager
 
 import (
 	"Wave/internal/application/room"
-	"fmt"
 	"sync"
 	"time"
 )
@@ -163,19 +162,19 @@ func newBuilder() *builder {
 		formers: make(map[room.RoomType][]*former),
 		u2f:     make(map[room.IUser]*former),
 	}
-	go func() {
-		for {
-			time.Sleep(5 * time.Second)
+	// go func() {
+	// 	for {
+	// 		time.Sleep(5 * time.Second)
 
-			b.mu.Lock()
-			fmt.Print("|")
-			for u := range b.u2f {
-				fmt.Print(u.GetID())
-			}
-			fmt.Println("|")
-			b.mu.Unlock()
-		}
-	}()
+	// 		b.mu.Lock()
+	// 		fmt.Print("|")
+	// 		for u := range b.u2f {
+	// 			fmt.Print(u.GetID())
+	// 		}
+	// 		fmt.Println("|")
+	// 		b.mu.Unlock()
+	// 	}
+	// }()
 	return b
 }
 
@@ -281,7 +280,6 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 				for _, u := range f.users {
 					delete(b.u2f, u.IUser)
 				}
-				fmt.Printf("%#v", b.u2f)
 				return
 			}
 		},
