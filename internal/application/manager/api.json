@@ -84,12 +84,28 @@
                 }
             }, 
             {
-                "verbose": "someone added or removed",
+                "verbose": "someone added",
                 "response": {
-                    "status": "quick_search_status",
+                    "status": "quick_search_added",
                     "payload": {
                         "members": [ 
                             {
+                                "user_name": "",
+                                "user_token": "",
+                                "user_serial": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "verbose": "someone removed",
+                "response": {
+                    "status": "quick_search_removed",
+                    "payload": {
+                        "members": [ 
+                            {
+                                "user_name": "",
                                 "user_token": "",
                                 "user_serial": 1
                             }
@@ -128,7 +144,9 @@
                     "payload": {
                         "members": [
                             {
-                                "user_token": ""
+                                "user_name": "",
+                                "user_token": "",
+                                "user_serial": 1
                             }
                         ]
                     }

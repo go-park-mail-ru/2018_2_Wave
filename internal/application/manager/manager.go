@@ -1,7 +1,7 @@
 package manager
 
 import (
-	"Wave/application/room"
+	"Wave/internal/application/room"
 	"Wave/internal/metrics"
 	"strconv"
 	"sync"
@@ -41,6 +41,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Pr
 		prof:    prof,
 		db:      db,
 	}
+	m.OnUserRemoved = m.onUserRemoved
 	m.Routes["lobby_list"] = m.onGetLobbyList
 	m.Routes["lobby_create"] = withRoomType(m.onLobbyCreate)
 	m.Routes["lobby_delete"] = withRoomID(m.onLobbyDelete)
@@ -53,6 +54,7 @@ func New(id room.RoomToken, step time.Duration, db interface{}, prof *metrics.Pr
 	m.Routes["quick_search_accept"] = m.onQSAccept
 	m.builder.OnUserAdded = m.onQSAdded
 	m.builder.OnUserRemoved = m.onQSRemoved
+	m.builder.OnAcceped = m.onQSAcceptStatus
 	m.builder.OnFormed = m.onQSReady
 	m.builder.OnFailed = m.onQSFailed
 	m.builder.OnDone = m.onQSDone
@@ -82,13 +84,13 @@ func (m *Manager) GetNextRoomID() room.RoomToken {
 }
 
 // CreateLobby -
-func (m *Manager) CreateLobby(room_type room.RoomType, room_token room.RoomToken) (room.IRoom, error) {
-	if factory, ok := type2Factory[room_type]; ok {
-		r := factory(room_token, m.Step, m.db)
+func (m *Manager) CreateLobby(roomType room.RoomType, roomToken room.RoomToken) (room.IRoom, error) {
+	if factory, ok := type2Factory[roomType]; ok {
+		r := factory(roomToken, m.Step, m, m.db)
 		if r == nil {
 			return nil, room.ErrorNil
 		}
-		m.rooms[room_token] = r
+		m.rooms[roomToken] = r
 		go r.Run()
 
 		// profiler
@@ -101,7 +103,29 @@ func (m *Manager) CreateLobby(room_type room.RoomType, room_token room.RoomToken
 	return nil, room.ErrorNotExists
 }
 
+// RemoveLobby - 
+func (m *Manager) RemoveLobby(roomToken room.RoomToken, u room.IUser) error {
+	if r, ok := m.rooms[roomToken]; ok {
+		if r.IsAbleToRemove(u) {
+			r.Stop()
+			delete(m.rooms, roomToken)
+
+			// profiler
+			if m.prof != nil {
+				m.prof.ActiveRooms.Dec()
+			}
+			return nil
+		}
+		return room.ErrorForbiden
+	}
+	return room.ErrorNotFound
+}
+
 // ----------------| handlers
+
+func (m *Manager) onUserRemoved(u room.IUser) {
+	m.builder.RemoveUser(u) // kick from quick serach
+}
 
 func (m *Manager) onGetLobbyList(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	data := []roomInfoPayload{}
@@ -125,34 +149,27 @@ func (m *Manager) onLobbyCreate(u room.IUser, im room.IInMessage, cmd room.RoomT
 }
 
 func (m *Manager) onLobbyDelete(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
-	if r, ok := m.rooms[cmd]; ok {
-		r.Stop()
-		delete(m.rooms, cmd)
-
-		// profiler
-		if m.prof != nil {
-			m.prof.ActiveRooms.Dec()
-		}
-	}
+	m.RemoveLobby(cmd, u)
 	return nil
 }
 
 func (m *Manager) onAddToRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
 	if r, ok := m.rooms[cmd]; ok {
-		u.AddToRoom(r)
+		u.Task(func() { u.AddToRoom(r) })
 	}
 	return nil
 }
 
 func (m *Manager) onRemoveFromRoom(u room.IUser, im room.IInMessage, cmd room.RoomToken) room.IRouteResponse {
 	if r, ok := m.rooms[cmd]; ok {
-		u.RemoveFromRoom(r)
+		u.Task(func() { u.RemoveFromRoom(r) })
 	}
 	return nil
 }
 
 // ------| quick serarch
 
+// -> quick_search
 func (m *Manager) onQSBegin(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	p := &QSPayload{}
 	if err := im.ToStruct(p); err != nil {
@@ -165,11 +182,13 @@ func (m *Manager) onQSBegin(u room.IUser, im room.IInMessage) room.IRouteRespons
 	return nil
 }
 
+// -> quick_search_abort
 func (m *Manager) onQSAbort(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	m.builder.RemoveUser(u)
 	return nil
 }
 
+// -> quick_search_accept
 func (m *Manager) onQSAccept(u room.IUser, im room.IInMessage) room.IRouteResponse {
 	p := &QSAcceptPayload{}
 	if err := im.ToStruct(p); err != nil {
@@ -179,30 +198,55 @@ func (m *Manager) onQSAccept(u room.IUser, im room.IInMessage) room.IRouteRespon
 	return nil
 }
 
+// <- quick_search_removed | quick_search_kick
 func (m *Manager) onQSRemoved(f *former, u room.IUser) {
 	m.SendMessageTo(u, messageQSKick)
-	m.onQSStatus(f)
+	m.onQSStatus(f, messageQSRemoved)
+	println("search removed", u.GetID())
 }
 
+// <- quick_search_added
 func (m *Manager) onQSAdded(f *former, u room.IUser) {
-	m.onQSStatus(f)
+	m.onQSStatus(f, messageQSAdded)
+	println("search added", u.GetID())
 }
 
-func (m *Manager) onQSStatus(f *former) {
+// <- quick_search_accept_status
+func (m *Manager) onQSAcceptStatus(f *former, u room.IUser) {
+	p := &QSStatusPayload{}
+	for _, u := range f.users {
+		if !u.bAccepted {
+			continue
+		}
+		p.Members = append(p.Members, QSStatusMemberPayload{
+			UserToken:  u.GetID(),
+			UserName:   u.GetName(),
+			UserSerial: f.GetUserSerial(u),
+		})
+	}
+	om := messageQSAcceptStatus.WithStruct(p)
+	for _, u := range f.users {
+		m.SendMessageTo(u, om)
+	}
+	println("search accept", u.GetID())
+}
+
+func (m *Manager) onQSStatus(f *former, om *room.RouteResponse) {
 	p := &QSStatusPayload{}
 	for _, u := range f.users {
 		p.Members = append(p.Members, QSStatusMemberPayload{
 			UserToken:  u.GetID(),
+			UserName:   u.GetName(),
 			UserSerial: f.GetUserSerial(u),
 		})
 	}
-
-	om := messageQSStatus.WithStruct(p)
+	om = om.WithStruct(p)
 	for _, u := range f.users {
 		m.SendMessageTo(u, om)
 	}
 }
 
+// <- quick_search_ready
 func (m *Manager) onQSReady(f *former) {
 	p := &QSReadyPayload{
 		AcceptTimeout: m.builder.acceptTime,
@@ -211,8 +255,10 @@ func (m *Manager) onQSReady(f *former) {
 	for _, u := range f.users {
 		m.SendMessageTo(u, om)
 	}
+	println("search ready")
 }
 
+// <- quick_search_done
 func (m *Manager) onQSDone(f *former) {
 	r, err := m.CreateLobby(f.rType, m.GetNextRoomID())
 	if err != nil {
@@ -225,13 +271,17 @@ func (m *Manager) onQSDone(f *former) {
 	for _, u := range f.users {
 		m.SendMessageTo(u, om)
 		u.AddToRoom(r)
+		// u.Task(func() { u.AddToRoom(r) }) // TODO::
 	}
+	println("search done")
 }
 
+// <- quick_search_failed
 func (m *Manager) onQSFailed(f *former) {
 	for _, u := range f.users {
 		m.SendMessageTo(u, messageQSFailed)
 	}
+	println("search failed")
 }
 
 // ----------------| helper functions

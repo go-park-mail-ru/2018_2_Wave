@@ -1,7 +1,7 @@
 package snake
 
 import (
-	"Wave/application/snake/core"
+	"Wave/internal/application/snake/core"
 	"math/rand"
 )
 

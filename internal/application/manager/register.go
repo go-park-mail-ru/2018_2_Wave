@@ -1,8 +1,8 @@
 package manager
 
 import (
-	"Wave/application/room"
-	"Wave/application/snake"
+	"Wave/internal/application/room"
+	"Wave/internal/application/snake"
 )
 
 // type2Factory - singletone map converting room type to the room factory

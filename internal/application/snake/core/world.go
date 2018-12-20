@@ -1,7 +1,7 @@
 package core
 
 import (
-	"Wave/application/room"
+	"Wave/internal/application/room"
 	"time"
 )
 
@@ -77,6 +77,13 @@ func (w *World) FindGap(length int, dir Direction) (res []Vec2i, err error) {
 		return w.scene.FindGap(length, dir)
 	}
 	// TODO:: log
+	return nil, room.ErrorNil
+}
+
+func (w *World) FindArea(length int, dir Direction, padding int) (res []Vec2i, err error) {
+	if w.scene != nil {
+		return w.scene.FindArea(length, dir, padding)
+	}
 	return nil, room.ErrorNil
 }
 
