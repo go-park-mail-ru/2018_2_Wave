@@ -57,12 +57,6 @@ func (u *User) RemoveFromRoom(r IRoom) error {
 }
 
 func (u *User) Listen() error {
-	defer func() {
-		if err := recover(); err != nil {
-			u.StopListening()
-		}
-	}()
-
 	u.LG.Sugar.Infof("User started: id=%s", u.GetID())
 	defer func() {
 		u.LG.Sugar.Infof("User stopped: id=%s", u.GetID())
@@ -143,6 +137,12 @@ func (u *User) getRoom(name RoomToken) (IRoom, bool) {
 }
 
 func (u *User) sendWorker() {
+	defer func() {
+		if err := recover(); err != nil {
+			u.StopListening()
+		}
+	}()
+
 	for {
 		select {
 		case m := <-u.output:
