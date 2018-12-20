@@ -566,3 +566,61 @@ func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
 		"who", "DeleteApp",
 	)
 }
+
+func (model *DatabaseModel) GetMyApps(cookie string) /*(apps models.Applications)*/ {
+	/*	rows, _ := model.Database.Queryx(`
+		SELECT A.name,A.cover,A.description,A.installations,A.price,A.year,UA.time_spent
+		FROM app AS A, userapp AS UA
+		WHERE A.appid IN (SELECT userapp.appid, userapp.time_spent
+							FROM userapp
+							WHERE userapp.uid=(SELECT DISTINCT session.uid
+												FROM session
+												JOIN userinfo ON session.uid=userinfo.uid
+												WHERE cookie=$1))
+		AND UA.time_spent;
+		`, cookie)
+		defer rows.Close()
+
+		for rows.Next() {
+			temp := models.Application{}
+			if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Description, &temp.Installations, &temp.Price, &temp.Year); err != nil {
+
+				model.LG.Sugar.Infow(
+					"scan failed",
+					"source", "database.go",
+					"who", "GetMyApps",
+				)
+
+				return models.Applications{}
+			}
+
+			apps.Applications = append(apps.Applications, temp)
+		}
+
+		model.LG.Sugar.Infow(
+			"GetMyApps succeeded",
+			"source", "database.go",
+			"who", "GetMyApps",
+		)
+
+		return apps*/
+}
+
+func (model *DatabaseModel) IncrementTime(cookie string, appname string) {
+	model.Database.MustExec(`
+		UPDATE userapp
+		SET time_total=time_total+10
+		WHERE uid=(SELECT session.uid FROM session
+			JOIN userinfo
+			ON session.uid=userinfo.uid
+			WHERE cookie=$1)
+		AND appid=(SELECT appid FROM app
+			WHERE name=$2);
+	`, cookie, appname)
+
+	model.LG.Sugar.Infow(
+		"IncrementTime succeeded",
+		"source", "database.go",
+		"who", "IncrementTime",
+	)
+}
