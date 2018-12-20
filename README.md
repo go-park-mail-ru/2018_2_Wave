@@ -5,9 +5,6 @@
 ![Alt Text](https://media.giphy.com/media/l3vR2SwA3hfH4NtVC/giphy.gif)
 
 ## Сборка
-
-Перед сборкой необходимо иметь нужную конфигурацию ``PostgreSQL`` и ``Go1.11``.
-
 ```
 ./init.sh
 ```
