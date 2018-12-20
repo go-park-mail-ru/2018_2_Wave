@@ -73,7 +73,7 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 	s := &snake{
 		world:      w,
 		movement:   direction,
-		baseTick:   50 * time.Millisecond,
+		baseTick:   200 * time.Millisecond,
 		tickFactor: 0.9,
 	}
 	s.ticker = core.MakeTicker(s.moveNext, s.baseTick)
