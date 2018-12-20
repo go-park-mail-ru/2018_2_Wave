@@ -1,6 +1,7 @@
 package snake
 
 import (
+	"math"
 	"time"
 
 	"Wave/internal/application/snake/core"
@@ -73,7 +74,7 @@ func newSnake(w *core.World, points []core.Vec2i, direction core.Direction) *sna
 		world:      w,
 		movement:   direction,
 		baseTick:   100 * time.Millisecond,
-		tickFactor: 0.8,
+		tickFactor: 0.9,
 	}
 	s.ticker = core.MakeTicker(s.moveNext, s.baseTick)
 	l := 'a'
@@ -156,7 +157,7 @@ func (s *snake) getTail() *snakeNode {
 
 func (s *snake) onLengthChanged() {
 	if len(s.body) > 0 {
-		factor := s.tickFactor * float64(len(s.body))
+		factor := math.Pow(s.tickFactor, float64(len(s.body)))
 		time := s.baseTick * time.Duration(factor)
 		s.ticker.SetTickTime(time)
 	}
