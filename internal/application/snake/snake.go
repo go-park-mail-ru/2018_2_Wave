@@ -158,7 +158,7 @@ func (s *snake) getTail() *snakeNode {
 func (s *snake) onLengthChanged() {
 	if len(s.body) > 0 {
 		factor := math.Pow(s.tickFactor, float64(len(s.body)))
-		time := s.baseTick * time.Duration(factor)
+		time := time.Duration(factor * float64(s.baseTick))
 		s.ticker.SetTickTime(time)
 	}
 }
