@@ -4,7 +4,6 @@ package models
 
 import (
 	json "encoding/json"
-
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -775,6 +774,8 @@ func easyjsonD2b7633eDecodeWaveInternalModels8(in *jlexer.Lexer, out *Applicatio
 			out.Installations = int(in.Int())
 		case "price":
 			out.Price = int(in.Int())
+		case "year":
+			out.Year = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -838,6 +839,16 @@ func easyjsonD2b7633eEncodeWaveInternalModels8(out *jwriter.Writer, in Applicati
 			out.RawString(prefix)
 		}
 		out.Int(int(in.Price))
+	}
+	{
+		const prefix string = ",\"year\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Year))
 	}
 	out.RawByte('}')
 }

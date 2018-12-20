@@ -7,6 +7,7 @@ type Application struct {
 	Description   string `json:"description"`
 	Installations int    `json:"installations"`
 	Price         int    `json:"price"`
+	Year          string `json:"year"`
 }
 
 // easyjson:json

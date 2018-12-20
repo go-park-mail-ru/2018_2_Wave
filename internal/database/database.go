@@ -403,14 +403,14 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 
 func (model *DatabaseModel) GetApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name, cover
+		SELECT name,cover,description,installations,price,year
 		FROM app
 	`)
 	defer rows.Close()
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Name, &temp.Cover); err != nil {
+		if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Description, &temp.Installations, &temp.Price, &temp.Year); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
@@ -435,15 +435,15 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name, cover, installations
+		SELECT name,cover,description,installations,price,year
 		FROM app
-		ORDER BY installations;
+		ORDER BY installations DESC;
 	`)
 	defer rows.Close()
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Installations); err != nil {
+		if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Description, &temp.Installations, &temp.Price, &temp.Year); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
@@ -469,11 +469,11 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`
-			SELECT name, cover, description
+			SELECT name,cover,description,installations,price,year
 			FROM app
 			WHERE name=$1;
 		`, name)
-		err := row.Scan(&app.Name, &app.Cover, &app.Description)
+		err := row.Scan(&app.Name, &app.Cover, &app.Description, &app.Installations, &app.Price, &app.Year)
 
 		if err != nil {
 
