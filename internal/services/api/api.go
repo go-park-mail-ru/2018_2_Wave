@@ -4,17 +4,17 @@ import (
 	psql "Wave/internal/database"
 	lg "Wave/internal/logger"
 	mc "Wave/internal/metrics"
-	"Wave/internal/services/auth/proto"
-	"Wave/internal/models"
 	"Wave/internal/misc"
+	"Wave/internal/models"
+	auth "Wave/internal/services/auth/proto"
 
 	"fmt"
-	"net/http"
-	"reflect"
-	"strconv"
-	"os"
 	"io"
 	"log"
+	"net/http"
+	"os"
+	"reflect"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
@@ -22,9 +22,9 @@ import (
 )
 
 type Handler struct {
-	DB psql.DatabaseModel
-	LG *lg.Logger
-	Prof *mc.Profiler
+	DB          psql.DatabaseModel
+	LG          *lg.Logger
+	Prof        *mc.Profiler
 	AuthManager auth.AuthClient
 }
 
@@ -34,10 +34,10 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	if err != nil || file == nil {
 
 		h.LG.Sugar.Infow("upload failed, unable to read from FormFile or avatar not provided, default avatar set",
-		"source", "api.go",
-		"who", "uploadHandler",)
+			"source", "api.go",
+			"who", "uploadHandler")
 
-        return true, "/img/avatars/default"
+		return true, "/img/avatars/default"
 	}
 
 	defer file.Close()
@@ -52,28 +52,28 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 	out, err := os.Create(createPath)
 	defer out.Close()
 
-    if err != nil {
+	if err != nil {
 
 		h.LG.Sugar.Infow("upload failed, file couldn't be created",
-		"source", "api.go",
-		"who", "uploadHandler",)
-
-        return false, ""
-    }
-
-    _, err = io.Copy(out, file)
-    if err != nil {
-
-        h.LG.Sugar.Infow("upload failed, couldn't copy data",
-		"source", "api.go",
-		"who", "uploadHandler",)
+			"source", "api.go",
+			"who", "uploadHandler")
 
 		return false, ""
-    }
+	}
+
+	_, err = io.Copy(out, file)
+	if err != nil {
+
+		h.LG.Sugar.Infow("upload failed, couldn't copy data",
+			"source", "api.go",
+			"who", "uploadHandler")
+
+		return false, ""
+	}
 
 	h.LG.Sugar.Infow("upload succeeded",
 		"source", "api.go",
-		"who", "uploadHandler",)
+		"who", "uploadHandler")
 
 	return true, path
 }
@@ -82,8 +82,8 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -110,22 +110,22 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users failed, bad avatar.",
-		"source", "api.go",
-		"who", "RegisterPOSTHandler",)
+			"source", "api.go",
+			"who", "RegisterPOSTHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("400", "BAD REQUEST").
-		Add(1)
+			WithLabelValues("400", "BAD REQUEST").
+			Add(1)
 
 		return
 	}
 
 	cookie, err := h.AuthManager.Create(
-			context.Background(),
-			&auth.Credentials{
+		context.Background(),
+		&auth.Credentials{
 			Username: user.Username,
 			Password: user.Password,
-			Avatar: user.Avatar,
+			Avatar:   user.Avatar,
 		})
 
 	if err != nil {
@@ -139,12 +139,12 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(rw, string(payload))
 
 			h.LG.Sugar.Infow("/users failed, bad username or/and password.",
-			"source", "api.go",
-			"who", "RegisterPOSTHandler",)
+				"source", "api.go",
+				"who", "RegisterPOSTHandler")
 
 			h.Prof.HitsStats.
-			WithLabelValues("403", "FORBIDDEN").
-			Add(1)
+				WithLabelValues("403", "FORBIDDEN").
+				Add(1)
 
 			return
 		}
@@ -152,12 +152,12 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/users failed",
-		"source", "api.go",
-		"who", "RegisterPOSTHandler",)
+			"source", "api.go",
+			"who", "RegisterPOSTHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("500", "INTERNAL SERVER ERROR").
-		Add(1)
+			WithLabelValues("500", "INTERNAL SERVER ERROR").
+			Add(1)
 
 		return
 	}
@@ -172,12 +172,12 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users failed, username already in use.",
-		"source", "api.go",
-		"who", "RegisterPOSTHandler",)
+			"source", "api.go",
+			"who", "RegisterPOSTHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("403", "FORBIDDEN").
-		Add(1)
+			WithLabelValues("403", "FORBIDDEN").
+			Add(1)
 
 		return
 	}
@@ -188,11 +188,11 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/users succeeded",
 		"source", "api.go",
-		"who", "RegisterPOSTHandler",)
+		"who", "RegisterPOSTHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("201", "CREATED").
-	Add(1)
+		WithLabelValues("201", "CREATED").
+		Add(1)
 
 	return
 }
@@ -208,8 +208,8 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.Prof.HitsStats.
-		WithLabelValues("500", "INTERNAL SERVER ERROR").
-		Add(1)
+			WithLabelValues("500", "INTERNAL SERVER ERROR").
+			Add(1)
 
 		return
 	}
@@ -220,11 +220,11 @@ func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/users/me succeeded",
 		"source", "api.go",
-		"who", "MeGETHandler",)
+		"who", "MeGETHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -253,12 +253,12 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me failed, bad avatar.",
-		"source", "api.go",
-		"who", "EditMePUTHandler",)
+			"source", "api.go",
+			"who", "EditMePUTHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("403", "FORBIDDEN").
-		Add(1)
+			WithLabelValues("403", "FORBIDDEN").
+			Add(1)
 
 		return
 	}
@@ -276,25 +276,25 @@ func (h *Handler) EditMePUTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/users/me failed",
-		"source", "api.go",
-		"who", "EditMePUTHandler",)
+			"source", "api.go",
+			"who", "EditMePUTHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("403", "FORBIDDEN").
-		Add(1)
+			WithLabelValues("403", "FORBIDDEN").
+			Add(1)
 
 		return
 	}
 
 	h.LG.Sugar.Infow("/users/me succeeded, user profile updated",
-	"source", "api.go",
-	"who", "EditMePUTHandler",)
+		"source", "api.go",
+		"who", "EditMePUTHandler")
 
 	rw.WriteHeader(http.StatusOK)
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -309,12 +309,12 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/users/{name} failed",
-		"source", "api.go",
-		"who", "UserGETHandler",)
+			"source", "api.go",
+			"who", "UserGETHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("500", "INTERNAL SERVER ERROR").
-		Add(1)
+			WithLabelValues("500", "INTERNAL SERVER ERROR").
+			Add(1)
 
 		return
 	}
@@ -323,12 +323,12 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusNotFound)
 
 		h.LG.Sugar.Infow("/users/{name} failed",
-		"source", "api.go",
-		"who", "UserGETHandler",)
+			"source", "api.go",
+			"who", "UserGETHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("404", "NOT FOUND").
-		Add(1)
+			WithLabelValues("404", "NOT FOUND").
+			Add(1)
 
 		return
 	}
@@ -339,11 +339,11 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/users/{name} succeeded",
 		"source", "api.go",
-		"who", "UserGETHandler",)
+		"who", "UserGETHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -360,12 +360,12 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/users/leaders failed",
-		"source", "api.go",
-		"who", "LeadersGETHandler",)
+			"source", "api.go",
+			"who", "LeadersGETHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("500", "INTERNAL SERVER ERROR").
-		Add(1)
+			WithLabelValues("500", "INTERNAL SERVER ERROR").
+			Add(1)
 
 		return
 	}
@@ -375,12 +375,12 @@ func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(rw, string(payload))
 
 	h.LG.Sugar.Infow("/users/leaders succeeded",
-	"source", "api.go",
-	"who", "LeadersGETHandler",)
+		"source", "api.go",
+		"who", "LeadersGETHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -399,12 +399,12 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/session failed",
-		"source", "api.go",
-		"who", "LoginPOSTHandler",)
+			"source", "api.go",
+			"who", "LoginPOSTHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("500", "INTERNAL SERVER ERROR").
-		Add(1)
+			WithLabelValues("500", "INTERNAL SERVER ERROR").
+			Add(1)
 
 		return
 	}
@@ -419,12 +419,12 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/session failed, incorrect password or/and username",
-		"source", "api.go",
-		"who", "LoginPOSTHandler",)
+			"source", "api.go",
+			"who", "LoginPOSTHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("401", "UNAUTHORIZED").
-		Add(1)
+			WithLabelValues("401", "UNAUTHORIZED").
+			Add(1)
 
 		return
 	}
@@ -435,11 +435,11 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/session succeeded",
 		"source", "api.go",
-		"who", "LoginPOSTHandler",)
+		"who", "LoginPOSTHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -458,12 +458,12 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/session failed",
-		"source", "api.go",
-		"who", "LogoutDELETEHandler",)
+			"source", "api.go",
+			"who", "LogoutDELETEHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("500", "INTERNAL SERVER ERROR").
-		Add(1)
+			WithLabelValues("500", "INTERNAL SERVER ERROR").
+			Add(1)
 
 		return
 	}
@@ -473,11 +473,11 @@ func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/session succeeded",
 		"source", "api.go",
-		"who", "LogoutDELETEHandler",)
+		"who", "LogoutDELETEHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -488,7 +488,7 @@ func (h *Handler) EditMeOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/users/me succeeded",
 		"source", "api.go",
-		"who", "EditMeOPTHandler",)
+		"who", "EditMeOPTHandler")
 
 }
 
@@ -496,7 +496,7 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/session succeeded",
 		"source", "api.go",
-		"who", "LogoutOPTHandler",)
+		"who", "LogoutOPTHandler")
 
 }
 
@@ -506,7 +506,7 @@ func (h *Handler) DeleteAppOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/apps succeeded",
 		"source", "api.go",
-		"who", "AddAppOPTHandler",)
+		"who", "AddAppOPTHandler")
 
 }
 
@@ -519,12 +519,12 @@ func (h *Handler) ShowAppsGETHandler(rw http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(rw, string(payload))
 
 	h.LG.Sugar.Infow("/apps succeeded",
-	"source", "api.go",
-	"who", "ShowAppsGETHandler",)
+		"source", "api.go",
+		"who", "ShowAppsGETHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -538,12 +538,12 @@ func (h *Handler) ShowAppsPopularGETHandler(rw http.ResponseWriter, r *http.Requ
 	fmt.Fprintln(rw, string(payload))
 
 	h.LG.Sugar.Infow("/apps succeeded",
-	"source", "api.go",
-	"who", "ShowAppsGETHandler",)
+		"source", "api.go",
+		"who", "ShowAppsGETHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -556,12 +556,12 @@ func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusNotFound)
 
 		h.LG.Sugar.Infow("/apps/{name} failed",
-		"source", "api.go",
-		"who", "AppGETHandler",)
+			"source", "api.go",
+			"who", "AppGETHandler")
 
 		h.Prof.HitsStats.
-		WithLabelValues("404", "NOT FOUND").
-		Add(1)
+			WithLabelValues("404", "NOT FOUND").
+			Add(1)
 
 		return
 	}
@@ -572,11 +572,11 @@ func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/apps/{name} succeeded",
 		"source", "api.go",
-		"who", "AppGETHandler",)
+		"who", "AppGETHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -589,12 +589,12 @@ func (h *Handler) AddAppPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 
 	h.LG.Sugar.Infow("/apps succeeded",
-	"source", "api.go",
-	"who", "AddAppPOSTHandler",)
+		"source", "api.go",
+		"who", "AddAppPOSTHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }
@@ -607,12 +607,12 @@ func (h *Handler) DeleteAppDELETEHandler(rw http.ResponseWriter, r *http.Request
 	rw.WriteHeader(http.StatusOK)
 
 	h.LG.Sugar.Infow("/apps succeeded",
-	"source", "api.go",
-	"who", "DeleteAppOPTHandler",)
+		"source", "api.go",
+		"who", "DeleteAppOPTHandler")
 
 	h.Prof.HitsStats.
-	WithLabelValues("200", "OK").
-	Add(1)
+		WithLabelValues("200", "OK").
+		Add(1)
 
 	return
 }

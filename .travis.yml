@@ -1,0 +1,26 @@
+language: go
+
+env:
+  - GO111MODULE=on
+
+go:
+  - "1.11.x"
+
+branches:
+  only:
+  - deploy
+
+git:
+  depth: 1
+
+install: true
+
+script:
+  - go build -o ./build/auth-serv ./cmd/auth/*.go
+  - go build -o ./build/game-serv ./cmd/game/*.go
+  - go build -o ./build/api-serv ./cmd/api/*.go
+
+notifications:
+  email:
+    on_success: always
+    on_failure: always
