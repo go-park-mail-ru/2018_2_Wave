@@ -53,6 +53,12 @@ func (r *Room) GetID() RoomToken  { return r.ID }
 func (r *Room) GetType() RoomType { return r.Type }
 
 func (r *Room) Run() error {
+	defer func() { // global room panic
+		if err := recover(); err != nil {
+			r.log("room tick panic", "who", r.GetID())
+		}
+	}()
+
 	r.log("room started")
 	go r.runBroadcast()
 	for {
@@ -86,7 +92,12 @@ func (r *Room) runBroadcast() {
 				r.SendMessageTo(u, rs)
 			}
 		case <-r.CancelBroadcast:
-			return
+			select {
+			case rs := <-r.broadcast:
+				r.broadcast <- rs
+			default:
+				return
+			}
 		}
 	}
 }
@@ -138,6 +149,12 @@ func (r *Room) ApplyMessage(u IUser, im IInMessage) error {
 	if _, ok := r.Users[u.GetID()]; !ok {
 		return ErrorForbiden
 	}
+	defer func() { // global handler panic
+		if err := recover(); err != nil {
+			r.log("ws route panic", "who", r.GetID())
+		}
+	}()
+
 	if route, ok := r.Routes[im.GetSignal()]; ok {
 		if om := route(u, im); om != nil {
 			return r.SendMessageTo(u, om)
