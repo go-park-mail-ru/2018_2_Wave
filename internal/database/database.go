@@ -477,7 +477,7 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	return apps
 }
 
-func (model *DatabaseModel) GetApp(name string, cookie string) (app models.UserApplication) {
+func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app models.UserApplication) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category, UA.time_total FROM app AS A JOIN userapp AS UA USING(appid) WHERE A.name=$1 AND UA.time_total=(SELECT time_total FROM userapp WHERE userapp.uid=(SELECT DISTINCT session.uid FROM session JOIN userinfo USING(uid) WHERE cookie=$2) AND userapp.appid=(SELECT DISTINCT appid FROM app WHERE name=$1));
 		`, name, cookie)
@@ -622,4 +622,49 @@ func (model *DatabaseModel) IncrementTime(cookie string, appname string) {
 		"source", "database.go",
 		"who", "IncrementTime",
 	)
+}
+
+func (model *DatabaseModel) GetApp(name string) (app models.Application) {
+	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
+		row := model.Database.QueryRowx(`SELECT link,name,image,about,installs,price,category
+		FROM app
+		WHERE name=$1;`, name)
+		err := row.Scan(&app.Link, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category)
+
+		if err != nil {
+
+			model.LG.Sugar.Infow(
+				"GetApp failed, scan error",
+				"source", "database.go",
+				"who", "GetApp",
+			)
+
+			return models.Application{}
+		}
+
+		model.LG.Sugar.Infow(
+			"GetApp succeeded",
+			"source", "database.go",
+			"who", "GetApp",
+		)
+
+		return app
+	} else if problem != nil {
+
+		model.LG.Sugar.Infow(
+			"Present failed",
+			"source", "database.go",
+			"who", "GetApp",
+		)
+
+		return models.Application{}
+	}
+
+	model.LG.Sugar.Infow(
+		"GetApp failed, app doesn't exist",
+		"source", "database.go",
+		"who", "GetApp",
+	)
+
+	return models.Application{}
 }

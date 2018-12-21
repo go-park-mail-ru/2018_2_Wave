@@ -549,9 +549,8 @@ func (h *Handler) ShowAppsPopularGETHandler(rw http.ResponseWriter, r *http.Requ
 }
 
 func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
-	cookie := misc.GetSessionCookie(r)
 	vars := mux.Vars(r)
-	app := h.DB.GetApp(vars["name"], cookie)
+	app := h.DB.GetApp(vars["name"])
 
 	if reflect.DeepEqual(models.UserApplication{}, app) {
 		rw.WriteHeader(http.StatusNotFound)
