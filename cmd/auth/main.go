@@ -15,7 +15,7 @@ import (
 const (
 	confPath = "./conf.json"
 
-	logPath = "./logs/"
+	logPath = ""
 	logFile = "auth.log"
 )
 
