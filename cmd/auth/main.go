@@ -20,6 +20,7 @@ const (
 )
 
 func main() {
+	//aa
 	conf := config.Configure(confPath)
 	curlog := lg.Construct(logPath, logFile)
 	db := database.New(curlog)
