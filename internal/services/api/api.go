@@ -553,7 +553,7 @@ func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	app := h.DB.GetApp(vars["name"], cookie)
 
-	if reflect.DeepEqual(models.Application{}, app) {
+	if reflect.DeepEqual(models.UserApplication{}, app) {
 		rw.WriteHeader(http.StatusNotFound)
 
 		h.LG.Sugar.Infow("/apps/{name} failed",

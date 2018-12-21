@@ -477,11 +477,11 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	return apps
 }
 
-func (model *DatabaseModel) GetApp(name string, cookie string) (app models.Application) {
+func (model *DatabaseModel) GetApp(name string, cookie string) (app models.UserApplication) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category, UA.time_total FROM app AS A JOIN userapp AS UA USING(appid) WHERE A.name=$1 AND UA.time_total=(SELECT time_total FROM userapp WHERE userapp.uid=(SELECT DISTINCT session.uid FROM session JOIN userinfo USING(uid) WHERE cookie=$2) AND userapp.appid=(SELECT DISTINCT appid FROM app WHERE name=$1));
 		`, name, cookie)
-		err := row.Scan(&app.Link, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category)
+		err := row.Scan(&app.Link, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category, &app.TimeTotal)
 
 		if err != nil {
 
@@ -491,7 +491,7 @@ func (model *DatabaseModel) GetApp(name string, cookie string) (app models.Appli
 				"who", "GetApp",
 			)
 
-			return models.Application{}
+			return models.UserApplication{}
 		}
 
 		model.LG.Sugar.Infow(
@@ -509,7 +509,7 @@ func (model *DatabaseModel) GetApp(name string, cookie string) (app models.Appli
 			"who", "GetApp",
 		)
 
-		return models.Application{}
+		return models.UserApplication{}
 	}
 
 	model.LG.Sugar.Infow(
@@ -518,7 +518,7 @@ func (model *DatabaseModel) GetApp(name string, cookie string) (app models.Appli
 		"who", "GetApp",
 	)
 
-	return models.Application{}
+	return models.UserApplication{}
 }
 
 func (model *DatabaseModel) AddApp(cookie string, appname string) {
