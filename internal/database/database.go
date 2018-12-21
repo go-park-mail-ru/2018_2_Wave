@@ -576,22 +576,13 @@ func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
 }
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
-	rows, _ := model.Database.Queryx(`
-		SELECT link,name,image,about,installs,price,category
-		FROM app
-		WHERE appid IN (SELECT userapp.appid
-							FROM userapp
-							WHERE userapp.uid=(SELECT DISTINCT session.uid
-												FROM session
-												JOIN userinfo
-												USING (uid)
-												WHERE cookie=$1));
-		`, cookie)
+	rows, _ := model.Database.Queryx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,UA.time_total FROM app AS A JOIN userapp AS UA USING(appid) WHERE UA.time_total IN (SELECT time_total FROM userapp WHERE userapp.uid=(SELECT DISTINCT session.uid FROM session JOIN userinfo USING(uid) WHERE cookie=$1));
+	`, cookie)
 	defer rows.Close()
 
 	for rows.Next() {
 		temp := models.UserApplication{}
-		if err := rows.Scan(&temp.Link, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category, &temp.TimeTotal); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
@@ -600,24 +591,6 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserAppli
 			)
 
 			return models.UserApplications{}
-		}
-
-		row := model.Database.QueryRowx(`SELECT time_total
-											FROM userapp WHERE appid=(SELECT app.appid
-																	FROM app
-																	WHERE name=$1);
-											`, temp.Name)
-
-		errTime := row.Scan(&temp.TimeTotal)
-
-		if errTime != nil {
-
-			model.LG.Sugar.Infow(
-				"scan failed",
-				"source", "database.go",
-				"who", "GetMyApps",
-			)
-
 		}
 
 		user_apps.UserApplications = append(user_apps.UserApplications, temp)
