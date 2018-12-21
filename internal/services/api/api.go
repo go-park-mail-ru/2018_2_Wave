@@ -506,7 +506,7 @@ func (h *Handler) DeleteAppOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 	h.LG.Sugar.Infow("/apps succeeded",
 		"source", "api.go",
-		"who", "AddAppOPTHandler")
+		"who", "DeleteAppOPTHandler")
 
 }
 
@@ -585,16 +585,29 @@ func (h *Handler) AddAppPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 	appname := r.FormValue("name")
 
-	h.DB.AddApp(cookie, appname)
-	rw.WriteHeader(http.StatusOK)
+	added := h.DB.AddApp(cookie, appname)
 
-	h.LG.Sugar.Infow("/apps succeeded",
-		"source", "api.go",
-		"who", "AddAppPOSTHandler")
+	if added == true {
+		rw.WriteHeader(http.StatusOK)
 
-	h.Prof.HitsStats.
-		WithLabelValues("200", "OK").
-		Add(1)
+		h.LG.Sugar.Infow("/apps succeeded",
+			"source", "api.go",
+			"who", "AddAppPOSTHandler")
+
+		h.Prof.HitsStats.
+			WithLabelValues("200", "OK").
+			Add(1)
+	} else {
+		rw.WriteHeader(http.StatusConflict)
+
+		h.LG.Sugar.Infow("/apps succeeded",
+			"source", "api.go",
+			"who", "AddAppPOSTHandler")
+
+		h.Prof.HitsStats.
+			WithLabelValues("409", "CONFLICT").
+			Add(1)
+	}
 
 	return
 }

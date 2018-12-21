@@ -521,31 +521,75 @@ func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app mode
 	return models.UserApplication{}
 }
 
-func (model *DatabaseModel) AddApp(cookie string, appname string) {
-	model.Database.MustExec(`
-		UPDATE app
-		SET installs=installs+1
-		WHERE name=$1;
-	`, appname)
+func (model *DatabaseModel) AddApp(cookie string, appname string) bool {
+	var exists string
+	row := model.Database.QueryRowx(`SELECT EXISTS
+									(SELECT true
+									FROM userapp
+									WHERE uid=(SELECT DISTINCT session.uid
+										FROM session
+										JOIN userinfo
+										USING(uid)
+										WHERE cookie=$1)
+										AND appid=(SELECT appid
+										FROM app
+										WHERE name=$2));`, cookie, appname)
+	err := row.Scan(&exists)
 
-	model.Database.MustExec(`
-		INSERT INTO userapp(uid, appid)
-		VALUES(
-			(SELECT DISTINCT session.uid FROM session
-			JOIN userinfo
-			USING(uid)
-			WHERE cookie=$1)
-			,
-			(SELECT appid FROM app
-			WHERE name=$2)
-		);
-	`, cookie, appname)
+	if err != nil {
 
-	model.LG.Sugar.Infow(
-		"AddApp succeeded",
-		"source", "database.go",
-		"who", "AddApp",
-	)
+		model.LG.Sugar.Infow(
+			"Scan failed",
+			"source", "database.go",
+			"who", "AddApp",
+		)
+
+		return false
+	}
+
+	fl, err := strconv.ParseBool(exists)
+
+	if err != nil {
+
+		model.LG.Sugar.Infow(
+			"strconv.ParseBool failed",
+			"source", "database.go",
+			"who", "AddApp",
+		)
+
+		return false
+	}
+
+	if fl == false {
+		model.Database.MustExec(`
+			UPDATE app
+			SET installs=installs+1
+			WHERE name=$1;
+		`, appname)
+
+		model.Database.MustExec(`
+			INSERT INTO userapp(uid, appid)
+			VALUES(
+				(SELECT DISTINCT session.uid FROM session
+				JOIN userinfo
+				USING(uid)
+				WHERE cookie=$1)
+				,
+				(SELECT appid FROM app
+				WHERE name=$2)
+			);
+		`, cookie, appname)
+
+		model.LG.Sugar.Infow(
+			"AddApp succeeded",
+			"source", "database.go",
+			"who", "AddApp",
+		)
+
+		return true
+	}
+
+	return false
 }
 
 func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
