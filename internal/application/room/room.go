@@ -140,6 +140,7 @@ func (r *Room) ApplyMessage(u IUser, im IInMessage) error {
 	}
 	defer func() { // global handler panic
 		if err := recover(); err != nil {
+			r.log("ws route panic", "who", r.GetID())
 		}
 	}()
 
