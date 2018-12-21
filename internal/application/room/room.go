@@ -53,6 +53,12 @@ func (r *Room) GetID() RoomToken  { return r.ID }
 func (r *Room) GetType() RoomType { return r.Type }
 
 func (r *Room) Run() error {
+	defer func() { // global room panic
+		if err := recover(); err != nil {
+			r.log("room tick panic", "who", r.GetID())
+		}
+	}()
+
 	r.log("room started")
 	go r.runBroadcast()
 	for {
