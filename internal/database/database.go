@@ -187,8 +187,8 @@ func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExte
 		SELECT username, avatar, score
 		FROM userinfo
 		JOIN session
-			ON session.uid = userinfo.uid
-			AND cookie=$1;
+		USING(uid)
+		WHERE cookie=$1;
 	`, cookie)
 	err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
 
@@ -277,9 +277,9 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 					UPDATE userinfo
 					SET username=$1
 					WHERE userinfo.uid = (
-						SELECT session.uid from session
+						SELECT DISCTINCT session.uid from session
 						JOIN userinfo
-							ON session.uid = userinfo.uid
+						USING(uid)
 						WHERE cookie=$2
 					);
 				`, profile.Username, cookie)
@@ -314,8 +314,9 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				UPDATE userinfo
 				SET password=$1
 				WHERE userinfo.uid = (
-					SELECT session.uid from session
-					JOIN userinfo ON session.uid = userinfo.uid
+					SELECT DISTINCT session.uid from session
+					JOIN userinfo
+					USING(uid)
 					WHERE cookie=$2
 				);
 			`, hashedPsswd, cookie)
@@ -340,9 +341,9 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			UPDATE userinfo
 			SET avatar=$1
 			WHERE userinfo.uid = (
-				SELECT session.uid from session
+				SELECT DISTINCT session.uid from session
 				JOIN userinfo
-				ON userinfo.uid = session.uid
+				USING(uid)
 				WHERE cookie=$2
 			);
 		`, profile.Avatar, cookie)
@@ -445,7 +446,7 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name,image,about,installs,price,category
+		SELECT link,name,image,about,installs,price,category
 		FROM app
 		ORDER BY installs DESC;
 	`)
@@ -478,17 +479,7 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetApp(name string, cookie string) (app models.Application) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
-		row := model.Database.QueryRowx(`
-			SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,
-			FROM app AS A, userapp AS UA
-			WHERE A.name=$1 AND UA.time_total=(SELECT time_total
-												FROM userapp WHERE
-												userapp.uid=(SELECT session.uid FROM session
-												JOIN userinfo
-												ON session.uid=userinfo.uid
-												WHERE cookie=$2))
-												AND userapp.appid=(SELECT appid FROM app
-													WHERE name=$2);
+		row := model.Database.QueryRowx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category, UA.time_total FROM app AS A JOIN userapp AS UA USING(appid) WHERE A.name=$1 AND UA.time_total=(SELECT time_total FROM userapp WHERE userapp.uid=(SELECT DISTINCT session.uid FROM session JOIN userinfo USING(uid) WHERE cookie=$2) AND userapp.appid=(SELECT DISTINCT appid FROM app WHERE name=$1));
 		`, name, cookie)
 		err := row.Scan(&app.Link, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category)
 
@@ -541,9 +532,9 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 	model.Database.MustExec(`
 		INSERT INTO userapp(uid, appid)
 		VALUES(
-			(SELECT session.uid FROM session
+			(SELECT DISTINCT session.uid FROM session
 			JOIN userinfo
-			ON session.uid=userinfo.uid
+			USING(uid)
 			WHERE cookie=$1)
 			,
 			(SELECT appid FROM app
@@ -569,9 +560,9 @@ func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
 	model.Database.MustExec(`
 		DELETE
 		FROM userapp
-		WHERE uid=(SELECT session.uid FROM session
+		WHERE uid=(SELECT DISTINCT session.uid FROM session
 			JOIN userinfo
-			ON session.uid=userinfo.uid
+			USING(uid)
 			WHERE cookie=$1)
 		AND appid=(SELECT appid FROM app
 			WHERE name=$2);
@@ -592,7 +583,8 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserAppli
 							FROM userapp
 							WHERE userapp.uid=(SELECT DISTINCT session.uid
 												FROM session
-												JOIN userinfo ON session.uid=userinfo.uid
+												JOIN userinfo
+												USING (uid)
 												WHERE cookie=$1));
 		`, cookie)
 	defer rows.Close()
@@ -644,9 +636,9 @@ func (model *DatabaseModel) IncrementTime(cookie string, appname string) {
 	model.Database.MustExec(`
 		UPDATE userapp
 		SET time_total=time_total+10
-		WHERE uid=(SELECT session.uid FROM session
+		WHERE uid=(SELECT DISTINCT session.uid FROM session
 			JOIN userinfo
-			ON session.uid=userinfo.uid
+			USING(uid)
 			WHERE cookie=$1)
 		AND appid=(SELECT appid FROM app
 			WHERE name=$2);
