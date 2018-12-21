@@ -15,8 +15,8 @@ import (
 const (
 	confPath = "./conf.json"
 
-	logPath = ""
-	logFile = "auth.log"
+	logPath = "./logs/"
+	logFile = "a.log"
 )
 
 func main() {

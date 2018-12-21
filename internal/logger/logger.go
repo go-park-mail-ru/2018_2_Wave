@@ -13,7 +13,7 @@ type Logger struct {
 
 func logfileExists(logPath, logFile string) bool {
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
-		os.Mkdir(logPath, 0755)
+		os.Mkdir(logPath, 0777)
 		_, err := os.OpenFile(logPath+logFile, os.O_CREATE|os.O_APPEND, 0777)
 		if err != nil {
 			return false
