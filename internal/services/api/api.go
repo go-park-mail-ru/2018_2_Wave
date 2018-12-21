@@ -618,9 +618,9 @@ func (h *Handler) DeleteAppDELETEHandler(rw http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) MeShowAppsGetHandler(rw http.ResponseWriter, r *http.Request) {
-	/*cookie := misc.GetSessionCookie(r)
+	cookie := misc.GetSessionCookie(r)
 
-	var apps models.Applications
+	var apps models.UserApplications
 	apps = h.DB.GetMyApps(cookie)
 
 	payload, _ := apps.MarshalJSON()
@@ -634,7 +634,7 @@ func (h *Handler) MeShowAppsGetHandler(rw http.ResponseWriter, r *http.Request) 
 	h.Prof.HitsStats.
 		WithLabelValues("200", "OK").
 		Add(1)
-	*/
+
 	return
 }
 

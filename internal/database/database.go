@@ -6,6 +6,7 @@ import (
 	"Wave/internal/models"
 	"os"
 	"strconv"
+
 	"github.com/namsral/flag"
 
 	"github.com/jmoiron/sqlx"
@@ -32,10 +33,10 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 		postgr = &DatabaseModel{
 			LG: lg_,
 		}
-		dbuser string
+		dbuser     string
 		dbpassword string
-		dbname string
-		err error
+		dbname     string
+		err        error
 	)
 	flag.StringVar(&dbuser, "WAVE_DB_USER", "Wave", "")
 	flag.StringVar(&dbname, "WAVE_DB_NAME", "Wave", "")
@@ -408,6 +409,8 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 	return board, nil
 }
 
+/*************************************** App API ***************************************/
+
 func (model *DatabaseModel) GetApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
 		SELECT name,cover,description,installations,price,year
@@ -574,43 +577,60 @@ func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
 	)
 }
 
-func (model *DatabaseModel) GetMyApps(cookie string) /*(apps models.Applications)*/ {
-	/*	rows, _ := model.Database.Queryx(`
-		SELECT A.name,A.cover,A.description,A.installations,A.price,A.year,UA.time_spent
-		FROM app AS A, userapp AS UA
-		WHERE A.appid IN (SELECT userapp.appid, userapp.time_spent
+func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
+	rows, _ := model.Database.Queryx(`
+		SELECT name,cover,description,installations,price,year
+		FROM app
+		WHERE appid IN (SELECT userapp.appid
 							FROM userapp
 							WHERE userapp.uid=(SELECT DISTINCT session.uid
 												FROM session
 												JOIN userinfo ON session.uid=userinfo.uid
-												WHERE cookie=$1))
-		AND UA.time_spent;
+												WHERE cookie=$1));
 		`, cookie)
-		defer rows.Close()
+	defer rows.Close()
 
-		for rows.Next() {
-			temp := models.Application{}
-			if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Description, &temp.Installations, &temp.Price, &temp.Year); err != nil {
+	for rows.Next() {
+		temp := models.UserApplication{}
+		if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Description, &temp.Installations, &temp.Price, &temp.Year); err != nil {
 
-				model.LG.Sugar.Infow(
-					"scan failed",
-					"source", "database.go",
-					"who", "GetMyApps",
-				)
+			model.LG.Sugar.Infow(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetMyApps",
+			)
 
-				return models.Applications{}
-			}
-
-			apps.Applications = append(apps.Applications, temp)
+			return models.UserApplications{}
 		}
 
-		model.LG.Sugar.Infow(
-			"GetMyApps succeeded",
-			"source", "database.go",
-			"who", "GetMyApps",
-		)
+		row := model.Database.QueryRowx(`SELECT time_total
+											FROM userapp WHERE appid=(SELECT app.appid
+																	FROM app
+																	WHERE name=$1);
+											`, temp.Name)
 
-		return apps*/
+		errTime := row.Scan(&temp.TimeTotal)
+
+		if errTime != nil {
+
+			model.LG.Sugar.Infow(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetMyApps",
+			)
+
+		}
+
+		user_apps.UserApplications = append(user_apps.UserApplications, temp)
+	}
+
+	model.LG.Sugar.Infow(
+		"GetMyApps succeeded",
+		"source", "database.go",
+		"who", "GetMyApps",
+	)
+
+	return user_apps
 }
 
 func (model *DatabaseModel) IncrementTime(cookie string, appname string) {
