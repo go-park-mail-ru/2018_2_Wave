@@ -17,7 +17,7 @@ paths:
       tags:
       - user
       summary: "Create an account."
-      description: ""
+      about: ""
       operationId: signupUser
       consumes:
         - "multipart/form-data"
@@ -26,43 +26,43 @@ paths:
       parameters:
         - name: body
           in: body
-          description: "Key user information."
+          about: "Key user information."
           required: true
           schema:
             $ref: "#/definitions/UserExtended"
       responses:
         201:
-          description: Created
+          about: Created
         403:
-          description: Forbidden
+          about: Forbidden
           schema:
             $ref: "#/definitions/ForbiddenRequest"
         500:
-          description: Internal Server Error
+          about: Internal Server Error
   /users/me:
     get:
       tags:
       - user
       summary: "Get current user's information."
-      description: ""
+      about: ""
       operationId: myProfile
       consumes: []
       produces:
         - application/json
       responses:
         200:
-          description: OK
+          about: OK
           schema:
             $ref: "#/definitions/UserExtended"
         401:
-          description: Unauthorized
+          about: Unauthorized
         500:
-          description: Internal Server Error
+          about: Internal Server Error
     put:
       tags:
       - user
       summary: "Update current user's profile."
-      description: ""
+      about: ""
       operationId: updateMyProfile
       consumes:
         - "multipart/form-data"
@@ -71,27 +71,27 @@ paths:
       parameters:
         - name: body
           in: body
-          description: "New user information."
+          about: "New user information."
           required: true
           schema:
             $ref: "#/definitions/UserEdit"
       responses:
         200:
-          description: OK
+          about: OK
         401:
-          description: Unauthorized
+          about: Unauthorized
         403:
-          description: Forbidden
+          about: Forbidden
           schema:
             $ref: "#/definitions/ForbiddenRequest"
         500:
-          description: Internal Server Error
+          about: Internal Server Error
   /users/{name}:
     get:
       tags:
       - user
       summary: "Get another user's information."
-      description: ""
+      about: ""
       operationId: usersProfile
       consumes: []
       produces:
@@ -101,23 +101,23 @@ paths:
         name: name
         type: string
         required: true
-        description: Target username.
+        about: Target username.
       responses:
         200:
-          description: OK
+          about: OK
           schema:
             $ref: "#/definitions/UserExtended"
         404:
-          description: Not Found
+          about: Not Found
         500:
-          description: Internal Server Error
+          about: Internal Server Error
 
   /users/leaders?count=${count}&page=${page}:
      get:
       tags:
       - user
       summary: "Get all users with their scores."
-      description: ""
+      about: ""
       operationId: leaders
       consumes:
         - application/json
@@ -125,22 +125,22 @@ paths:
         - application/json
       responses:
         406:
-          description: Not Acceptable
+          about: Not Acceptable
         400:
-          description: Bad Request
+          about: Bad Request
         200:
-          description: OK
+          about: OK
           schema:
             $ref: "#/definitions/Leaderboard"
         500:
-          description: Internal Server Error
+          about: Internal Server Error
 
   /session:
     post:
       tags:
       - session
       summary: "Log in into an existing account."
-      description: ""
+      about: ""
       operationId: loginUser
       consumes:
         - "multipart/form-data"
@@ -149,31 +149,31 @@ paths:
       parameters:
         - name: body
           in: body
-          description: "User credentials."
+          about: "User credentials."
           required: true
           schema:
             $ref: "#/definitions/UserCredentials"
       responses:
         200:
-          description: OK
+          about: OK
         401:
-          description: Unauthorized
+          about: Unauthorized
           schema:
             $ref: "#/definitions/ForbiddenRequest"
         500:
-          description: Internal Server Error
+          about: Internal Server Error
     delete:
       tags:
       - session
       summary: "Log out from the current account."
-      description: ""
+      about: ""
       operationId: logoutUser
       consumes: []
       responses:
         200:
-          description: OK
+          about: OK
         500:
-          description: Internal Server Error
+          about: Internal Server Error
   
   /conn/lobby:
 

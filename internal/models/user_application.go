@@ -2,12 +2,13 @@ package models
 
 // easyjson:json
 type UserApplication struct {
+	Link          string `json:"link"`
 	Name          string `json:"name"`
-	Cover         string `json:"cover"`
-	Description   string `json:"description"`
-	Installations int    `json:"installations"`
+	Image         string `json:"image"`
+	About         string `json:"about"`
+	Installations int    `json:"installs"`
 	Price         int    `json:"price"`
-	Year          string `json:"year"`
+	Category      string `json:"category"`
 	TimeTotal     int    `json:"time_total"`
 }
 

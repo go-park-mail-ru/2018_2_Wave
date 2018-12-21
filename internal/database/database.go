@@ -413,14 +413,14 @@ func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Lea
 
 func (model *DatabaseModel) GetApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name,cover,description,installations,price,year
+		SELECT link,name,image,about,installs,price,category
 		FROM app
 	`)
 	defer rows.Close()
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Description, &temp.Installations, &temp.Price, &temp.Year); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
@@ -445,15 +445,15 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name,cover,description,installations,price,year
+		SELECT name,image,about,installs,price,category
 		FROM app
-		ORDER BY installations DESC;
+		ORDER BY installs DESC;
 	`)
 	defer rows.Close()
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Description, &temp.Installations, &temp.Price, &temp.Year); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
@@ -476,14 +476,21 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	return apps
 }
 
-func (model *DatabaseModel) GetApp(name string) (app models.Application) {
+func (model *DatabaseModel) GetApp(name string, cookie string) (app models.Application) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`
-			SELECT name,cover,description,installations,price,year
-			FROM app
-			WHERE name=$1;
-		`, name)
-		err := row.Scan(&app.Name, &app.Cover, &app.Description, &app.Installations, &app.Price, &app.Year)
+			SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,
+			FROM app AS A, userapp AS UA
+			WHERE A.name=$1 AND UA.time_total=(SELECT time_total
+												FROM userapp WHERE
+												userapp.uid=(SELECT session.uid FROM session
+												JOIN userinfo
+												ON session.uid=userinfo.uid
+												WHERE cookie=$2))
+												AND userapp.appid=(SELECT appid FROM app
+													WHERE name=$2);
+		`, name, cookie)
+		err := row.Scan(&app.Link, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category)
 
 		if err != nil {
 
@@ -524,10 +531,10 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 }
 
 func (model *DatabaseModel) AddApp(cookie string, appname string) {
-	// increment installations
+	// increment installs
 	model.Database.MustExec(`
 		UPDATE app
-		SET installations=installations+1
+		SET installs=installs+1
 		WHERE name=$1;
 	`, appname)
 
@@ -552,10 +559,10 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 }
 
 func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
-	// decrement installations
+	// decrement installs
 	model.Database.MustExec(`
 		UPDATE app
-		SET installations=installations-1
+		SET installs=installs-1
 		WHERE name=$1;
 	`, appname)
 
@@ -579,7 +586,7 @@ func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT name,cover,description,installations,price,year
+		SELECT link,name,image,about,installs,price,category
 		FROM app
 		WHERE appid IN (SELECT userapp.appid
 							FROM userapp
@@ -592,7 +599,7 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserAppli
 
 	for rows.Next() {
 		temp := models.UserApplication{}
-		if err := rows.Scan(&temp.Name, &temp.Cover, &temp.Description, &temp.Installations, &temp.Price, &temp.Year); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
