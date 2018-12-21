@@ -138,6 +138,11 @@ func (r *Room) ApplyMessage(u IUser, im IInMessage) error {
 	if _, ok := r.Users[u.GetID()]; !ok {
 		return ErrorForbiden
 	}
+	defer func() { // global handler panic
+		if err := recover(); err != nil {
+		}
+	}()
+
 	if route, ok := r.Routes[im.GetSignal()]; ok {
 		if om := route(u, im); om != nil {
 			return r.SendMessageTo(u, om)
