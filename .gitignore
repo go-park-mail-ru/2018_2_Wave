@@ -1,6 +1,7 @@
 # common
 .vscode/
 .build/
+.vs/
 
 # golang
 vendor
