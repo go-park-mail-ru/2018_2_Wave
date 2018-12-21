@@ -479,7 +479,7 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app models.UserApplication) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
-		row := model.Database.QueryRowx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category, UA.time_total FROM app AS A JOIN userapp AS UA USING(appid) WHERE A.name=$1 AND UA.time_total=(SELECT time_total FROM userapp WHERE userapp.uid=(SELECT DISTINCT session.uid FROM session JOIN userinfo USING(uid) WHERE cookie=$2) AND userapp.appid=(SELECT DISTINCT appid FROM app WHERE name=$1));
+		row := model.Database.QueryRowx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,UA.time_total FROM app AS A JOIN userapp AS UA USING(appid) WHERE A.name=$1 AND UA.time_total=(SELECT time_total FROM userapp WHERE userapp.uid=(SELECT DISTINCT session.uid FROM session JOIN userinfo USING(uid) WHERE cookie=$2) AND userapp.appid=(SELECT DISTINCT appid FROM app WHERE name=$1));
 		`, name, cookie)
 		err := row.Scan(&app.Link, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category, &app.TimeTotal)
 
@@ -522,7 +522,6 @@ func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app mode
 }
 
 func (model *DatabaseModel) AddApp(cookie string, appname string) {
-	// increment installs
 	model.Database.MustExec(`
 		UPDATE app
 		SET installs=installs+1
@@ -550,7 +549,6 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 }
 
 func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
-	// decrement installs
 	model.Database.MustExec(`
 		UPDATE app
 		SET installs=installs-1
@@ -576,7 +574,17 @@ func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
 }
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
-	rows, _ := model.Database.Queryx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,UA.time_total FROM app AS A JOIN userapp AS UA USING(appid) WHERE UA.time_total IN (SELECT time_total FROM userapp WHERE userapp.uid=(SELECT DISTINCT session.uid FROM session JOIN userinfo USING(uid) WHERE cookie=$1));
+	rows, _ := model.Database.Queryx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,UA.time_total
+									FROM app AS A
+									JOIN userapp AS UA
+									USING(appid)
+									WHERE UA.time_total IN (SELECT time_total
+									FROM userapp
+									WHERE userapp.uid=(SELECT DISTINCT session.uid
+										FROM session
+										JOIN userinfo
+										USING(uid)
+										WHERE cookie=$1));
 	`, cookie)
 	defer rows.Close()
 
