@@ -2,10 +2,11 @@ DROP TABLE IF EXISTS app;
 
 CREATE TABLE app (
     appid           BIGSERIAL       PRIMARY KEY,
+    link            TEXT            ,
     name            TEXT            ,
-    cover           TEXT            ,
-    description     TEXT            ,
-    installations   INT             DEFAULT 0,
+    image           TEXT            ,
+    about           TEXT            ,
+    installs        INT             DEFAULT 0,
     price           INT             DEFAULT 0,
-    year            TEXT
+    category        TEXT
 );

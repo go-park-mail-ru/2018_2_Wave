@@ -72,6 +72,8 @@ func (authm *AuthManager) Create(ctx context.Context, credentials *auth.Credenti
 				"who", "Create",
 			)
 
+			authm.DB.AddApp(cookie, "Terminal")
+			authm.DB.AddApp(cookie, "Snake")
 			return &auth.Cookie{CookieValue: cookie}, nil
 		}
 	}

@@ -552,7 +552,7 @@ func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	app := h.DB.GetApp(vars["name"])
 
-	if reflect.DeepEqual(models.Application{}, app) {
+	if reflect.DeepEqual(models.UserApplication{}, app) {
 		rw.WriteHeader(http.StatusNotFound)
 
 		h.LG.Sugar.Infow("/apps/{name} failed",
@@ -613,6 +613,40 @@ func (h *Handler) DeleteAppDELETEHandler(rw http.ResponseWriter, r *http.Request
 	h.Prof.HitsStats.
 		WithLabelValues("200", "OK").
 		Add(1)
+
+	return
+}
+
+func (h *Handler) MeShowAppsGetHandler(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
+
+	var apps models.UserApplications
+	apps = h.DB.GetMyApps(cookie)
+
+	payload, _ := apps.MarshalJSON()
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/me/apps succeeded",
+		"source", "api.go",
+		"who", "MeShowAppsGetHandler")
+
+	h.Prof.HitsStats.
+		WithLabelValues("200", "OK").
+		Add(1)
+
+	return
+}
+
+func (h *Handler) AppTimerPOSTHandler(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
+	appname := r.FormValue("name")
+
+	h.DB.IncrementTime(cookie, appname)
+
+	h.LG.Sugar.Infow("/me/apps/timer succeeded",
+		"source", "api.go",
+		"who", "AppTimerPSTHandler")
 
 	return
 }
