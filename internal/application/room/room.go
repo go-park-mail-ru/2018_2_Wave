@@ -85,8 +85,8 @@ func (r *Room) runBroadcast() {
 			for _, u := range r.Users {
 				r.SendMessageTo(u, rs)
 			}
-		case <-r.CancelBroadcast:
-			return
+			// case <-r.CancelBroadcast:
+			// return
 		}
 	}
 }
