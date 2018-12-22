@@ -108,7 +108,7 @@ func ValidateUname(target string) bool {
 }
 
 func ValidatePassword(target string) bool {
-	if len(target) < 6 {
+	if len(target) < 4 {
 		return false
 	}
 
@@ -486,6 +486,52 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	return apps
 }
 
+func (model *DatabaseModel) GetApp(name string) (app models.Application) {
+	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
+		row := model.Database.QueryRowx(`SELECT link,name,image,about,installs,price,category
+		FROM app
+		WHERE name=$1;`, name)
+		err := row.Scan(&app.Link, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category)
+
+		if err != nil {
+
+			model.LG.Sugar.Infow(
+				"GetApp failed, scan error",
+				"source", "database.go",
+				"who", "GetApp",
+			)
+
+			return models.Application{}
+		}
+
+		model.LG.Sugar.Infow(
+			"GetApp succeeded",
+			"source", "database.go",
+			"who", "GetApp",
+		)
+
+		return app
+	} else if problem != nil {
+
+		model.LG.Sugar.Infow(
+			"Present failed",
+			"source", "database.go",
+			"who", "GetApp",
+		)
+
+		return models.Application{}
+	}
+
+	model.LG.Sugar.Infow(
+		"GetApp failed, app doesn't exist",
+		"source", "database.go",
+		"who", "GetApp",
+	)
+
+	return models.Application{}
+}
+
+/*
 func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app models.UserApplication) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,UA.time_total FROM app AS A JOIN userapp AS UA USING(appid) WHERE A.name=$1 AND UA.time_total=(SELECT time_total FROM userapp WHERE userapp.uid=(SELECT DISTINCT session.uid FROM session JOIN userinfo USING(uid) WHERE cookie=$2) AND userapp.appid=(SELECT DISTINCT appid FROM app WHERE name=$1));
@@ -528,6 +574,66 @@ func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app mode
 	)
 
 	return models.UserApplication{}
+}
+*/
+
+func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
+	rows, _ := model.Database.Queryx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,UA.time_total
+									FROM app AS A
+									JOIN userapp AS UA
+									USING(appid)
+									WHERE UA.time_total IN (SELECT time_total
+									FROM userapp
+									WHERE userapp.uid=(SELECT DISTINCT session.uid
+										FROM session
+										JOIN userinfo
+										USING(uid)
+										WHERE cookie=$1));
+	`, cookie)
+	defer rows.Close()
+
+	for rows.Next() {
+		temp := models.UserApplication{}
+		if err := rows.Scan(&temp.Link, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category, &temp.TimeTotal); err != nil {
+
+			model.LG.Sugar.Infow(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetMyApps",
+			)
+
+			return models.UserApplications{}
+		}
+
+		user_apps.UserApplications = append(user_apps.UserApplications, temp)
+	}
+
+	model.LG.Sugar.Infow(
+		"GetMyApps succeeded",
+		"source", "database.go",
+		"who", "GetMyApps",
+	)
+
+	return user_apps
+}
+
+func (model *DatabaseModel) IncrementTime(cookie string, appname string) {
+	model.Database.MustExec(`
+		UPDATE userapp
+		SET time_total=time_total+10
+		WHERE uid=(SELECT DISTINCT session.uid FROM session
+			JOIN userinfo
+			USING(uid)
+			WHERE cookie=$1)
+		AND appid=(SELECT appid FROM app
+			WHERE name=$2);
+	`, cookie, appname)
+
+	model.LG.Sugar.Infow(
+		"IncrementTime succeeded",
+		"source", "database.go",
+		"who", "IncrementTime",
+	)
 }
 
 func (model *DatabaseModel) AddApp(cookie string, appname string) bool {
@@ -599,108 +705,4 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) bool {
 	}
 
 	return false
-}
-
-func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
-	rows, _ := model.Database.Queryx(`SELECT A.link,A.name,A.image,A.about,A.installs,A.price,A.category,UA.time_total
-									FROM app AS A
-									JOIN userapp AS UA
-									USING(appid)
-									WHERE UA.time_total IN (SELECT time_total
-									FROM userapp
-									WHERE userapp.uid=(SELECT DISTINCT session.uid
-										FROM session
-										JOIN userinfo
-										USING(uid)
-										WHERE cookie=$1));
-	`, cookie)
-	defer rows.Close()
-
-	for rows.Next() {
-		temp := models.UserApplication{}
-		if err := rows.Scan(&temp.Link, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category, &temp.TimeTotal); err != nil {
-
-			model.LG.Sugar.Infow(
-				"scan failed",
-				"source", "database.go",
-				"who", "GetMyApps",
-			)
-
-			return models.UserApplications{}
-		}
-
-		user_apps.UserApplications = append(user_apps.UserApplications, temp)
-	}
-
-	model.LG.Sugar.Infow(
-		"GetMyApps succeeded",
-		"source", "database.go",
-		"who", "GetMyApps",
-	)
-
-	return user_apps
-}
-
-func (model *DatabaseModel) IncrementTime(cookie string, appname string) {
-	model.Database.MustExec(`
-		UPDATE userapp
-		SET time_total=time_total+10
-		WHERE uid=(SELECT DISTINCT session.uid FROM session
-			JOIN userinfo
-			USING(uid)
-			WHERE cookie=$1)
-		AND appid=(SELECT appid FROM app
-			WHERE name=$2);
-	`, cookie, appname)
-
-	model.LG.Sugar.Infow(
-		"IncrementTime succeeded",
-		"source", "database.go",
-		"who", "IncrementTime",
-	)
-}
-
-func (model *DatabaseModel) GetApp(name string) (app models.Application) {
-	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
-		row := model.Database.QueryRowx(`SELECT link,name,image,about,installs,price,category
-		FROM app
-		WHERE name=$1;`, name)
-		err := row.Scan(&app.Link, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category)
-
-		if err != nil {
-
-			model.LG.Sugar.Infow(
-				"GetApp failed, scan error",
-				"source", "database.go",
-				"who", "GetApp",
-			)
-
-			return models.Application{}
-		}
-
-		model.LG.Sugar.Infow(
-			"GetApp succeeded",
-			"source", "database.go",
-			"who", "GetApp",
-		)
-
-		return app
-	} else if problem != nil {
-
-		model.LG.Sugar.Infow(
-			"Present failed",
-			"source", "database.go",
-			"who", "GetApp",
-		)
-
-		return models.Application{}
-	}
-
-	model.LG.Sugar.Infow(
-		"GetApp failed, app doesn't exist",
-		"source", "database.go",
-		"who", "GetApp",
-	)
-
-	return models.Application{}
 }
