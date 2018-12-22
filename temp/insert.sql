@@ -9,3 +9,4 @@ INSERT INTO app(link, url, name, image, about, category) VALUES ('/blep', 'https
 INSERT INTO app(link, url, name, image, about, category) VALUES ('/catchthealien', 'https://itberries-frontend.herokuapp.com/', 'Catch the alien!', 'img/app_covers/catch.jpg', 'Game by Itberries', '2018_1');
 INSERT INTO app(link, url, name, image, about, category) VALUES ('/guardians', 'https://chunk-frontend.herokuapp.com/', 'Guardians', 'img/app_covers/guardians.jpg', 'Game by Chunk', '2017_2');
 INSERT INTO app(link, url, name, image, about, category) VALUES ('/rhytmblast', 'https://glitchless.surge.sh/', 'Rhytm Blast', 'img/app_covers/rhytmblast.jpg', 'Game by Glitchless', '2017_2');
+INSERT INTO app(link, url, name, image, about, category) VALUES ('/proto', 'https://rasseki.pro/', '__proto__', 'img/app_covers/proto.jpg', 'Game by __proto__', '2018_2');

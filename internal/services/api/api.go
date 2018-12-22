@@ -48,7 +48,7 @@ func NewHandler(DB *psql.DatabaseModel, LG *lg.Logger, Prof *mc.Profiler) *Handl
 		ping: make(chan pinger, 10),
 	}
 	go func() {
-		ticker := time.NewTicker(30*time.Second)
+		ticker := time.NewTicker(30 * time.Second)
 		for {
 			select{
 			case <- ticker.C:
@@ -75,13 +75,13 @@ func NewHandler(DB *psql.DatabaseModel, LG *lg.Logger, Prof *mc.Profiler) *Handl
 					h.times[p.user] = t
 				} else {
 					// create a new session
-					h.times[p.user]	= data{
-						app: p.app,
+					h.times[p.user] = data{
+						app:   p.app,
 						total: 0,
-						last: time.Now(),
+						last:  time.Now(),
 					}
 				}
-			} 
+			}
 		}
 	}()
 	return h
@@ -670,6 +670,22 @@ func (h *Handler) PingPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) StoreStatGETHandler(rw http.ResponseWriter, r *http.Request) {
+func (h *Handler) CategoryGETHandler(rw http.ResponseWriter, r *http.Request) {
+	var apps models.Applications
+	category := r.FormValue("category")
+	apps = h.DB.GetAppsByCattegory(category)
+
+	payload, _ := apps.MarshalJSON()
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps succeeded",
+		"source", "api.go",
+		"who", "ShowAppsGETHandler")
+
+	h.Prof.HitsStats.
+		WithLabelValues("200", "OK").
+		Add(1)
+
 	return
 }

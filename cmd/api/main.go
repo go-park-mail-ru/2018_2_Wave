@@ -51,9 +51,9 @@ func main() {
 
 	r.HandleFunc("/apps", mw.Chain(API.ShowAppsGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 	r.HandleFunc("/apps/popular", mw.Chain(API.ShowAppsPopularGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
-	r.HandleFunc("/apps/{name}", mw.Chain(API.AppGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
-	r.HandleFunc("/me/apps/{name}", mw.Chain(API.AppPersonalGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
-	r.HandleFunc("/apps/category", mw.Chain(API.StoreStatGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
+	//r.HandleFunc("/apps/{name}", mw.Chain(API.AppGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
+	r.HandleFunc("/apps/{name}", mw.Chain(API.AppPersonalGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
+	r.HandleFunc("/apps/category/{category}", mw.Chain(API.CategoryGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 	r.HandleFunc("/me/apps", mw.Chain(API.AddAppPOSTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 	r.HandleFunc("/me/apps", mw.Chain(API.MeShowAppsGetHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 
