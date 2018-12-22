@@ -41,6 +41,7 @@ func (s *snakeNode) OnColided(o core.IObject) {
 		s.snake.destroy()
 	}
 	if _, ok := o.(*wall); ok {
+		println("fatal collision")
 		s.snake.destroy()
 	}
 	if b, ok := o.(*booster); ok {

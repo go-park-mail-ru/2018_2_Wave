@@ -2,14 +2,16 @@ package main
 
 import (
 	"Wave/internal/config"
+	"Wave/internal/database"
 	lg "Wave/internal/logger"
 	mc "Wave/internal/metrics"
+	mw "Wave/internal/middleware"
 	gm "Wave/internal/services/game"
-	game "Wave/internal/services/game/proto"
 
-	"net"
+	"net/http"
 
-	"google.golang.org/grpc"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -20,20 +22,14 @@ const (
 )
 
 func main() {
-	conf := config.Configure(confPath)
-	curlog := lg.Construct(logPath, logFile)
-	prof := mc.Construct()
-
-	lis, err := net.Listen("tcp", conf.Game.Port)
-	if err != nil {
-
-		curlog.Sugar.Infow("can't listen on port",
-			"source", "main.go")
-
-	}
-
-	server := grpc.NewServer()
-	game.RegisterGameServer(server, gm.NewGame(curlog, prof, conf))
-
-	server.Serve(lis)
+	var (
+		conf   = config.Configure(confPath)
+		curlog = lg.Construct(logPath, logFile)
+		db     = database.New(curlog)
+		prof   = mc.Construct()
+		g      = gm.NewHandler(curlog, prof, db)
+		r      = mux.NewRouter()
+	)
+	r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
+	http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r))
 }

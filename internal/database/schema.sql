@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS session;
-DROP TABLE IF EXISTS userinfo;
+DROP TABLE IF EXISTS userinfo CASCADE;
 
 -- User Tables Block
 CREATE TABLE userinfo (
@@ -8,8 +8,6 @@ CREATE TABLE userinfo (
     password    VARCHAR(60)     NOT NULL,
     score       INT             DEFAULT 0,
     avatar      TEXT            DEFAULT '/img/avatars/default'
-
-    appid       BIGSERIAL,
 );
 
 CREATE TABLE session (
