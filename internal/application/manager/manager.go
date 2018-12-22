@@ -103,7 +103,7 @@ func (m *Manager) CreateLobby(roomType room.RoomType, roomToken room.RoomToken) 
 	return nil, room.ErrorNotExists
 }
 
-// RemoveLobby - 
+// RemoveLobby -
 func (m *Manager) RemoveLobby(roomToken room.RoomToken, u room.IUser) error {
 	if r, ok := m.rooms[roomToken]; ok {
 		if r.IsAbleToRemove(u) {
