@@ -376,6 +376,8 @@ func (model *DatabaseModel) Logout(cookie string) bool {
 	return true
 }
 
+///....
+
 func (model *DatabaseModel) Register(credentials models.UserCredentials) (string, error) {
 	if !ValidateUname(credentials.Username) || !ValidatePassword(credentials.Password) {
 		return "", fmt.Errorf("non-valid")
