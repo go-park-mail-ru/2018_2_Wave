@@ -620,72 +620,15 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserAppli
 	return user_apps
 }
 
-func (model *DatabaseModel) IncrementTime(cookie string, appname string) {
+func (model *DatabaseModel) AddApp(cookie string, appname string) {
+
 	model.Database.MustExec(`
-		UPDATE userapp
-		SET time_total=time_total+10
-		WHERE uid=(SELECT DISTINCT session.uid FROM session
-			JOIN userinfo
-			USING(uid)
-			WHERE cookie=$1)
-		AND appid=(SELECT appid FROM app
-			WHERE name=$2);
-	`, cookie, appname)
-
-	model.LG.Sugar.Infow(
-		"IncrementTime succeeded",
-		"source", "database.go",
-		"who", "IncrementTime",
-	)
-}
-
-func (model *DatabaseModel) AddApp(cookie string, appname string) bool {
-	var exists string
-	row := model.Database.QueryRowx(`SELECT EXISTS
-									(SELECT true
-									FROM userapp
-									WHERE uid=(SELECT DISTINCT session.uid
-										FROM session
-										JOIN userinfo
-										USING(uid)
-										WHERE cookie=$1)
-										AND appid=(SELECT appid
-										FROM app
-										WHERE name=$2));`, cookie, appname)
-	err := row.Scan(&exists)
-
-	if err != nil {
-
-		model.LG.Sugar.Infow(
-			"Scan failed",
-			"source", "database.go",
-			"who", "AddApp",
-		)
-
-		return false
-	}
-
-	fl, err := strconv.ParseBool(exists)
-
-	if err != nil {
-
-		model.LG.Sugar.Infow(
-			"strconv.ParseBool failed",
-			"source", "database.go",
-			"who", "AddApp",
-		)
-
-		return false
-	}
-
-	if fl == false {
-		model.Database.MustExec(`
 			UPDATE app
 			SET installs=installs+1
 			WHERE name=$1;
 		`, appname)
 
-		model.Database.MustExec(`
+	model.Database.MustExec(`
 			INSERT INTO userapp(uid, appid)
 			VALUES(
 				(SELECT DISTINCT session.uid FROM session
@@ -698,14 +641,25 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) bool {
 			);
 		`, cookie, appname)
 
-		model.LG.Sugar.Infow(
-			"AddApp succeeded",
-			"source", "database.go",
-			"who", "AddApp",
-		)
+	model.LG.Sugar.Infow(
+		"AddApp succeeded",
+		"source", "database.go",
+		"who", "AddApp",
+	)
 
-		return true
+	return
+}
+
+func (model *DatabaseModel) Ping(cookie string, name string) {
+	var temp string
+
+	row := model.Database.QueryRowx(``)
+	err := row.Scan(&temp)
+	err = err
+	ping, _ := strconv.Atoi(temp)
+
+	if ping-(ping+20) > 20 {
+
 	}
-
-	return false
+	return
 }

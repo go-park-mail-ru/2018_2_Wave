@@ -59,7 +59,7 @@ func main() {
 	r.HandleFunc("/apps/popular", mw.Chain(API.ShowAppsPopularGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 	r.HandleFunc("/apps/{name}", mw.Chain(API.AppGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 
-	r.HandleFunc("/me/apps/timer", mw.Chain(API.AppTimerPOSTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST")
+	r.HandleFunc("/ping", mw.Chain(API.PingPOSTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 
 	curlog.Sugar.Infow("starting api server on "+conf.SC.Host+conf.SC.Port,
 		"source", "main.go")
