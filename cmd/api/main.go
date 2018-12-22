@@ -19,7 +19,7 @@ import (
 const (
 	confPath = "./conf.json"
 
-	logPath = ".logs/"
+	logPath = "./logs/"
 	logFile = "api.log"
 )
 
