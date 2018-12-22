@@ -55,6 +55,7 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 		)
 
 		os.Exit(1)
+		// exitting
 	}
 
 	postgr.LG.Sugar.Infow(
