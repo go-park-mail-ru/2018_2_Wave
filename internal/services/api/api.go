@@ -609,5 +609,6 @@ func (h *Handler) PingPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) StoreStatGETHandler(rw http.ResponseWriter, r *http.Request) {
+
 	return
 }
