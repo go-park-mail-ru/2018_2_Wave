@@ -261,7 +261,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 /******************** Me GET ********************/
-
+//..
 func (h *Handler) MeGETHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 
