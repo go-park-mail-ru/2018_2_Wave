@@ -3,6 +3,7 @@ package models
 // easyjson:json
 type UserApplication struct {
 	Link          string `json:"link"`
+	Url           string `json:"url"`
 	Name          string `json:"name"`
 	Image         string `json:"image"`
 	About         string `json:"about"`

@@ -497,6 +497,8 @@ func easyjsonD2b7633eDecodeWaveInternalModels5(in *jlexer.Lexer, out *UserApplic
 		switch key {
 		case "link":
 			out.Link = string(in.String())
+		case "url":
+			out.Url = string(in.String())
 		case "name":
 			out.Name = string(in.String())
 		case "image":
@@ -534,6 +536,16 @@ func easyjsonD2b7633eEncodeWaveInternalModels5(out *jwriter.Writer, in UserAppli
 			out.RawString(prefix)
 		}
 		out.String(string(in.Link))
+	}
+	{
+		const prefix string = ",\"url\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Url))
 	}
 	{
 		const prefix string = ",\"name\":"
@@ -1024,6 +1036,8 @@ func easyjsonD2b7633eDecodeWaveInternalModels10(in *jlexer.Lexer, out *Applicati
 		switch key {
 		case "link":
 			out.Link = string(in.String())
+		case "url":
+			out.Url = string(in.String())
 		case "name":
 			out.Name = string(in.String())
 		case "image":
@@ -1059,6 +1073,16 @@ func easyjsonD2b7633eEncodeWaveInternalModels10(out *jwriter.Writer, in Applicat
 			out.RawString(prefix)
 		}
 		out.String(string(in.Link))
+	}
+	{
+		const prefix string = ",\"url\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Url))
 	}
 	{
 		const prefix string = ",\"name\":"

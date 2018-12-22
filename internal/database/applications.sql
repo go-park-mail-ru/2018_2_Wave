@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS app;
 
 CREATE TABLE app (
     appid           BIGSERIAL       PRIMARY KEY,
+    url             TEXT            DEFAULT '',
     link            TEXT            ,
     name            TEXT            ,
     image           TEXT            ,
