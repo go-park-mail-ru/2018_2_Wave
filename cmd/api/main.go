@@ -7,7 +7,6 @@ import (
 	mc "Wave/internal/metrics"
 	mw "Wave/internal/middleware"
 	"Wave/internal/services/api"
-	auth "Wave/internal/services/auth/proto"
 
 	"net/http"
 
@@ -15,13 +14,12 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
 )
 
 const (
 	confPath = "./conf.json"
 
-	logPath = "./build/logs/"
+	logPath = ".logs/"
 	logFile = "api.log"
 )
 
@@ -35,25 +33,26 @@ func main() {
 	prof := mc.Construct()
 	db := database.New(curlog)
 
-	grpcConn, err := grpc.Dial(
-		conf.AC.Host+conf.AC.Port,
-		grpc.WithInsecure(),
-	)
+	/*
+		grpcConn, err := grpc.Dial(
+			conf.AC.Host+conf.AC.Port,
+			grpc.WithInsecure(),
+		)
 
-	if err != nil {
+		if err != nil {
 
-		curlog.Sugar.Infow("can't connect to grpc server",
-			"source", "main.go")
+			curlog.Sugar.Infow("can't connect to grpc server",
+				"source", "main.go")
 
-	}
+		}
 
-	defer grpcConn.Close()
-
+		defer grpcConn.Close()
+	*/
 	API := &api.Handler{
-		DB:          *db,
-		LG:          curlog,
-		Prof:        prof,
-		AuthManager: auth.NewAuthClient(grpcConn),
+		DB:   *db,
+		LG:   curlog,
+		Prof: prof,
+		// AuthManager: auth.NewAuthClient(grpcConn),
 	}
 
 	r := mux.NewRouter()

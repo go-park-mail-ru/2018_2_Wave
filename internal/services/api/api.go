@@ -18,7 +18,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
-	"golang.org/x/net/context"
 )
 
 type Handler struct {
@@ -91,6 +90,113 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 /******************** Register POST ********************/
 
 func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
+	/*
+		user := models.UserEdit{
+			Username: r.FormValue("username"),
+			Password: r.FormValue("password"),
+		}
+
+		isCreated, avatarPath := h.uploadHandler(r)
+
+		if isCreated {
+			user.Avatar = avatarPath
+		} else if !isCreated {
+			fr := models.ForbiddenRequest{
+				Reason: "Bad avatar.",
+			}
+
+			payload, _ := fr.MarshalJSON()
+			rw.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(rw, string(payload))
+
+			h.LG.Sugar.Infow("/users failed, bad avatar.",
+				"source", "api.go",
+				"who", "RegisterPOSTHandler")
+
+			h.Prof.HitsStats.
+				WithLabelValues("400", "BAD REQUEST").
+				Add(1)
+
+			return
+		}
+
+		cookie, err := h.AuthManager.Create(
+			context.Background(),
+			&auth.Credentials{
+				Username: user.Username,
+				Password: user.Password,
+				Avatar:   user.Avatar,
+			})
+
+		if err != nil {
+			if err.Error() == "rpc error: code = Unknown desc = validation failed" {
+				fr := models.ForbiddenRequest{
+					Reason: "Bad username or/and password",
+				}
+
+				payload, _ := fr.MarshalJSON()
+				rw.WriteHeader(http.StatusForbidden)
+				fmt.Fprintln(rw, string(payload))
+
+				h.LG.Sugar.Infow("/users failed, bad username or/and password.",
+					"source", "api.go",
+					"who", "RegisterPOSTHandler")
+
+				h.Prof.HitsStats.
+					WithLabelValues("403", "FORBIDDEN").
+					Add(1)
+
+				return
+			}
+
+			rw.WriteHeader(http.StatusInternalServerError)
+
+			h.LG.Sugar.Infow("/users failed",
+				"source", "api.go",
+				"who", "RegisterPOSTHandler")
+
+			h.Prof.HitsStats.
+				WithLabelValues("500", "INTERNAL SERVER ERROR").
+				Add(1)
+
+			return
+		}
+
+		if cookie.CookieValue == "" {
+			fr := models.ForbiddenRequest{
+				Reason: "Username already in use.",
+			}
+
+			payload, _ := fr.MarshalJSON()
+			rw.WriteHeader(http.StatusForbidden)
+			fmt.Fprintln(rw, string(payload))
+
+			h.LG.Sugar.Infow("/users failed, username already in use.",
+				"source", "api.go",
+				"who", "RegisterPOSTHandler")
+
+			h.Prof.HitsStats.
+				WithLabelValues("403", "FORBIDDEN").
+				Add(1)
+
+			return
+		}
+
+		sessionCookie := misc.MakeSessionCookie(cookie.CookieValue)
+		http.SetCookie(rw, sessionCookie)
+		rw.WriteHeader(http.StatusCreated)
+
+		h.LG.Sugar.Infow("/users succeeded",
+			"source", "api.go",
+			"who", "RegisterPOSTHandler")
+
+		h.Prof.HitsStats.
+			WithLabelValues("201", "CREATED").
+			Add(1)
+
+		return
+	*/
+
 	user := models.UserEdit{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
@@ -120,16 +226,10 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := h.AuthManager.Create(
-		context.Background(),
-		&auth.Credentials{
-			Username: user.Username,
-			Password: user.Password,
-			Avatar:   user.Avatar,
-		})
+	cookie, err := h.DB.Register(user)
 
 	if err != nil {
-		if err.Error() == "rpc error: code = Unknown desc = validation failed" {
+		if err.Error() == "validation failed" {
 			fr := models.ForbiddenRequest{
 				Reason: "Bad username or/and password",
 			}
@@ -162,7 +262,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if cookie.CookieValue == "" {
+	if cookie == "" {
 		fr := models.ForbiddenRequest{
 			Reason: "Username already in use.",
 		}
@@ -182,7 +282,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionCookie := misc.MakeSessionCookie(cookie.CookieValue)
+	sessionCookie := misc.MakeSessionCookie(cookie)
 	http.SetCookie(rw, sessionCookie)
 	rw.WriteHeader(http.StatusCreated)
 
@@ -447,14 +547,45 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 /******************** Logout DELETE ********************/
 
 func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {
-	cookie := misc.GetSessionCookie(r)
-	success, _ := h.AuthManager.Delete(
-		context.Background(),
-		&auth.Cookie{
-			CookieValue: cookie,
-		})
+	/*
+		cookie := misc.GetSessionCookie(r)
+		success, _ := h.AuthManager.Delete(
+			context.Background(),
+			&auth.Cookie{
+				CookieValue: cookie,
+			})
+		if success.Resp != true {
+			rw.WriteHeader(http.StatusInternalServerError)
 
-	if success.Resp != true {
+			h.LG.Sugar.Infow("/session failed",
+				"source", "api.go",
+				"who", "LogoutDELETEHandler")
+
+			h.Prof.HitsStats.
+				WithLabelValues("500", "INTERNAL SERVER ERROR").
+				Add(1)
+
+			return
+		}
+
+		http.SetCookie(rw, misc.MakeSessionCookie(""))
+		rw.WriteHeader(http.StatusOK)
+
+		h.LG.Sugar.Infow("/session succeeded",
+			"source", "api.go",
+			"who", "LogoutDELETEHandler")
+
+		h.Prof.HitsStats.
+			WithLabelValues("200", "OK").
+			Add(1)
+
+		return
+	*/
+
+	cookie := misc.GetSessionCookie(r)
+	success := h.DB.Logout(cookie)
+
+	if success != true {
 		rw.WriteHeader(http.StatusInternalServerError)
 
 		h.LG.Sugar.Infow("/session failed",

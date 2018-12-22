@@ -4,6 +4,7 @@ import (
 	lg "Wave/internal/logger"
 	"Wave/internal/misc"
 	"Wave/internal/models"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -356,6 +357,87 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 	}
 
 	return nil
+}
+
+func (model *DatabaseModel) Logout(cookie string) bool {
+	model.Database.QueryRowx(`
+	DELETE
+	FROM session
+	WHERE cookie=$1;
+	`, cookie)
+
+	model.LG.Sugar.Infow(
+		"logout succeeded",
+		"source", "database.go",
+		"who", "Logout",
+	)
+
+	return true
+}
+
+func (model *DatabaseModel) Register(credentials models.UserEdit) (string, error) {
+	if ValidateUname(credentials.Username) && ValidatePassword(credentials.Password) {
+		if isPresent, problem := model.Present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
+
+			model.LG.Sugar.Infow(
+				"signup failed, user already exists",
+				"source", "database.go",
+				"who", "Register",
+			)
+
+			return "", nil
+		} else if problem != nil {
+
+			model.LG.Sugar.Infow(
+				"signup failed, present failed",
+				"source", "database.go",
+				"who", "Register",
+			)
+
+			return "", problem
+		} else if !isPresent {
+			cookie := misc.GenerateCookie()
+			hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
+
+			if credentials.Avatar != "/img/avatars/default" {
+				model.Database.MustExec(`
+				INSERT INTO userinfo(username,password,avatar)
+				VALUES($1, $2, $3)
+			`, credentials.Username, hashedPsswd, credentials.Avatar)
+			} else {
+				model.Database.MustExec(`
+				INSERT INTO userinfo(username,password)
+				VALUES($1, $2)
+			`, credentials.Username, hashedPsswd)
+			}
+
+			model.Database.MustExec(`
+			INSERT INTO session(uid, cookie)
+			VALUES(
+				(SELECT uid FROM userinfo WHERE username=$1),
+				$2
+			)
+		`, credentials.Username, cookie)
+
+			model.LG.Sugar.Infow(
+				"signup succeeded",
+				"source", "database.go",
+				"who", "Create",
+			)
+
+			model.AddApp(cookie, "Terminal")
+			model.AddApp(cookie, "Snake")
+			return cookie, nil
+		}
+	}
+
+	model.LG.Sugar.Infow(
+		"signup failed, validation failed",
+		"source", "database.go",
+		"who", "Register",
+	)
+
+	return "", fmt.Errorf("validation failed")
 }
 
 func (model *DatabaseModel) GetTopUsers(limit int, offset int) (board models.Leaders, err error) {
