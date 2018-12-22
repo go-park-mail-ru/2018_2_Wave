@@ -10,7 +10,6 @@ import (
 	"Wave/internal/database"
 	"Wave/internal/logger"
 	"Wave/internal/metrics"
-	"Wave/internal/misc"
 
 	"github.com/gorilla/websocket"
 )
@@ -22,6 +21,9 @@ type Handler struct {
 	LG   *logger.Logger
 	Prof *metrics.Profiler
 	DB   *database.DatabaseModel
+
+	cookieToRand map[string]int64
+	randToCookie map[int64]string
 
 	wsApp    *manager.Manager
 	upgrader websocket.Upgrader
@@ -42,6 +44,8 @@ func NewHandler(LG *logger.Logger, Prof *metrics.Profiler, db *database.Database
 				return true
 			},
 		},
+		cookieToRand: make(map[string]int64),
+		randToCookie: make(map[int64]string),
 		LG:   LG,
 		DB:   db,
 		Prof: Prof,
@@ -58,10 +62,17 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	go func() {
-		var (
-			cookie      = misc.GetSessionCookie(r)
-			username, _ = h.DB.Info(cookie)
-		)
+		defer func() {
+			if err := recover(); err != nil {
+				h.LG.Sugar.Infof("Shit happens, sorry")
+			}
+		}()
+		im := &room.InMessage{}
+		ws.ReadJSON(im)
+
+		username := ""
+		im.ToStruct(&username)
+		
 		user := room.NewUser(h.wsApp.GetNextUserID(), ws)
 		user.Name = username
 		user.LG = h.LG
@@ -69,3 +80,11 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 		user.Listen()
 	}()
 }
+
+// func (h *Handler) WSHallo(rw http.ResponseWriter, r *http.Request) {
+// 	cookie := misc.GetSessionCookie(r)
+// 	if cookie == "" {
+
+// 	}
+// 	if rnd, ok := h.cookieToRand[cookie]
+// }

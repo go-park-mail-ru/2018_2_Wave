@@ -22,6 +22,7 @@ func MakeSessionCookie(value string) *http.Cookie {
 	loginCookie.Name = sessionCookieName
 	loginCookie.Value = value
 	loginCookie.Path = ""
+	loginCookie.Secure = true
 	return loginCookie
 }
 
