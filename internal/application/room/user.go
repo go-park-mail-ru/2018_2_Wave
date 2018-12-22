@@ -139,7 +139,6 @@ func (u *User) getRoom(name RoomToken) (IRoom, bool) {
 func (u *User) sendWorker() {
 	defer func() {
 		if err := recover(); err != nil {
-			u.LG.Sugar.Infof("Broadcast fail: id=%s %s", u.GetID(), err)
 			u.StopListening()
 		}
 	}()
@@ -147,12 +146,6 @@ func (u *User) sendWorker() {
 	for {
 		select {
 		case m := <-u.output:
-			// log output
-			if u.LG != nil {
-				data, _ := json.Marshal(m)
-				u.LG.Sugar.Infof("out_message: %v %v", u.GetID(), string(data[:80]))
-			}
-
 			if err := u.Conn.WriteJSON(m); err != nil {
 				u.StopListening()
 				u.stop()
@@ -164,32 +157,23 @@ func (u *User) sendWorker() {
 }
 
 func (u *User) receiveWorker() {
-	// defer func() {
-	// 	if err := recover(); err != nil {
-	// 		u.LG.Sugar.Infof("Receive fail: id=%s %s", u.GetID(), err)
-	// 		u.StopListening()
-	// 	}
-	// }()
-
 	for {
 		m := &InMessage{}
 
 		// read a message
 		if err := u.Conn.ReadJSON(m); err != nil {
-			u.LG.Sugar.Infof("wrong_message: %v %s", u.GetID(), err)
-			// if websocket.IsCloseError(err, wsCloseErrors...) {
-			u.onDisconnected()
-			u.stop()
-			return
-			// }
-
-			// u.LG.Sugar.Infof("wrong_message: %v %s", u.GetID(), err)
-			// u.Consume(&OutMessage{
-			// 	RoomToken: m.GetRoomID(),
-			// 	Status:    StatusError,
-			// 	Payload:   "Wrong message",
-			// })
-			// continue
+			if websocket.IsCloseError(err, wsCloseErrors...) {
+				u.onDisconnected()
+				u.stop()
+				return
+			}
+			u.LG.Sugar.Infof("wrong_message: %v", u.GetID())
+			u.Consume(&OutMessage{
+				RoomToken: m.GetRoomID(),
+				Status:    StatusError,
+				Payload:   "Wrong message",
+			})
+			continue
 		}
 
 		u.input <- m
