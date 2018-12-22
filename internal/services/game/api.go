@@ -67,11 +67,8 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 				h.LG.Sugar.Infof("Shit happens, sorry")
 			}
 		}()
-		im := &room.InMessage{}
-		ws.ReadJSON(im)
-
 		username := ""
-		im.ToStruct(&username)
+		ws.ReadJSON(&username)
 		
 		user := room.NewUser(h.wsApp.GetNextUserID(), ws)
 		user.Name = username
@@ -80,11 +77,3 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 		user.Listen()
 	}()
 }
-
-// func (h *Handler) WSHallo(rw http.ResponseWriter, r *http.Request) {
-// 	cookie := misc.GetSessionCookie(r)
-// 	if cookie == "" {
-
-// 	}
-// 	if rnd, ok := h.cookieToRand[cookie]
-// }
