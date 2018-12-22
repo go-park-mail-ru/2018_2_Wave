@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
@@ -197,39 +196,15 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	*/
 
-	user := models.UserEdit{
+	user := models.UserCredentials{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
-	}
-
-	isCreated, avatarPath := h.uploadHandler(r)
-
-	if isCreated {
-		user.Avatar = avatarPath
-	} else if !isCreated {
-		fr := models.ForbiddenRequest{
-			Reason: "Bad avatar.",
-		}
-
-		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(rw, string(payload))
-
-		h.LG.Sugar.Infow("/users failed, bad avatar.",
-			"source", "api.go",
-			"who", "RegisterPOSTHandler")
-
-		h.Prof.HitsStats.
-			WithLabelValues("400", "BAD REQUEST").
-			Add(1)
-
-		return
 	}
 
 	cookie, err := h.DB.Register(user)
 
 	if err != nil {
-		if err.Error() == "validation failed" {
+		if err.Error() == "non-valid" {
 			fr := models.ForbiddenRequest{
 				Reason: "Bad username or/and password",
 			}
@@ -249,37 +224,25 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rw.WriteHeader(http.StatusInternalServerError)
+		if err.Error() == "exists" {
+			fr := models.ForbiddenRequest{
+				Reason: "Username already in use.",
+			}
 
-		h.LG.Sugar.Infow("/users failed",
-			"source", "api.go",
-			"who", "RegisterPOSTHandler")
+			payload, _ := fr.MarshalJSON()
+			rw.WriteHeader(http.StatusForbidden)
+			fmt.Fprintln(rw, string(payload))
 
-		h.Prof.HitsStats.
-			WithLabelValues("500", "INTERNAL SERVER ERROR").
-			Add(1)
+			h.LG.Sugar.Infow("/users failed, username already in use.",
+				"source", "api.go",
+				"who", "RegisterPOSTHandler")
 
-		return
-	}
+			h.Prof.HitsStats.
+				WithLabelValues("403", "FORBIDDEN").
+				Add(1)
 
-	if cookie == "" {
-		fr := models.ForbiddenRequest{
-			Reason: "Username already in use.",
+			return
 		}
-
-		payload, _ := fr.MarshalJSON()
-		rw.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(rw, string(payload))
-
-		h.LG.Sugar.Infow("/users failed, username already in use.",
-			"source", "api.go",
-			"who", "RegisterPOSTHandler")
-
-		h.Prof.HitsStats.
-			WithLabelValues("403", "FORBIDDEN").
-			Add(1)
-
-		return
 	}
 
 	sessionCookie := misc.MakeSessionCookie(cookie)
@@ -440,43 +403,6 @@ func (h *Handler) UserGETHandler(rw http.ResponseWriter, r *http.Request) {
 	h.LG.Sugar.Infow("/users/{name} succeeded",
 		"source", "api.go",
 		"who", "UserGETHandler")
-
-	h.Prof.HitsStats.
-		WithLabelValues("200", "OK").
-		Add(1)
-
-	return
-}
-
-/******************** Leaders GET ********************/
-
-func (h *Handler) LeadersGETHandler(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	c, _ := strconv.Atoi(vars["count"])
-	p, _ := strconv.Atoi(vars["page"])
-	leaders, err := h.DB.GetTopUsers(c, p)
-
-	if err != nil || reflect.DeepEqual(models.Leaders{}, leaders) {
-		rw.WriteHeader(http.StatusInternalServerError)
-
-		h.LG.Sugar.Infow("/users/leaders failed",
-			"source", "api.go",
-			"who", "LeadersGETHandler")
-
-		h.Prof.HitsStats.
-			WithLabelValues("500", "INTERNAL SERVER ERROR").
-			Add(1)
-
-		return
-	}
-
-	rw.WriteHeader(http.StatusOK)
-	payload, _ := leaders.MarshalJSON()
-	fmt.Fprintln(rw, string(payload))
-
-	h.LG.Sugar.Infow("/users/leaders succeeded",
-		"source", "api.go",
-		"who", "LeadersGETHandler")
 
 	h.Prof.HitsStats.
 		WithLabelValues("200", "OK").
