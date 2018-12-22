@@ -544,7 +544,7 @@ func (h *Handler) AddAppPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 func (h *Handler) MeShowAppsGetHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 
-	var apps models.UserApplications
+	var apps models.Applications
 	apps = h.DB.GetMyApps(cookie)
 
 	payload, _ := apps.MarshalJSON()

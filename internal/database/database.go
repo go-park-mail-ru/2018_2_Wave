@@ -580,20 +580,22 @@ func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app mode
 }
 */
 
-func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
+func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applications) {
 	rows, _ := model.Database.Queryx(`SELECT link,url,name,image,about,installs,price,category
 										FROM app
+										JOIN userapp
+										USING(appid)
 										WHERE userapp.uid=(SELECT DISTINCT session.uid
 											FROM session
 											JOIN userinfo
 											USING(uid)
-											WHERE cookie=$1));
+											WHERE cookie=$1);
 	`, cookie)
 	defer rows.Close()
 
 	for rows.Next() {
-		temp := models.UserApplication{}
-		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category, &temp.TimeTotal); err != nil {
+		temp := models.Application{}
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
 
 			model.LG.Sugar.Infow(
 				"scan failed",
@@ -601,10 +603,10 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserAppli
 				"who", "GetMyApps",
 			)
 
-			return models.UserApplications{}
+			return models.Applications{}
 		}
 
-		user_apps.UserApplications = append(user_apps.UserApplications, temp)
+		user_apps.Applications = append(user_apps.Applications, temp)
 	}
 
 	model.LG.Sugar.Infow(
