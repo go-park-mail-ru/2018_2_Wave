@@ -13,16 +13,68 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 )
+
+type pinger struct {
+	user string
+	app  string
+}
+
+type data struct {
+	app   string
+	total time.Duration
+	last  time.Time
+}
 
 type Handler struct {
 	DB   psql.DatabaseModel
 	LG   *lg.Logger
 	Prof *mc.Profiler
 	//AuthManager auth.AuthClient
+
+	times map[string]data
+	ping  chan pinger
+}
+
+func NewHandler(DB *psql.DatabaseModel, LG *lg.Logger, Prof *mc.Profiler) *Handler {
+	h := &Handler{
+		DB:   *DB,
+		LG:   LG,
+		Prof: Prof,
+		ping: make(chan pinger, 1000),
+	}
+	go func() {
+		ticker := time.NewTicker(30*time.Second)
+		for {
+			select{
+			case <- ticker.C:
+
+			case p := <-h.ping:
+				if t, ok := h.times[p.user]; ok {
+					// the same app
+					if t.app == p.app {
+						diff := time.Since(t.last)
+						t.total = t.total + diff
+					} else { // an other app
+						// h.DB.Ping(p.user, )
+					}
+					h.times[p.user] = t
+				} else {
+					// create a new session
+					h.times[p.user]	= data{
+						app: p.app,
+						total: 0,
+						last: time.Now(),
+					}
+				}
+			} 
+		}
+	}()
+	return h
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
@@ -599,7 +651,7 @@ func (h *Handler) MeShowAppsGetHandler(rw http.ResponseWriter, r *http.Request) 
 func (h *Handler) PingPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 	appname := r.FormValue("name")
-	h.DB.Ping(cookie, appname)
+	h.ping <- pinger{cookie, appname}
 
 	h.LG.Sugar.Infow("/ping succeeded",
 		"source", "api.go",

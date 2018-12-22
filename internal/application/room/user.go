@@ -139,6 +139,7 @@ func (u *User) getRoom(name RoomToken) (IRoom, bool) {
 func (u *User) sendWorker() {
 	defer func() {
 		if err := recover(); err != nil {
+			u.LG.Sugar.Infof("Broadcast fail: id=%s %s", u.GetID(), err)
 			u.StopListening()
 		}
 	}()
@@ -163,6 +164,13 @@ func (u *User) sendWorker() {
 }
 
 func (u *User) receiveWorker() {
+	// defer func() {
+	// 	if err := recover(); err != nil {
+	// 		u.LG.Sugar.Infof("Receive fail: id=%s %s", u.GetID(), err)
+	// 		u.StopListening()
+	// 	}
+	// }()
+
 	for {
 		m := &InMessage{}
 
@@ -173,7 +181,7 @@ func (u *User) receiveWorker() {
 				u.stop()
 				return
 			}
-			u.LG.Sugar.Infof("wrong_message: %v", u.GetID())
+			u.LG.Sugar.Infof("wrong_message: %v %s", u.GetID(), err)
 			u.Consume(&OutMessage{
 				RoomToken: m.GetRoomID(),
 				Status:    StatusError,

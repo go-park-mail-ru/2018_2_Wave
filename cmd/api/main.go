@@ -28,18 +28,14 @@ const (
 //go generate protoc --go_out=plugins=grpc:. ./internal/services/auth/proto/*.proto
 
 func main() {
-	conf := config.Configure(confPath)
-	curlog := lg.Construct(logPath, logFile)
-	prof := mc.Construct()
-	db := database.New(curlog)
-
-	API := &api.Handler{
-		DB:   *db,
-		LG:   curlog,
-		Prof: prof,
-	}
-
-	r := mux.NewRouter()
+	var (
+		conf   = config.Configure(confPath)
+		curlog = lg.Construct(logPath, logFile)
+		prof   = mc.Construct()
+		db     = database.New(curlog)
+		API    = api.NewHandler(db, curlog, prof)
+		r      = mux.NewRouter()
+	)
 	r.HandleFunc("/metrics", promhttp.Handler().(http.HandlerFunc)).Methods("GET")
 
 	r.HandleFunc("/", mw.Chain(API.SlashHandler))
