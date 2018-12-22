@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS session;
-DROP TABLE IF EXISTS userinfo;
+DROP TABLE IF EXISTS userinfo CASCADE;
 
 -- User Tables Block
 CREATE TABLE userinfo (

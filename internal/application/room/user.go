@@ -146,6 +146,12 @@ func (u *User) sendWorker() {
 	for {
 		select {
 		case m := <-u.output:
+			// log output
+			if u.LG != nil {
+				data, _ := json.Marshal(m)
+				u.LG.Sugar.Infof("out_message: %v %v", u.GetID(), string(data[:80]))
+			}
+
 			if err := u.Conn.WriteJSON(m); err != nil {
 				u.StopListening()
 				u.stop()
