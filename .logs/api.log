@@ -74,3 +74,8 @@
 {"level":"info","message":"/users succeeded","source":"api.go","who":"RegisterPOSTHandler"}
 {"level":"info","message":"CORS succeeded","source":"middleware.go","who":"CORS"}
 {"level":"info","message":"/users failed, username already in use.","source":"api.go","who":"RegisterPOSTHandler"}
+{"level":"info","message":"PostgreSQL connection establishment succeeded","source":"database.go","who":"New"}
+{"level":"info","message":"starting api server on http://localhost:9600","source":"main.go"}
+{"level":"info","message":"CORS succeeded","source":"middleware.go","who":"CORS"}
+{"level":"info","message":"signup succeeded","source":"database.go","who":"Register"}
+{"level":"info","message":"/users succeeded","source":"api.go","who":"RegisterPOSTHandler"}
