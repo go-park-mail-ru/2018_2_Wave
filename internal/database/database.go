@@ -45,7 +45,9 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	flag.StringVar(&dbpassword, "WAVE_DB_PASSWORD", "Wave", "")
 	flag.Parse()
 
-	postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
+	postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
+
+	// postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
 
 	if err != nil {
 		postgr.LG.Sugar.Infow(

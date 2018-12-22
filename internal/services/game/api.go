@@ -46,9 +46,9 @@ func NewHandler(LG *logger.Logger, Prof *metrics.Profiler, db *database.Database
 		},
 		cookieToRand: make(map[string]int64),
 		randToCookie: make(map[int64]string),
-		LG:   LG,
-		DB:   db,
-		Prof: Prof,
+		LG:           LG,
+		DB:           db,
+		Prof:         Prof,
 	}
 }
 
@@ -68,8 +68,10 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 			}
 		}()
 		username := ""
-		ws.ReadJSON(&username)
-		
+		if err := ws.ReadJSON(&username); err != nil {
+			h.LG.Sugar.Infof("WS get user name sheet %s", err)
+		}
+
 		user := room.NewUser(h.wsApp.GetNextUserID(), ws)
 		user.Name = username
 		user.LG = h.LG
