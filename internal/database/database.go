@@ -581,7 +581,7 @@ func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app mode
 */
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
-	rows, _ := model.Database.Queryx(`SELECT link,url,name,image,about,installs,price,category,time_total
+	rows, _ := model.Database.Queryx(`SELECT link,url,name,image,about,installs,price,category
 										FROM app
 										WHERE userapp.uid=(SELECT DISTINCT session.uid
 											FROM session
