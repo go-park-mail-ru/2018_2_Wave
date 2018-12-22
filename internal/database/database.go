@@ -411,12 +411,13 @@ func (model *DatabaseModel) Register(credentials models.UserCredentials) (string
 		);
 	`, credentials.Username, cookie)
 
-	model.LG.Sugar.Infow(
-		"signup succeeded",
-		"source", "database.go",
-		"who", "Register",
-	)
-
+	/*
+		model.LG.Sugar.Infow(
+			"signup succeeded",
+			"source", "database.go",
+			"who", "Register",
+		)
+	*/
 	return cookie, nil
 	/*
 		if ValidateUname(credentials.Username) && ValidatePassword(credentials.Password) {
