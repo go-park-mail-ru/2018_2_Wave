@@ -10,6 +10,7 @@ import (
 	"github.com/namsral/flag"
 
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -702,79 +703,22 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 	return
 }
 
-func (model *DatabaseModel) Ping(cookie string, name string) {
-	/*
-		var temp string
+func (model *DatabaseModel) Ping(cookie string, app string, dt time.Duration) {
+	secs := float64(dt) / float64(time.Second)
 
-		row := model.Database.QueryRowx(`SELECT time_start
-								FROM userapp
-								WHERE appid=(SELECT appid
-									FROM app
-									WHERE name=$1)
-									AND uid=(SELECT DISTINCT session.uid
-											FROM session
-											JOIN userinfo
-											USING(uid)
-											WHERE cookie=$2)`, name, cookie)
-		err := row.Scan(&temp)
-		err = err
-		start, _ := strconv.Atoi(temp)
-		curTime := time.Now()
-
-		if start == 0 {
-			model.Database.MustExec(`UPDATE time_start
-										SET time_start=$1
-										WHERE appid=(SELECT appid
-										FROM app
-										WHERE name=$2)
-										AND uid=(SELECT DISTINCT session.uid
-												FROM session
-												JOIN userinfo
-												USING(uid)
-												WHERE cookie=$3)`, curTime, name, cookie)
-
-			model.Database.MustExec(`UPDATE time_ping
-										SET time_start=$1
-										WHERE appid=(SELECT appid
-										FROM app
-										WHERE name=$2)
-										AND uid=(SELECT DISTINCT session.uid
-												FROM session
-												JOIN userinfo
-												USING(uid)
-												WHERE cookie=$3)`, curTime, name, cookie)
-		}
-
-		time.Sleep(30000 * time.Millisecond)
-
-		rowTP := model.Database.QueryRowx(`SELECT time_ping
-											FROM userapp
-											WHERE appid=(SELECT appid
-												FROM app
-												WHERE name=$1)
-												AND uid=(SELECT DISTINCT session.uid
-														FROM session
-														JOIN userinfo
-														USING(uid)
-														WHERE cookie=$2)`, name, cookie)
-		errTP := row.Scan(&temp)
-		errTP = errTP
-		time_ping, _ := strconv.Atoi(temp)
-
-		go if time_ping > 30000 * time.Millisecond {
-			rowTP := model.Database.QueryRowx(`UPDATE time_total
-			SET
-			FROM userapp
-			WHERE appid=(SELECT appid
+	model.Database.Exec(`
+		UPDATE userapp 
+		SET time_total=time_total + $3
+		WHERE appid=(
+				SELECT appid
 				FROM app
-				WHERE name=$1)
-				AND uid=(SELECT DISTINCT session.uid
-						FROM session
-						JOIN userinfo
-						USING(uid)
-						WHERE cookie=$2)`, name, cookie)
-		}
-
-		return
-	*/
+				WHERE name=$1
+			)
+			AND uid=(
+				SELECT DISTINCT session.uid 
+				FROM session
+				JOIN userinfo USING(uid)
+				WHERE cookie=$2
+			)
+	`, app, cookie, secs)
 }

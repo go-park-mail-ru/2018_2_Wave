@@ -45,22 +45,32 @@ func NewHandler(DB *psql.DatabaseModel, LG *lg.Logger, Prof *mc.Profiler) *Handl
 		DB:   *DB,
 		LG:   LG,
 		Prof: Prof,
-		ping: make(chan pinger, 1000),
+		ping: make(chan pinger, 10),
 	}
 	go func() {
 		ticker := time.NewTicker(30*time.Second)
 		for {
 			select{
 			case <- ticker.C:
-
+				for user, t := range h.times {
+					// store out time sessions
+					diff := time.Since(t.last)
+					if diff > 30 * time.Second {
+						h.DB.Ping(user, t.app, t.total)
+					}
+					delete(h.times, user)
+				}
 			case p := <-h.ping:
 				if t, ok := h.times[p.user]; ok {
 					// the same app
 					if t.app == p.app {
 						diff := time.Since(t.last)
 						t.total = t.total + diff
+						t.last = time.Now()
 					} else { // an other app
-						// h.DB.Ping(p.user, )
+						h.DB.Ping(p.user, p.app, t.total)
+						t.total = 0
+						t.last = time.Now()
 					}
 					h.times[p.user] = t
 				} else {
