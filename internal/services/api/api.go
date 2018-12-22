@@ -6,7 +6,6 @@ import (
 	mc "Wave/internal/metrics"
 	"Wave/internal/misc"
 	"Wave/internal/models"
-	auth "Wave/internal/services/auth/proto"
 
 	"fmt"
 	"io"
@@ -20,10 +19,10 @@ import (
 )
 
 type Handler struct {
-	DB          psql.DatabaseModel
-	LG          *lg.Logger
-	Prof        *mc.Profiler
-	AuthManager auth.AuthClient
+	DB   psql.DatabaseModel
+	LG   *lg.Logger
+	Prof *mc.Profiler
+	//AuthManager auth.AuthClient
 }
 
 func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
