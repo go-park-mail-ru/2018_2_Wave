@@ -581,17 +581,13 @@ func (model *DatabaseModel) GetAppPersonal(name string, cookie string) (app mode
 */
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {
-	rows, _ := model.Database.Queryx(`SELECT A.link,A.url,A.name,A.image,A.about,A.installs,A.price,A.category,UA.time_total
-									FROM app AS A
-									JOIN userapp AS UA
-									USING(appid)
-									WHERE UA.time_total IN (SELECT time_total
-									FROM userapp
-									WHERE userapp.uid=(SELECT DISTINCT session.uid
-										FROM session
-										JOIN userinfo
-										USING(uid)
-										WHERE cookie=$1));
+	rows, _ := model.Database.Queryx(`SELECT link,url,name,image,about,installs,price,category,time_total
+										FROM app
+										WHERE userapp.uid=(SELECT DISTINCT session.uid
+											FROM session
+											JOIN userinfo
+											USING(uid)
+											WHERE cookie=$1));
 	`, cookie)
 	defer rows.Close()
 
