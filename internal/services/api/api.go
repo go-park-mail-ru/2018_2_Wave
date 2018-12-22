@@ -554,24 +554,6 @@ func (h *Handler) AddAppPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) DeleteAppDELETEHandler(rw http.ResponseWriter, r *http.Request) {
-	cookie := misc.GetSessionCookie(r)
-	appname := r.FormValue("name")
-
-	h.DB.DeleteApp(cookie, appname)
-	rw.WriteHeader(http.StatusOK)
-
-	h.LG.Sugar.Infow("/apps succeeded",
-		"source", "api.go",
-		"who", "DeleteAppOPTHandler")
-
-	h.Prof.HitsStats.
-		WithLabelValues("200", "OK").
-		Add(1)
-
-	return
-}
-
 func (h *Handler) MeShowAppsGetHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 
