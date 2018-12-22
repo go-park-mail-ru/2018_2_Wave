@@ -176,18 +176,20 @@ func (u *User) receiveWorker() {
 
 		// read a message
 		if err := u.Conn.ReadJSON(m); err != nil {
-			if websocket.IsCloseError(err, wsCloseErrors...) {
-				u.onDisconnected()
-				u.stop()
-				return
-			}
 			u.LG.Sugar.Infof("wrong_message: %v %s", u.GetID(), err)
-			u.Consume(&OutMessage{
-				RoomToken: m.GetRoomID(),
-				Status:    StatusError,
-				Payload:   "Wrong message",
-			})
-			continue
+			// if websocket.IsCloseError(err, wsCloseErrors...) {
+			u.onDisconnected()
+			u.stop()
+			return
+			// }
+
+			// u.LG.Sugar.Infof("wrong_message: %v %s", u.GetID(), err)
+			// u.Consume(&OutMessage{
+			// 	RoomToken: m.GetRoomID(),
+			// 	Status:    StatusError,
+			// 	Payload:   "Wrong message",
+			// })
+			// continue
 		}
 
 		u.input <- m
