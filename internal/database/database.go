@@ -550,7 +550,7 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 	return models.Application{}
 }
 
-func (model *DatabaseModel) GetAppInstalls(name string) (app models.Application) {
+func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app models.UserApplicationInstalled) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`SELECT link,url,name,image,about,installs,price,category
 										FROM app
@@ -565,7 +565,43 @@ func (model *DatabaseModel) GetAppInstalls(name string) (app models.Application)
 				"who", "GetApp",
 			)
 
-			return models.Application{}
+			return models.UserApplicationInstalled{}
+		}
+
+		var exists string
+		rowInst := model.Database.QueryRowx(`SELECT EXISTS
+											(SELECT true
+											FROM userapp
+											JOIN app
+											USING(appid)
+											WHERE userapp.uid=(SELECT DISTINCT session.uid
+												FROM session JOIN userinfo
+												USING(uid)
+												WHERE cookie=$1) AND name=$2);`, cookie, name)
+		err = rowInst.Scan(&exists)
+
+		if err != nil {
+
+			model.LG.Sugar.Infow(
+				"Scan failed",
+				"source", "database.go",
+				"who", "Present",
+			)
+
+			return models.UserApplicationInstalled{}
+		}
+
+		app.Installed, err = strconv.ParseBool(exists)
+
+		if err != nil {
+
+			model.LG.Sugar.Infow(
+				"strconv.ParseBool failed",
+				"source", "database.go",
+				"who", "Present",
+			)
+
+			return models.UserApplicationInstalled{}
 		}
 
 		model.LG.Sugar.Infow(
@@ -583,7 +619,7 @@ func (model *DatabaseModel) GetAppInstalls(name string) (app models.Application)
 			"who", "GetApp",
 		)
 
-		return models.Application{}
+		return models.UserApplicationInstalled{}
 	}
 
 	model.LG.Sugar.Infow(

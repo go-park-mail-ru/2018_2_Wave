@@ -523,6 +523,39 @@ func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (h *Handler) AppPersonalGETHandler(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	app := h.DB.GetAppPersonal(vars["name"])
+
+	if reflect.DeepEqual(models.Application{}, app) {
+		rw.WriteHeader(http.StatusNotFound)
+
+		h.LG.Sugar.Infow("/apps/{name} failed",
+			"source", "api.go",
+			"who", "AppGETHandler")
+
+		h.Prof.HitsStats.
+			WithLabelValues("404", "NOT FOUND").
+			Add(1)
+
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	payload, _ := app.MarshalJSON()
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps/{name} succeeded",
+		"source", "api.go",
+		"who", "AppGETHandler")
+
+	h.Prof.HitsStats.
+		WithLabelValues("200", "OK").
+		Add(1)
+
+	return
+}
+
 func (h *Handler) AddAppPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie := misc.GetSessionCookie(r)
 	appname := r.FormValue("name")
