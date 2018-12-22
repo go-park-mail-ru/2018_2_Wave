@@ -10,7 +10,7 @@ import (
 
 	"net/http"
 
-	"github.com/gorilla/handlers"
+	"github.com/gorilla/handlersç"
 	"github.com/gorilla/mux"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
