@@ -88,113 +88,6 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 /******************** Register POST ********************/
 
 func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
-	/*
-		user := models.UserEdit{
-			Username: r.FormValue("username"),
-			Password: r.FormValue("password"),
-		}
-
-		isCreated, avatarPath := h.uploadHandler(r)
-
-		if isCreated {
-			user.Avatar = avatarPath
-		} else if !isCreated {
-			fr := models.ForbiddenRequest{
-				Reason: "Bad avatar.",
-			}
-
-			payload, _ := fr.MarshalJSON()
-			rw.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(rw, string(payload))
-
-			h.LG.Sugar.Infow("/users failed, bad avatar.",
-				"source", "api.go",
-				"who", "RegisterPOSTHandler")
-
-			h.Prof.HitsStats.
-				WithLabelValues("400", "BAD REQUEST").
-				Add(1)
-
-			return
-		}
-
-		cookie, err := h.AuthManager.Create(
-			context.Background(),
-			&auth.Credentials{
-				Username: user.Username,
-				Password: user.Password,
-				Avatar:   user.Avatar,
-			})
-
-		if err != nil {
-			if err.Error() == "rpc error: code = Unknown desc = validation failed" {
-				fr := models.ForbiddenRequest{
-					Reason: "Bad username or/and password",
-				}
-
-				payload, _ := fr.MarshalJSON()
-				rw.WriteHeader(http.StatusForbidden)
-				fmt.Fprintln(rw, string(payload))
-
-				h.LG.Sugar.Infow("/users failed, bad username or/and password.",
-					"source", "api.go",
-					"who", "RegisterPOSTHandler")
-
-				h.Prof.HitsStats.
-					WithLabelValues("403", "FORBIDDEN").
-					Add(1)
-
-				return
-			}
-
-			rw.WriteHeader(http.StatusInternalServerError)
-
-			h.LG.Sugar.Infow("/users failed",
-				"source", "api.go",
-				"who", "RegisterPOSTHandler")
-
-			h.Prof.HitsStats.
-				WithLabelValues("500", "INTERNAL SERVER ERROR").
-				Add(1)
-
-			return
-		}
-
-		if cookie.CookieValue == "" {
-			fr := models.ForbiddenRequest{
-				Reason: "Username already in use.",
-			}
-
-			payload, _ := fr.MarshalJSON()
-			rw.WriteHeader(http.StatusForbidden)
-			fmt.Fprintln(rw, string(payload))
-
-			h.LG.Sugar.Infow("/users failed, username already in use.",
-				"source", "api.go",
-				"who", "RegisterPOSTHandler")
-
-			h.Prof.HitsStats.
-				WithLabelValues("403", "FORBIDDEN").
-				Add(1)
-
-			return
-		}
-
-		sessionCookie := misc.MakeSessionCookie(cookie.CookieValue)
-		http.SetCookie(rw, sessionCookie)
-		rw.WriteHeader(http.StatusCreated)
-
-		h.LG.Sugar.Infow("/users succeeded",
-			"source", "api.go",
-			"who", "RegisterPOSTHandler")
-
-		h.Prof.HitsStats.
-			WithLabelValues("201", "CREATED").
-			Add(1)
-
-		return
-	*/
-
 	user := models.UserCredentials{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
@@ -559,14 +452,6 @@ func (h *Handler) LogoutOPTHandler(rw http.ResponseWriter, r *http.Request) {
 
 /******************** Applications ********************/
 
-func (h *Handler) DeleteAppOPTHandler(rw http.ResponseWriter, r *http.Request) {
-
-	h.LG.Sugar.Infow("/apps succeeded",
-		"source", "api.go",
-		"who", "DeleteAppOPTHandler")
-
-}
-
 func (h *Handler) ShowAppsGETHandler(rw http.ResponseWriter, r *http.Request) {
 	var apps models.Applications
 	apps = h.DB.GetApps()
@@ -609,7 +494,7 @@ func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	app := h.DB.GetApp(vars["name"])
 
-	if reflect.DeepEqual(models.UserApplication{}, app) {
+	if reflect.DeepEqual(models.Application{}, app) {
 		rw.WriteHeader(http.StatusNotFound)
 
 		h.LG.Sugar.Infow("/apps/{name} failed",

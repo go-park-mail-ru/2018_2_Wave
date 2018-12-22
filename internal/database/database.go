@@ -122,7 +122,7 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 		row := model.Database.QueryRowx(`
 			SELECT password
 			FROM userinfo
-			WHERE username=$1
+			WHERE username=$1;
 		`, credentials.Username)
 
 		err := row.Scan(&psswd)
@@ -376,8 +376,6 @@ func (model *DatabaseModel) Logout(cookie string) bool {
 	return true
 }
 
-///....
-
 func (model *DatabaseModel) Register(credentials models.UserCredentials) (string, error) {
 	if !ValidateUname(credentials.Username) || !ValidatePassword(credentials.Password) {
 		return "", fmt.Errorf("non-valid")
@@ -413,78 +411,12 @@ func (model *DatabaseModel) Register(credentials models.UserCredentials) (string
 		);
 	`, credentials.Username, cookie)
 
-	/*
-		model.LG.Sugar.Infow(
-			"signup succeeded",
-			"source", "database.go",
-			"who", "Register",
-		)
-	*/
+	model.LG.Sugar.Infow(
+		"signup succeeded",
+		"source", "database.go",
+		"who", "Register",
+	)
 	return cookie, nil
-	/*
-		if ValidateUname(credentials.Username) && ValidatePassword(credentials.Password) {
-			if isPresent, problem := model.Present(UserInfoTable, UsernameCol, credentials.Username); isPresent && problem == nil {
-
-				model.LG.Sugar.Infow(
-					"signup failed, user already exists",
-					"source", "database.go",
-					"who", "Register",
-				)
-
-				return "", nil
-			} else if problem != nil {
-
-				model.LG.Sugar.Infow(
-					"signup failed, present failed",
-					"source", "database.go",
-					"who", "Register",
-				)
-
-				return "", problem
-			} else if !isPresent {
-				cookie := misc.GenerateCookie()
-				hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
-
-				if credentials.Avatar != "/img/avatars/default" {
-					model.Database.MustExec(`
-					INSERT INTO userinfo(username,password,avatar)
-					VALUES($1, $2, $3)
-				`, credentials.Username, hashedPsswd, credentials.Avatar)
-				} else {
-					model.Database.MustExec(`
-					INSERT INTO userinfo(username,password)
-					VALUES($1, $2)
-				`, credentials.Username, hashedPsswd)
-				}
-
-				model.Database.MustExec(`
-				INSERT INTO session(uid, cookie)
-				VALUES(
-					(SELECT uid FROM userinfo WHERE username=$1),
-					$2
-				)
-			`, credentials.Username, cookie)
-
-				model.LG.Sugar.Infow(
-					"signup succeeded",
-					"source", "database.go",
-					"who", "Create",
-				)
-
-				model.AddApp(cookie, "Terminal")
-				model.AddApp(cookie, "Snake")
-				return cookie, nil
-			}
-		}
-
-		model.LG.Sugar.Infow(
-			"signup failed, validation failed",
-			"source", "database.go",
-			"who", "Register",
-		)
-
-		return "", fmt.Errorf("validation failed")
-	*/
 }
 
 /*************************************** App API ***************************************/
@@ -667,31 +599,6 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) bool {
 	}
 
 	return false
-}
-
-func (model *DatabaseModel) DeleteApp(cookie string, appname string) {
-	model.Database.MustExec(`
-		UPDATE app
-		SET installs=installs-1
-		WHERE name=$1;
-	`, appname)
-
-	model.Database.MustExec(`
-		DELETE
-		FROM userapp
-		WHERE uid=(SELECT DISTINCT session.uid FROM session
-			JOIN userinfo
-			USING(uid)
-			WHERE cookie=$1)
-		AND appid=(SELECT appid FROM app
-			WHERE name=$2);
-	`, cookie, appname)
-
-	model.LG.Sugar.Infow(
-		"DeleteApp succeeded",
-		"source", "database.go",
-		"who", "DeleteApp",
-	)
 }
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.UserApplications) {

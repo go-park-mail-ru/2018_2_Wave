@@ -10,6 +10,7 @@ import (
 
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -32,26 +33,10 @@ func main() {
 	prof := mc.Construct()
 	db := database.New(curlog)
 
-	/*
-		grpcConn, err := grpc.Dial(
-			conf.AC.Host+conf.AC.Port,
-			grpc.WithInsecure(),
-		)
-
-		if err != nil {
-
-			curlog.Sugar.Infow("can't connect to grpc server",
-				"source", "main.go")
-
-		}
-
-		defer grpcConn.Close()
-	*/
 	API := &api.Handler{
 		DB:   *db,
 		LG:   curlog,
 		Prof: prof,
-		// AuthManager: auth.NewAuthClient(grpcConn),
 	}
 
 	r := mux.NewRouter()
@@ -67,12 +52,10 @@ func main() {
 
 	r.HandleFunc("/users/me", mw.Chain(API.EditMeOPTHandler, mw.OptionsPreflight(conf.CC, curlog, prof))).Methods("OPTIONS")
 	r.HandleFunc("/session", mw.Chain(API.LogoutOPTHandler, mw.OptionsPreflight(conf.CC, curlog, prof))).Methods("OPTIONS")
-	r.HandleFunc("/me/apps", mw.Chain(API.DeleteAppOPTHandler, mw.OptionsPreflight(conf.CC, curlog, prof))).Methods("OPTIONS")
 
 	r.HandleFunc("/apps", mw.Chain(API.ShowAppsGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 	r.HandleFunc("/me/apps", mw.Chain(API.AddAppPOSTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 	r.HandleFunc("/me/apps", mw.Chain(API.MeShowAppsGetHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
-	r.HandleFunc("/me/apps", mw.Chain(API.DeleteAppDELETEHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("DELETE")
 	r.HandleFunc("/apps/popular", mw.Chain(API.ShowAppsPopularGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 	r.HandleFunc("/apps/{name}", mw.Chain(API.AppGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 
@@ -81,5 +64,5 @@ func main() {
 	curlog.Sugar.Infow("starting api server on "+conf.SC.Host+conf.SC.Port,
 		"source", "main.go")
 
-	http.ListenAndServe(conf.SC.Port, r) //handlers.RecoveryHandler()(r))
+	http.ListenAndServe(conf.SC.Port, handlers.RecoveryHandler()(r))
 }
