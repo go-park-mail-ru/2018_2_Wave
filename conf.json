@@ -17,7 +17,8 @@
             "http://127.0.0.1",
             "http://192.168.137.1:3000/",
             "SNAKEWAVE.COM",
-            "snakewave.com"
+            "snakewave.com",
+            "https://snakewave.com"
         ],
         "headers": [
             "Content-type"
