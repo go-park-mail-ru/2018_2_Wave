@@ -778,3 +778,37 @@ func (model *DatabaseModel) Ping(cookie string, name string) {
 		return
 	*/
 }
+
+func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.Applications) {
+	rows, _ := model.Database.Queryx(`
+		SELECT link,url,name,image,about,installs,price,category
+		FROM app
+		WHERE category=$1
+		ORDER BY installs DESC;
+	`, category)
+	defer rows.Close()
+
+	for rows.Next() {
+		temp := models.Application{}
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
+
+			model.LG.Sugar.Infow(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetPopularApps",
+			)
+
+			return models.Applications{}
+		}
+
+		apps.Applications = append(apps.Applications, temp)
+	}
+
+	model.LG.Sugar.Infow(
+		"GetPopularApps succeeded",
+		"source", "database.go",
+		"who", "GetPopularApps",
+	)
+
+	return apps
+}
