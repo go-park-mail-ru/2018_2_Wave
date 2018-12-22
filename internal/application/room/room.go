@@ -100,6 +100,7 @@ func (r *Room) runBroadcast() {
 			}
 		}
 	}
+
 }
 
 func (r *Room) AddUser(u IUser) (err error) {
