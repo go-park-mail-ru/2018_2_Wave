@@ -49,6 +49,8 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 
 	postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
 
+	// postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
+
 	if err != nil {
 		postgr.LG.Sugar.Infow(
 			"PostgreSQL connection establishment failed",
