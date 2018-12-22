@@ -45,7 +45,9 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	flag.StringVar(&dbpassword, "WAVE_DB_PASSWORD", "Wave", "")
 	flag.Parse()
 
-	postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
+	//postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
+
+	postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
 
 	if err != nil {
 		postgr.LG.Sugar.Infow(
@@ -628,7 +630,7 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 		"who", "GetApp",
 	)
 
-	return models.Application{}
+	return models.UserApplicationInstalled{}
 }
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applications) {
@@ -700,15 +702,78 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 }
 
 func (model *DatabaseModel) Ping(cookie string, name string) {
-	var temp string
+	/*
+		var temp string
 
-	row := model.Database.QueryRowx(``)
-	err := row.Scan(&temp)
-	err = err
-	ping, _ := strconv.Atoi(temp)
+		row := model.Database.QueryRowx(`SELECT time_start
+								FROM userapp
+								WHERE appid=(SELECT appid
+									FROM app
+									WHERE name=$1)
+									AND uid=(SELECT DISTINCT session.uid
+											FROM session
+											JOIN userinfo
+											USING(uid)
+											WHERE cookie=$2)`, name, cookie)
+		err := row.Scan(&temp)
+		err = err
+		start, _ := strconv.Atoi(temp)
+		curTime := time.Now()
 
-	if ping-(ping+20) > 20 {
+		if start == 0 {
+			model.Database.MustExec(`UPDATE time_start
+										SET time_start=$1
+										WHERE appid=(SELECT appid
+										FROM app
+										WHERE name=$2)
+										AND uid=(SELECT DISTINCT session.uid
+												FROM session
+												JOIN userinfo
+												USING(uid)
+												WHERE cookie=$3)`, curTime, name, cookie)
 
-	}
-	return
+			model.Database.MustExec(`UPDATE time_ping
+										SET time_start=$1
+										WHERE appid=(SELECT appid
+										FROM app
+										WHERE name=$2)
+										AND uid=(SELECT DISTINCT session.uid
+												FROM session
+												JOIN userinfo
+												USING(uid)
+												WHERE cookie=$3)`, curTime, name, cookie)
+		}
+
+		time.Sleep(30000 * time.Millisecond)
+
+		rowTP := model.Database.QueryRowx(`SELECT time_ping
+											FROM userapp
+											WHERE appid=(SELECT appid
+												FROM app
+												WHERE name=$1)
+												AND uid=(SELECT DISTINCT session.uid
+														FROM session
+														JOIN userinfo
+														USING(uid)
+														WHERE cookie=$2)`, name, cookie)
+		errTP := row.Scan(&temp)
+		errTP = errTP
+		time_ping, _ := strconv.Atoi(temp)
+
+		go if time_ping > 30000 * time.Millisecond {
+			rowTP := model.Database.QueryRowx(`UPDATE time_total
+			SET
+			FROM userapp
+			WHERE appid=(SELECT appid
+				FROM app
+				WHERE name=$1)
+				AND uid=(SELECT DISTINCT session.uid
+						FROM session
+						JOIN userinfo
+						USING(uid)
+						WHERE cookie=$2)`, name, cookie)
+		}
+
+		return
+	*/
 }
