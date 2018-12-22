@@ -524,13 +524,14 @@ func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AppPersonalGETHandler(rw http.ResponseWriter, r *http.Request) {
+	cookie := misc.GetSessionCookie(r)
 	vars := mux.Vars(r)
-	app := h.DB.GetAppPersonal(vars["name"])
+	app := h.DB.GetAppPersonal(cookie, vars["name"])
 
-	if reflect.DeepEqual(models.Application{}, app) {
+	if reflect.DeepEqual(models.UserApplicationInstalled{}, app) {
 		rw.WriteHeader(http.StatusNotFound)
 
-		h.LG.Sugar.Infow("/apps/{name} failed",
+		h.LG.Sugar.Infow("/me/apps/{name} failed",
 			"source", "api.go",
 			"who", "AppGETHandler")
 
@@ -545,9 +546,9 @@ func (h *Handler) AppPersonalGETHandler(rw http.ResponseWriter, r *http.Request)
 	payload, _ := app.MarshalJSON()
 	fmt.Fprintln(rw, string(payload))
 
-	h.LG.Sugar.Infow("/apps/{name} succeeded",
+	h.LG.Sugar.Infow("/me/apps/{name} succeeded",
 		"source", "api.go",
-		"who", "AppGETHandler")
+		"who", "AppPersonalGETHandler")
 
 	h.Prof.HitsStats.
 		WithLabelValues("200", "OK").
