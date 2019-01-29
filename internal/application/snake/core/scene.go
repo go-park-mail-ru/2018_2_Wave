@@ -1,7 +1,7 @@
 package core
 
 import (
-	"Wave/internal/application/room"
+	"Wave/internal/application/proto"
 	"Wave/internal/logger"
 
 	"math/rand"
@@ -46,7 +46,7 @@ func (s *scene) AddObject(o IObject) error {
 	defer s.mu.Unlock()
 
 	if s.isPlaced(o) {
-		return room.ErrorAlreadyExists
+		return proto.ErrorAlreadyExists
 	}
 	s.objects = append(s.objects, o)
 	s.objectMap[o.GetID()] = o
@@ -58,7 +58,7 @@ func (s *scene) RemoveObject(o IObject) error {
 	defer s.mu.Unlock()
 
 	if o = s.actualiser(o); o == nil {
-		return room.ErrorNotExists
+		return proto.ErrorNotExists
 	}
 	for i, expectant := range s.objects {
 		if expectant != o {
@@ -75,7 +75,7 @@ func (s *scene) RemoveObject(o IObject) error {
 
 		return nil
 	}
-	return room.ErrorNotExists
+	return proto.ErrorNotExists
 }
 
 func (s *scene) FindArea(length int, dir Direction, padding int) (res []Vec2i, err error) {
@@ -87,7 +87,7 @@ func (s *scene) FindArea(length int, dir Direction, padding int) (res []Vec2i, e
 FIND_POSITION:
 	{
 		if iteration++; iteration > 300 {
-			return nil, room.ErrorNotFound
+			return nil, proto.ErrorNotFound
 		}
 
 		position := Vec2i{
@@ -167,7 +167,7 @@ func (s *scene) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {
 		s.collisions = append(s.collisions, cs...)
 		return nil
 	}
-	return room.ErrorNil
+	return proto.ErrorNil
 }
 
 func (s *scene) isPlaced(o IObject) bool {

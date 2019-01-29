@@ -1,7 +1,7 @@
 package snake
 
 import (
-	"Wave/internal/application/room"
+	"Wave/internal/application/proto"
 	"Wave/internal/application/snake/core"
 	"time"
 )
@@ -9,26 +9,25 @@ import (
 //go:generate easyjson .
 
 type App struct {
-	*room.Room // base room
+	*proto.Room // base class
 	game       *game
 }
 
-const RoomType room.RoomType = "snake"
+const RoomType proto.RoomType = "snake"
 
 // ----------------|
 
 // New snake app
-func New(id room.RoomToken, step time.Duration, m room.IRoomManager, db interface{}) room.IRoom {
+func New(id proto.RoomToken, step time.Duration, m proto.IManager, db interface{}) proto.IRoom {
 	s := &App{
-		Room: room.NewRoom(id, RoomType, step),
+		Room: proto.NewRoom(id, RoomType, m, step),
 		game: newGame(core.Vec2i{
 			X: 60,
 			Y: 40,
 		}),
 	}
-	s.SetCounterType(room.FillGaps)
+	s.SetCounterType(proto.FillGaps)
 	s.OnTick = s.onTick
-	s.Manager = m
 	s.OnUserRemoved = s.onUserRemoved
 	s.game.OnSnakeDead = s.onSnakeDead
 	s.Routes["game_action"] = s.onGameAction
@@ -47,15 +46,15 @@ func (a *App) onTick(dt time.Duration) {
 		serial, _ := a.GetTokenCounter(s.UserToken)
 		info.Snakes[i].Serial = serial
 	}
-	a.Broadcast(room.MessageTick.WithStruct(info))
+	a.Broadcast(proto.MessageTick.WithStruct(info))
 }
 
-func (a *App) onUserRemoved(u room.IUser) {
+func (a *App) onUserRemoved(u proto.IUser) {
 	a.game.DeleteSnake(u)
 }
 
 // -> game_action
-func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse {
+func (a *App) onGameAction(u proto.IUser, im proto.IInMessage) {
 	ac := &gameAction{}
 	if im.ToStruct(ac) != nil {
 		return nil
@@ -71,27 +70,24 @@ func (a *App) onGameAction(u room.IUser, im room.IInMessage) room.IRouteResponse
 	case "move_down":
 		a.withSnake(u, func(s *snake) { s.SetDirection(core.Down) })
 	}
-	return nil
 }
 
 // -> game_play
-func (a *App) onGamePlay(u room.IUser, im room.IInMessage) room.IRouteResponse {
+func (a *App) onGamePlay(u proto.IUser, im proto.IInMessage) {
 	a.game.CreateSnake(u, 3)
-	return nil
 }
 
 // -> game_exit
-func (a *App) onGameExit(u room.IUser, im room.IInMessage) room.IRouteResponse {
+func (a *App) onGameExit(u proto.IUser, im proto.IInMessage) {
 	a.game.DeleteSnake(u)
 
 	if len(a.game.user2snake) == 0 {
 		a.exit()
 	}
-	return nil
 }
 
 // <- STATUS_DEAD | win
-func (a *App) onSnakeDead(u room.IUser) {
+func (a *App) onSnakeDead(u proto.IUser) {
 	serial, _ := a.GetUserCounter(u)
 	a.Broadcast(messageDead.WithStruct(&playerPayload{
 		UserName:   u.GetName(),
@@ -101,7 +97,7 @@ func (a *App) onSnakeDead(u room.IUser) {
 
 	if len(a.game.user2snake) <= 1 {
 		if len(a.game.user2snake) == 1 {
-			var w room.IUser
+			var w proto.IUser
 			for w = range a.game.user2snake {
 			}
 
@@ -134,19 +130,19 @@ type gameAction struct {
 
 type playerPayload struct {
 	UserName   string      `json:"user_name"`
-	UserToken  room.UserID `json:"user_token"`
+	UserToken  proto.UserToken `json:"user_token"`
 	UserSerial int64       `json:"user_serial"`
 }
 
 var (
-	messageWin            = room.RouteResponse{Status: "win"}.WithStruct("")
-	messageDead           = room.RouteResponse{Status: "STATUS_DEAD"}.WithStruct("")
-	messageNoSnake        = room.RouteResponse{Status: room.StatusError}.WithReason("No snake")
-	messageAlreadyPlays   = room.RouteResponse{Status: room.StatusError}.WithReason("already plays")
-	messageUnknownCommand = room.RouteResponse{Status: room.StatusError}.WithReason("unknown command")
+	messageWin            = proto.Response{Status: "win"}.WithStruct("")
+	messageDead           = proto.Response{Status: "STATUS_DEAD"}.WithStruct("")
+	messageNoSnake        = proto.Response{Status: "STATUS_ERROR"}.WithReason("No snake")
+	messageAlreadyPlays   = proto.Response{Status: "STATUS_ERROR"}.WithReason("already plays")
+	messageUnknownCommand = proto.Response{Status: "STATUS_ERROR"}.WithReason("unknown command")
 )
 
-func (a *App) withSnake(u room.IUser, next func(s *snake)) room.IRouteResponse {
+func (a *App) withSnake(u proto.IUser, next func(s *snake)) {
 	if s, err := a.game.GetSnake(u); err == nil {
 		next(s)
 		return nil

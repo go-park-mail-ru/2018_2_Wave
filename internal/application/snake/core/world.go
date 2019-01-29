@@ -1,7 +1,7 @@
 package core
 
 import (
-	"Wave/internal/application/room"
+	"Wave/internal/application/proto"
 	"time"
 )
 
@@ -58,7 +58,7 @@ func (w *World) AddObject(o IObject) error {
 		o.setWorld(w)
 		return nil
 	}
-	return room.ErrorNil
+	return proto.ErrorNil
 }
 
 // RemoveObject removes the object from the world.
@@ -66,7 +66,7 @@ func (w *World) RemoveObject(o IObject) error {
 	if w.scene != nil {
 		return w.scene.RemoveObject(o)
 	}
-	return room.ErrorNil
+	return proto.ErrorNil
 }
 
 // ----------------| scene functions
@@ -77,14 +77,14 @@ func (w *World) FindGap(length int, dir Direction) (res []Vec2i, err error) {
 		return w.scene.FindGap(length, dir)
 	}
 	// TODO:: log
-	return nil, room.ErrorNil
+	return nil, proto.ErrorNil
 }
 
 func (w *World) FindArea(length int, dir Direction, padding int) (res []Vec2i, err error) {
 	if w.scene != nil {
 		return w.scene.FindArea(length, dir, padding)
 	}
-	return nil, room.ErrorNil
+	return nil, proto.ErrorNil
 }
 
 func (w *World) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {
@@ -92,5 +92,5 @@ func (w *World) onObjectMove(o IObject, expectedPosition Vec2i) (err error) {
 		return w.scene.onObjectMove(o, expectedPosition)
 	}
 	// TODO:: log
-	return room.ErrorNil
+	return proto.ErrorNil
 }

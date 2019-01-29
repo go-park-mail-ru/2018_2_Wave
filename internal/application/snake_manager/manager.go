@@ -1,7 +1,7 @@
 package manager
 
 import (
-	"Wave/internal/application/room"
+	"Wave/internal/application/proto"
 	"Wave/internal/metrics"
 	"strconv"
 	"sync"

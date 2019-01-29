@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"Wave/internal/application/manager"
-	"Wave/internal/application/room"
+	"Wave/internal/application/proto"
 	"Wave/internal/application/snake"
 	"Wave/internal/database"
 	"Wave/internal/logger"

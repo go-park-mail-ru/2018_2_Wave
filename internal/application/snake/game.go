@@ -1,25 +1,25 @@
 package snake
 
 import (
-	"Wave/internal/application/room"
+	"Wave/internal/application/proto"
 	"Wave/internal/application/snake/core"
 	"time"
 )
 
 type game struct {
-	user2snake map[room.IUser]*snake
+	user2snake map[proto.IUser]*snake
 	world      *core.World
 	walls      *walls
 
 	foodTicker  core.Ticker
 	boostTicker core.Ticker
 
-	OnSnakeDead func(room.IUser)
+	OnSnakeDead func(proto.IUser)
 }
 
 func newGame(worldSize core.Vec2i) *game {
 	g := &game{
-		user2snake: map[room.IUser]*snake{},
+		user2snake: map[proto.IUser]*snake{},
 		world:      core.NewWorld(worldSize),
 	}
 	g.walls = newWalls(g.world)
@@ -43,23 +43,23 @@ func (g *game) Tick(dt time.Duration) {
 // ----------------| controller interface
 
 // get user bound snake
-func (g *game) GetSnake(u room.IUser) (*snake, error) {
+func (g *game) GetSnake(u proto.IUser) (*snake, error) {
 	if u == nil {
-		return nil, room.ErrorNil
+		return nil, proto.ErrorNil
 	}
 	if snake, ok := g.user2snake[u]; ok {
 		return snake, nil
 	}
-	return nil, room.ErrorNotExists
+	return nil, proto.ErrorNotExists
 }
 
 // create a new snake and place it into the world
-func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
+func (g *game) CreateSnake(u proto.IUser, length int) (*snake, error) {
 	if u == nil {
-		return nil, room.ErrorNil
+		return nil, proto.ErrorNil
 	}
 	if _, ok := g.user2snake[u]; ok {
-		return nil, room.ErrorAlreadyExists
+		return nil, proto.ErrorAlreadyExists
 	}
 
 	// create a snake object and find a spwn area
@@ -83,16 +83,16 @@ func (g *game) CreateSnake(u room.IUser, length int) (*snake, error) {
 }
 
 // delete a snake associated with the user from the world
-func (g *game) DeleteSnake(u room.IUser) error {
+func (g *game) DeleteSnake(u proto.IUser) error {
 	if u == nil {
-		return room.ErrorNil
+		return proto.ErrorNil
 	}
 	if s, ok := g.user2snake[u]; ok {
 		s.destroy()
 		delete(g.user2snake, u)
 		return nil
 	}
-	return room.ErrorNotExists
+	return proto.ErrorNotExists
 }
 
 func (g *game) GetGameInfo() *gameInfo {

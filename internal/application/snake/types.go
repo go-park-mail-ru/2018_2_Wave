@@ -1,7 +1,7 @@
 package snake
 
 import (
-	"Wave/internal/application/room"
+	"Wave/internal/application/proto"
 	"Wave/internal/application/snake/core"
 )
 
@@ -11,7 +11,7 @@ type objectInfo struct {
 }
 
 type snakeInfo struct {
-	UserToken room.UserID  `json:"user_token"`
+	UserToken proto.UserToken  `json:"user_token"`
 	Score     int          `json:"score"`
 	Serial    int64        `json:"user_serial"`
 	Snake     []objectInfo `json:"body"`

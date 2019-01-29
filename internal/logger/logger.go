@@ -7,6 +7,17 @@ import (
 	"go.uber.org/zap"
 )
 
+// ----------------| ILogger
+
+// ILogger - application logger interface
+type ILogger interface {
+	Infof(pattern string, args ...interface{})
+	Info(args ...interface{})
+}
+
+// ----------------| Logger
+
+// Logger - default ilogger implementation
 type Logger struct {
 	Sugar *zap.SugaredLogger
 }
@@ -26,6 +37,7 @@ func logfileExists(logPath, logFile string) bool {
 	return false
 }
 
+// Construct - constructor
 func Construct(logPath, logFile string) *Logger {
 	if !logfileExists(logPath, logFile) {
 		return &Logger{}
@@ -60,4 +72,14 @@ func Construct(logPath, logFile string) *Logger {
 	}
 
 	return &sugarredLogger
+}
+
+// Infof - inforamtion patterned message
+func (l *Logger) Infof(pattern string, args ...interface{}) {
+	l.Sugar.Infof(pattern, args...)
+}
+
+// Info - inforamtion message
+func (l *Logger) Info(args ...interface{}) {
+	l.Sugar.Info(args...)
 }
