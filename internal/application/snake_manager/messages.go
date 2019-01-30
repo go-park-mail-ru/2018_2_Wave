@@ -1,49 +1,50 @@
 package manager
 
-import "Wave/internal/application/room"
+import "Wave/internal/application/proto"
 
 var (
-	messageQSAcceptStatus = room.RouteResponse{Status: "quick_search_accept_status"}.WithStruct("")
-	messageQSFailed       = room.RouteResponse{Status: "quick_search_failed"}.WithStruct("")
-	messageQSRemoved      = room.RouteResponse{Status: "quick_search_removed"}.WithStruct("")
-	messageQSAdded        = room.RouteResponse{Status: "quick_search_added"}.WithStruct("")
-	messageQSReady        = room.RouteResponse{Status: "quick_search_ready"}.WithStruct("")
-	messageQSDone         = room.RouteResponse{Status: "quick_search_done"}.WithStruct("")
-	messageQSKick         = room.RouteResponse{Status: "quick_search_kick"}.WithStruct("")
+	messageOK             = proto.Response{Status: "STATUS_OK"}.WithStruct("")
+	messageQSAcceptStatus = proto.Response{Status: "quick_search_accept_status"}.WithStruct("")
+	messageQSFailed       = proto.Response{Status: "quick_search_failed"}.WithStruct("")
+	messageQSRemoved      = proto.Response{Status: "quick_search_removed"}.WithStruct("")
+	messageQSAdded        = proto.Response{Status: "quick_search_added"}.WithStruct("")
+	messageQSReady        = proto.Response{Status: "quick_search_ready"}.WithStruct("")
+	messageQSDone         = proto.Response{Status: "quick_search_done"}.WithStruct("")
+	messageQSKick         = proto.Response{Status: "quick_search_kick"}.WithStruct("")
 )
 
 // easyjson:json
 type roomTokenPayload struct {
-	RoomToken room.RoomToken `json:"room_token"`
+	RoomToken proto.RoomToken `json:"room_token"`
 }
 
 // easyjson:json
 type roomTypePayload struct {
-	RoomType room.RoomType `json:"room_type"`
+	RoomType proto.RoomType `json:"room_type"`
 }
 
 // easyjson:json
 type userTokenPayload struct {
-	UserToken room.UserID `json:"user_token"`
+	UserToken proto.UserToken `json:"user_token"`
 }
 
 // easyjson:json
 type roomInfoPayload struct {
-	RoomToken room.RoomToken `json:"room_token"`
-	RoomType  room.RoomType  `json:"room_type"`
+	RoomToken proto.RoomToken `json:"room_token"`
+	RoomType  proto.RoomType  `json:"room_type"`
 }
 
 // easyjson:json
 type QSStatusMemberPayload struct {
-	UserName   string      `json:"user_name"`
-	UserToken  room.UserID `json:"user_token"`
-	UserSerial int64       `json:"user_serial"`
+	UserName   string          `json:"user_name"`
+	UserToken  proto.UserToken `json:"user_token"`
+	UserSerial int64           `json:"user_serial"`
 }
 
 // easyjson:json
 type QSPayload struct {
-	PlayerCount int           `json:"player_count"`
-	RoomType    room.RoomType `json:"room_type"`
+	PlayerCount int            `json:"player_count"`
+	RoomType    proto.RoomType `json:"room_type"`
 }
 
 func (q *QSPayload) IsValid() bool {

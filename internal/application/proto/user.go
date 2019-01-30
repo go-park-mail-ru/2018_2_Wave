@@ -31,8 +31,10 @@ type IUser interface {
 	EnterRoom(IRoom) error  // add the user into the room
 	ExitRoom(IRoom) error   // remove the user from the room
 
-	Run()  // run the user
+	Start()  // run the user
 	Stop() // stop the user
+
+	IActor
 }
 
 // ----------------| User
@@ -94,17 +96,17 @@ func (u *User) EnterRoom(r IRoom) error {
 	if r == nil {
 		return ErrorNil
 	}
-	return r.addUser(u)
+	return r.Task(func() { r.addUser(u) })
 }
 
 func (u *User) ExitRoom(r IRoom) error {
 	if r == nil {
 		return ErrorNil
 	}
-	return r.removeUser(u)
+	return r.Task(func() { r.removeUser(u) })
 }
 
-func (u *User) Run() {
+func (u *User) Start() {
 	u.Logf("user started")
 	go u.PanicRecovery(u.receiveWorker)
 	go u.PanicRecovery(u.sendWorker)
@@ -160,6 +162,6 @@ func (u *User) sendWorker() {
 
 func (u *User) onDisconnected() {
 	for _, r := range u.Rooms {
-		r.onDisconnected(u)
+		r.Task(func() { r.onDisconnected(u) })
 	}
 }

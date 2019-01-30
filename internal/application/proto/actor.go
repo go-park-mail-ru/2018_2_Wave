@@ -14,7 +14,9 @@ type ActorTask func()
 // IActor - Actor inteface.
 // @See Actor pattern
 type IActor interface {
-	Task(ActorTask)
+	Task(ActorTask) error
+	SetLogger(logger.ILogger)
+	GetLogger() logger.ILogger
 }
 
 // ----------------| Actor
@@ -35,7 +37,7 @@ func MakeActor(bufferSize int) Actor {
 }
 
 // AddTask to the actor message queue
-func (a *Actor) AddTask(t ActorTask) error {
+func (a *Actor) Task(t ActorTask) error {
 	if t == nil {
 		a.T <- t
 		return nil
@@ -57,15 +59,18 @@ func (a *Actor) Logf(pattern string, args ...interface{}) {
 }
 
 // Log - log
-func (a *Actor) Log(args ...interface{}) {
+func (a *Actor) Log(msg string, args ...interface{}) {
 	if a.LG == nil {
 		return
 	}
 	if a.LogMeta != nil {
 		args = append(args, a.LogMeta()...)
 	}
-	a.LG.Info(args...)
+	a.LG.Info(msg, args...)
 }
+
+func (a *Actor) SetLogger(l logger.ILogger) { a.LG = l }
+func (a *Actor) GetLogger() logger.ILogger  { return a.LG }
 
 // ->> panic recovery
 

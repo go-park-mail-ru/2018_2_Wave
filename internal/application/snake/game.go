@@ -78,7 +78,6 @@ func (g *game) CreateSnake(u proto.IUser, length int) (*snake, error) {
 			g.OnSnakeDead(u)
 		}
 	}
-	println("snake created", u.GetID())
 	return snake, nil
 }
 
@@ -100,7 +99,7 @@ func (g *game) GetGameInfo() *gameInfo {
 	// snakes
 	for u, s := range g.user2snake {
 		si := snakeInfo{
-			UserToken: u.GetID(),
+			UserToken: u.GetToken(),
 			Score:     s.score,
 		}
 		for _, bn := range s.body {

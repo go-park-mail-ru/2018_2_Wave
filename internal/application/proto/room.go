@@ -36,16 +36,19 @@ type IRoom interface {
 
 	Start() // start the room. Locks the thread
 	Stop()  // stop the room
+	GetTickTime() time.Duration
 
 	GetUserSerial(u IUser) (serial int64, err error)      // get user local id
 	GetTokenSerial(t UserToken) (serial int64, err error) // get user local id
 	SetCounterType(CounterType NumerationType)            // set id numeration mode
 
 	IsAbleToRemove(u IUser) bool // wether the user can remove the room
+
+	IActor
 }
 
 // RoomFactory - IRoom factort
-type RoomFactory func(_ RoomToken, _ RoomType, _ IManager, db interface{}, step time.Duration) IRoom
+type RoomFactory func(_ RoomToken, _ IManager, db interface{}, step time.Duration) IRoom
 
 // ---------------| Room
 
@@ -171,8 +174,12 @@ func (r *Room) Start() {
 // Stop the room - safe
 func (r *Room) Stop() {
 	r.cancel <- ""
+	if m := r.GetManager(); m != nil {
+		m.Task(func() { m.RemoveLobby(r.GetToken(), nil) })
+	}
 }
 
+func (r *Room) GetTickTime() time.Duration                           { return r.step }
 func (r *Room) GetUserSerial(u IUser) (serial int64, err error)      { return r.counter.GetUserID(u) }
 func (r *Room) GetTokenSerial(t UserToken) (serial int64, err error) { return r.counter.GetTokenID(t) }
 func (r *Room) SetCounterType(CounterType NumerationType)            { r.counter.UserCounterType = CounterType }

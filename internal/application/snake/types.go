@@ -11,10 +11,10 @@ type objectInfo struct {
 }
 
 type snakeInfo struct {
-	UserToken proto.UserToken  `json:"user_token"`
-	Score     int          `json:"score"`
-	Serial    int64        `json:"user_serial"`
-	Snake     []objectInfo `json:"body"`
+	UserToken proto.UserToken `json:"user_token"`
+	Score     int             `json:"score"`
+	Serial    int64           `json:"user_serial"`
+	Snake     []objectInfo    `json:"body"`
 }
 
 type gameInfo struct {

@@ -19,26 +19,26 @@ const (
 // ----------------| former
 
 type formerUser struct {
-	room.IUser
+	proto.IUser
 	bAccepted bool
 }
 
 type former struct {
 	users   []formerUser
 	stage   formingStage
-	rType   room.RoomType
+	rType   proto.RoomType
 	aim     int
-	counter *room.Counter
+	counter proto.Counter
 
-	onUserRemoved func(*former, room.IUser)
-	onUserAdded   func(*former, room.IUser)
-	onAcceped     func(*former, room.IUser)
+	onUserRemoved func(*former, proto.IUser)
+	onUserAdded   func(*former, proto.IUser)
+	onAcceped     func(*former, proto.IUser)
 	onFormed      func(*former)
 	onFailed      func(*former)
 	onDone        func(*former)
 }
 
-func (f *former) AddUser(u room.IUser) {
+func (f *former) AddUser(u proto.IUser) {
 	if f.stage != stageForming {
 		return
 	}
@@ -47,7 +47,7 @@ func (f *former) AddUser(u room.IUser) {
 	}
 
 	f.users = append(f.users, formerUser{u, false})
-	f.counter.Add(u.GetID())
+	f.counter.Register(u.GetToken())
 	if f.onUserAdded != nil {
 		f.onUserAdded(f, u)
 	}
@@ -60,7 +60,7 @@ func (f *former) AddUser(u room.IUser) {
 	}
 }
 
-func (f *former) RemoveUser(u room.IUser) {
+func (f *former) RemoveUser(u proto.IUser) {
 	if f.stage == stageForming {
 		f.removeUser(u)
 		return
@@ -71,7 +71,7 @@ func (f *former) RemoveUser(u room.IUser) {
 	}
 }
 
-func (f *former) Accept(u room.IUser, bAccept bool) {
+func (f *former) Accept(u proto.IUser, bAccept bool) {
 	if f.stage != stageAccepting {
 		return
 	}
@@ -119,8 +119,8 @@ func (f *former) StopAccepting() {
 	}
 }
 
-func (f *former) GetUserSerial(u room.IUser) int64 {
-	c, _ := f.counter.GetUserCounter(u)
+func (f *former) GetUserSerial(u proto.IUser) int64 {
+	c, _ := f.counter.GetUserID(u)
 	return c
 }
 
@@ -128,11 +128,11 @@ func (f *former) IsFormed() bool {
 	return len(f.users) >= f.aim
 }
 
-func (f *former) removeUser(u room.IUser) {
+func (f *former) removeUser(u proto.IUser) {
 	for i, expectant := range f.users {
 		if expectant.IUser == u {
 			f.users = append(f.users[:i], f.users[i+1:]...)
-			f.counter.Delete(u.GetID())
+			f.counter.Unregister(u.GetToken())
 
 			if f.onUserRemoved != nil {
 				f.onUserRemoved(f, u)
@@ -144,14 +144,14 @@ func (f *former) removeUser(u room.IUser) {
 // ----------------| builder
 
 type builder struct {
-	formers    map[room.RoomType][]*former
-	u2f        map[room.IUser]*former
+	formers    map[proto.RoomType][]*former
+	u2f        map[proto.IUser]*former
 	mu         sync.Mutex
 	acceptTime int // seconds
 
-	OnUserRemoved func(*former, room.IUser)
-	OnUserAdded   func(*former, room.IUser)
-	OnAcceped     func(*former, room.IUser)
+	OnUserRemoved func(*former, proto.IUser)
+	OnUserAdded   func(*former, proto.IUser)
+	OnAcceped     func(*former, proto.IUser)
 	OnFormed      func(*former)
 	OnFailed      func(*former)
 	OnDone        func(*former)
@@ -159,63 +159,50 @@ type builder struct {
 
 func newBuilder() *builder {
 	b := &builder{
-		formers: make(map[room.RoomType][]*former),
-		u2f:     make(map[room.IUser]*former),
+		formers: make(map[proto.RoomType][]*former),
+		u2f:     make(map[proto.IUser]*former),
 	}
-	// go func() {
-	// 	for {
-	// 		time.Sleep(5 * time.Second)
-
-	// 		b.mu.Lock()
-	// 		fmt.Print("|")
-	// 		for u := range b.u2f {
-	// 			fmt.Print(u.GetID())
-	// 		}
-	// 		fmt.Println("|")
-	// 		b.mu.Unlock()
-	// 	}
-	// }()
 	return b
 }
 
-func (b *builder) AddUser(u room.IUser, roomType room.RoomType, players int) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	// if not searches
-	if _, ok := b.u2f[u]; !ok {
-		b.getFormer(roomType, players).AddUser(u)
-	} else {
-		println("user already exists")
-	}
+func (b *builder) AddUser(u proto.IUser, roomType proto.RoomType, players int) {
+	b.lock(func() {
+		// if not searches
+		if _, ok := b.u2f[u]; !ok {
+			b.getFormer(roomType, players).AddUser(u)
+		} else {
+			println("user already exists")
+		}
+	})
 }
 
-func (b *builder) RemoveUser(u room.IUser) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.removeUser(u)
+func (b *builder) RemoveUser(u proto.IUser) {
+	b.lock(func() {
+		b.removeUser(u)
+	})
 }
 
-func (b *builder) Accept(u room.IUser, bAccept bool) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	// if searches
+func (b *builder) Accept(u proto.IUser, bAccept bool) {
+	b.lock(func() {
+		if f, ok := b.u2f[u]; ok {
+			// if searches
+			f.Accept(u, bAccept)
+		}
+	})
+}
+
+// ----------------| internal
+
+func (b *builder) removeUser(u proto.IUser) {
 	if f, ok := b.u2f[u]; ok {
-		f.Accept(u, bAccept)
-	}
-}
-
-// NOTE: the mutex must be taken before
-func (b *builder) removeUser(u room.IUser) {
-	// if searches
-	if f, ok := b.u2f[u]; ok {
+		// if searches
 		f.RemoveUser(u)
 	} else {
 		println("user not found")
 	}
 }
 
-// NOTE: the mutex must be taken before
-func (b *builder) getFormer(roomType room.RoomType, players int) *former {
+func (b *builder) getFormer(roomType proto.RoomType, players int) *former {
 	ff, ok := b.formers[roomType]
 	if !ok {
 		ff = []*former{}
@@ -236,16 +223,16 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 	f := &former{
 		aim:       players,
 		rType:     roomType,
-		counter:   room.NewCounter(room.FillGaps),
+		counter:   proto.MakeCounter(proto.FillGaps),
 		onFailed:  b.OnFailed,
 		onAcceped: b.OnAcceped,
-		onUserAdded: func(f *former, u room.IUser) {
+		onUserAdded: func(f *former, u proto.IUser) {
 			b.u2f[u] = f
 			if b.OnUserAdded != nil {
 				b.OnUserAdded(f, u)
 			}
 		},
-		onUserRemoved: func(f *former, u room.IUser) {
+		onUserRemoved: func(f *former, u proto.IUser) {
 			delete(b.u2f, u)
 			if b.OnUserRemoved != nil {
 				b.OnUserRemoved(f, u)
@@ -286,4 +273,10 @@ func (b *builder) getFormer(roomType room.RoomType, players int) *former {
 	}
 	b.formers[roomType] = append(ff, f)
 	return f
+}
+
+func (b *builder) lock(code func()) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	code()
 }

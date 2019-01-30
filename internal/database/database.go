@@ -26,12 +26,10 @@ const (
 
 type DatabaseModel struct {
 	Database *sqlx.DB
-	LG       *lg.Logger
+	LG       lg.ILogger
 }
 
-var a = flag.String("", "", "")
-
-func New(lg_ *lg.Logger) *DatabaseModel {
+func New(lg_ lg.ILogger) *DatabaseModel {
 	var (
 		postgr = &DatabaseModel{
 			LG: lg_,
@@ -51,7 +49,7 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 	// postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
 
 	if err != nil {
-		postgr.LG.Sugar.Infow(
+		postgr.LG.Info(
 			"PostgreSQL connection establishment failed",
 			"source", "database.go",
 			"who", "New",
@@ -61,7 +59,7 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 		// exitting
 	}
 
-	postgr.LG.Sugar.Infow(
+	postgr.LG.Info(
 		"PostgreSQL connection establishment succeeded",
 		"source", "database.go",
 		"who", "New",
@@ -78,7 +76,7 @@ func (model *DatabaseModel) Present(tableName string, colName string, target str
 
 	if err != nil {
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"Scan failed",
 			"source", "database.go",
 			"who", "Present",
@@ -91,7 +89,7 @@ func (model *DatabaseModel) Present(tableName string, colName string, target str
 
 	if err != nil {
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"strconv.ParseBool failed",
 			"source", "database.go",
 			"who", "Present",
@@ -133,7 +131,7 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 
 		if err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"Scan failed",
 				"source", "database.go",
 				"who", "LogIn",
@@ -152,7 +150,7 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 				);
 			`, credentials.Username, cookie)
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"login succeeded, cookie set",
 				"source", "database.go",
 				"who", "LogIn",
@@ -160,7 +158,7 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 
 			return cookie, nil
 		} else {
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"login failed, wrong password",
 				"source", "database.go",
 				"who", "LogIn",
@@ -170,7 +168,7 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 		}
 	} else if problem != nil {
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"Present failed",
 			"source", "database.go",
 			"who", "LogIn",
@@ -179,7 +177,7 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 		return "", problem
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"login failed, no such user",
 		"source", "database.go",
 		"who", "LogIn",
@@ -200,7 +198,7 @@ func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExte
 
 	if err != nil {
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"getmyprofile failed, scan error",
 			"source", "database.go",
 			"who", "GetMyProfile",
@@ -209,7 +207,7 @@ func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExte
 		return models.UserExtended{}, err
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"getmyprofile succeeded",
 		"source", "database.go",
 		"who", "GetMyProfile",
@@ -229,7 +227,7 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 
 		if err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"getprofile failed, scan error",
 				"source", "database.go",
 				"who", "GetProfile",
@@ -238,7 +236,7 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 			return models.UserExtended{}, err
 		}
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"getprofile succeeded",
 			"source", "database.go",
 			"who", "GetProfile",
@@ -247,7 +245,7 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 		return profile, nil
 	} else if problem != nil {
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"Present failed",
 			"source", "database.go",
 			"who", "GetProfile",
@@ -256,7 +254,7 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 		return models.UserExtended{}, err
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"getprofile failed, user doesn't exist",
 		"source", "database.go",
 		"who", "GetProfile",
@@ -269,7 +267,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 	if profile.Username != "" {
 		isPresent, problem := model.Present(UserInfoTable, UsernameCol, profile.Username)
 		if problem != nil {
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"Present failed",
 				"source", "database.go",
 				"who", "UpdateProfile",
@@ -290,14 +288,14 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 					);
 				`, profile.Username, cookie)
 
-				model.LG.Sugar.Infow(
+				model.LG.Info(
 					"update profile succeeded, username updated",
 					"source", "database.go",
 					"who", "UpdateProfile",
 				)
 			} else {
 
-				model.LG.Sugar.Infow(
+				model.LG.Info(
 					"update profile failed, invalid username",
 					"source", "database.go",
 					"who", "UpdateProfile",
@@ -305,7 +303,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			}
 		}
 		if isPresent {
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"update profile failed, username already in use",
 				"source", "database.go",
 				"who", "UpdateProfile",
@@ -327,14 +325,14 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				);
 			`, hashedPsswd, cookie)
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"update profile succeeded, password updated",
 				"source", "database.go",
 				"who", "UpdateProfile",
 			)
 		} else {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"update profile failed, invalid password",
 				"source", "database.go",
 				"who", "UpdateProfile",
@@ -354,7 +352,7 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			);
 		`, profile.Avatar, cookie)
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"update profile succeeded, avatar updated",
 			"source", "database.go",
 			"who", "UpdateProfile",
@@ -371,7 +369,7 @@ func (model *DatabaseModel) Logout(cookie string) bool {
 	WHERE cookie=$1;
 	`, cookie)
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"logout succeeded",
 		"source", "database.go",
 		"who", "Logout",
@@ -415,7 +413,7 @@ func (model *DatabaseModel) Register(credentials models.UserCredentials) (string
 		);
 	`, credentials.Username, cookie)
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"signup succeeded",
 		"source", "database.go",
 		"who", "Register",
@@ -455,7 +453,7 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 		temp := models.Application{}
 		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"scan failed",
 				"source", "database.go",
 				"who", "GetApps",
@@ -467,7 +465,7 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 		apps.Applications = append(apps.Applications, temp)
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"GetApps succeeded",
 		"source", "database.go",
 		"who", "GetApps",
@@ -488,7 +486,7 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 		temp := models.Application{}
 		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"scan failed",
 				"source", "database.go",
 				"who", "GetPopularApps",
@@ -500,7 +498,7 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 		apps.Applications = append(apps.Applications, temp)
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"GetPopularApps succeeded",
 		"source", "database.go",
 		"who", "GetPopularApps",
@@ -518,7 +516,7 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 
 		if err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"GetApp failed, scan error",
 				"source", "database.go",
 				"who", "GetApp",
@@ -527,7 +525,7 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 			return models.Application{}
 		}
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"GetApp succeeded",
 			"source", "database.go",
 			"who", "GetApp",
@@ -536,7 +534,7 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 		return app
 	} else if problem != nil {
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"Present failed",
 			"source", "database.go",
 			"who", "GetApp",
@@ -545,7 +543,7 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 		return models.Application{}
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"GetApp failed, app doesn't exist",
 		"source", "database.go",
 		"who", "GetApp",
@@ -563,7 +561,7 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 
 		if err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"GetApp failed, scan error",
 				"source", "database.go",
 				"who", "GetApp",
@@ -586,7 +584,7 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 
 		if err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"Scan failed",
 				"source", "database.go",
 				"who", "Present",
@@ -599,7 +597,7 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 
 		if err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"strconv.ParseBool failed",
 				"source", "database.go",
 				"who", "Present",
@@ -608,7 +606,7 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 			return models.UserApplicationInstalled{}
 		}
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"GetApp succeeded",
 			"source", "database.go",
 			"who", "GetApp",
@@ -617,7 +615,7 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 		return app
 	} else if problem != nil {
 
-		model.LG.Sugar.Infow(
+		model.LG.Info(
 			"Present failed",
 			"source", "database.go",
 			"who", "GetApp",
@@ -626,7 +624,7 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 		return models.UserApplicationInstalled{}
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"GetApp failed, app doesn't exist",
 		"source", "database.go",
 		"who", "GetApp",
@@ -652,7 +650,7 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applicati
 		temp := models.Application{}
 		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"scan failed",
 				"source", "database.go",
 				"who", "GetMyApps",
@@ -664,7 +662,7 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applicati
 		user_apps.Applications = append(user_apps.Applications, temp)
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"GetMyApps succeeded",
 		"source", "database.go",
 		"who", "GetMyApps",
@@ -694,7 +692,7 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 			);
 		`, cookie, appname)
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"AddApp succeeded",
 		"source", "database.go",
 		"who", "AddApp",
@@ -736,7 +734,7 @@ func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.App
 		temp := models.Application{}
 		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
 
-			model.LG.Sugar.Infow(
+			model.LG.Info(
 				"scan failed",
 				"source", "database.go",
 				"who", "GetPopularApps",
@@ -748,7 +746,7 @@ func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.App
 		apps.Applications = append(apps.Applications, temp)
 	}
 
-	model.LG.Sugar.Infow(
+	model.LG.Info(
 		"GetPopularApps succeeded",
 		"source", "database.go",
 		"who", "GetPopularApps",

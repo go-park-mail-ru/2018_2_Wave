@@ -10,7 +10,7 @@ import (
 
 type App struct {
 	*proto.Room // base class
-	game       *game
+	game        *game
 }
 
 const RoomType proto.RoomType = "snake"
@@ -18,7 +18,7 @@ const RoomType proto.RoomType = "snake"
 // ----------------|
 
 // New snake app
-func New(id proto.RoomToken, step time.Duration, m proto.IManager, db interface{}) proto.IRoom {
+func New(id proto.RoomToken, m proto.IManager, db interface{}, step time.Duration) proto.IRoom {
 	s := &App{
 		Room: proto.NewRoom(id, RoomType, m, step),
 		game: newGame(core.Vec2i{
@@ -28,7 +28,7 @@ func New(id proto.RoomToken, step time.Duration, m proto.IManager, db interface{
 	}
 	s.SetCounterType(proto.FillGaps)
 	s.OnTick = s.onTick
-	s.OnUserRemoved = s.onUserRemoved
+	s.OnUserRemove = s.onUserRemoved
 	s.game.OnSnakeDead = s.onSnakeDead
 	s.Routes["game_action"] = s.onGameAction
 	s.Routes["game_play"] = s.onGamePlay
@@ -43,10 +43,10 @@ func (a *App) onTick(dt time.Duration) {
 	a.game.Tick(dt)
 	info := a.game.GetGameInfo()
 	for i, s := range info.Snakes {
-		serial, _ := a.GetTokenCounter(s.UserToken)
+		serial, _ := a.GetTokenSerial(s.UserToken)
 		info.Snakes[i].Serial = serial
 	}
-	a.Broadcast(proto.MessageTick.WithStruct(info))
+	a.Broadcast(messageTick.WithStruct(info))
 }
 
 func (a *App) onUserRemoved(u proto.IUser) {
@@ -57,7 +57,7 @@ func (a *App) onUserRemoved(u proto.IUser) {
 func (a *App) onGameAction(u proto.IUser, im proto.IInMessage) {
 	ac := &gameAction{}
 	if im.ToStruct(ac) != nil {
-		return nil
+		return
 	}
 
 	switch ac.ActionName {
@@ -88,10 +88,10 @@ func (a *App) onGameExit(u proto.IUser, im proto.IInMessage) {
 
 // <- STATUS_DEAD | win
 func (a *App) onSnakeDead(u proto.IUser) {
-	serial, _ := a.GetUserCounter(u)
+	serial, _ := a.GetUserSerial(u)
 	a.Broadcast(messageDead.WithStruct(&playerPayload{
+		UserToken:  u.GetToken(),
 		UserName:   u.GetName(),
-		UserToken:  u.GetID(),
 		UserSerial: serial,
 	}))
 
@@ -101,10 +101,10 @@ func (a *App) onSnakeDead(u proto.IUser) {
 			for w = range a.game.user2snake {
 			}
 
-			serial, _ := a.GetUserCounter(w)
+			serial, _ := a.GetUserSerial(w)
 			a.Broadcast(messageWin.WithStruct(&playerPayload{
+				UserToken:  w.GetToken(),
 				UserName:   w.GetName(),
-				UserToken:  w.GetID(),
 				UserSerial: serial,
 			}))
 		}
@@ -113,11 +113,9 @@ func (a *App) onSnakeDead(u proto.IUser) {
 }
 
 func (a *App) exit() {
+	a.Stop()
 	for _, u := range a.Users {
-		u.Task(func() { u.RemoveFromRoom(a) })
-	}
-	if a.Manager != nil {
-		a.Manager.RemoveLobby(a.GetID(), nil)
+		u.Task(func() { u.ExitRoom(a) })
 	}
 }
 
@@ -129,9 +127,9 @@ type gameAction struct {
 }
 
 type playerPayload struct {
-	UserName   string      `json:"user_name"`
+	UserName   string          `json:"user_name"`
 	UserToken  proto.UserToken `json:"user_token"`
-	UserSerial int64       `json:"user_serial"`
+	UserSerial int64           `json:"user_serial"`
 }
 
 var (
@@ -140,12 +138,11 @@ var (
 	messageNoSnake        = proto.Response{Status: "STATUS_ERROR"}.WithReason("No snake")
 	messageAlreadyPlays   = proto.Response{Status: "STATUS_ERROR"}.WithReason("already plays")
 	messageUnknownCommand = proto.Response{Status: "STATUS_ERROR"}.WithReason("unknown command")
+	messageTick           = proto.Response{Status: "STATUS_TICK"}.WithReason("")
 )
 
 func (a *App) withSnake(u proto.IUser, next func(s *snake)) {
 	if s, err := a.game.GetSnake(u); err == nil {
 		next(s)
-		return nil
 	}
-	return messageNoSnake
 }
