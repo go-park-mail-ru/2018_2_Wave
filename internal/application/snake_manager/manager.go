@@ -20,9 +20,9 @@ import (
  */
 type Manager struct {
 	*proto.Room // the room super
-	rooms      map[proto.RoomToken]proto.IRoom
-	db         interface{}
-	prof       *metrics.Profiler
+	rooms       map[proto.RoomToken]proto.IRoom
+	db          interface{}
+	prof        *metrics.Profiler
 
 	lastRoomID int64
 	lastUserID int64
@@ -284,7 +284,7 @@ func (m *Manager) onQSDone(f *former) {
 	})
 	for _, u := range f.users {
 		m.SendTo(u, om)
-		u.Task(func() { u.EnterRoom(r) }) 
+		u.Task(func() { u.EnterRoom(r) })
 	}
 	m.Logf("search done")
 }
@@ -305,7 +305,7 @@ func (m *Manager) withRoomToken(next func(proto.IUser, proto.RoomToken)) proto.R
 		if im.ToStruct(cmd) == nil {
 			next(u, cmd.RoomToken)
 		} else {
-			m.Log("message is not a roomTokenPayload", 
+			m.Log("message is not a roomTokenPayload",
 				"who", "withRoomToken",
 				"where", "manager.go")
 		}
@@ -318,8 +318,8 @@ func (m *Manager) withRoomType(next func(proto.IUser, proto.RoomType)) proto.Rou
 		if im.ToStruct(cmd) == nil {
 			next(u, cmd.RoomType)
 		}
-		m.Log("message is not a roomTypePayload", 
-				"who", "withRoomToken",
-				"where", "manager.go")
+		m.Log("message is not a roomTypePayload",
+			"who", "withRoomToken",
+			"where", "manager.go")
 	}
 }

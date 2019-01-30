@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"Wave/internal/application/snake_manager"
 	"Wave/internal/application/snake"
+	"Wave/internal/application/snake_manager"
 	"Wave/internal/database"
 	"Wave/internal/logger"
 	"Wave/internal/metrics"

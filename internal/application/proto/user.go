@@ -31,8 +31,8 @@ type IUser interface {
 	EnterRoom(IRoom) error  // add the user into the room
 	ExitRoom(IRoom) error   // remove the user from the room
 
-	Start()  // run the user
-	Stop() // stop the user
+	Start() // run the user
+	Stop()  // stop the user
 
 	IActor
 }
