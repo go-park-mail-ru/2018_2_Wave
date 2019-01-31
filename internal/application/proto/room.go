@@ -1,7 +1,6 @@
 package proto
 
 import (
-	"Wave/internal/logger"
 	"time"
 )
 
@@ -58,7 +57,6 @@ type Room struct {
 
 	Users   map[UserToken]IUser
 	Routes  map[string]Route
-	LG      logger.ILogger
 	manager IManager
 
 	counter Counter
@@ -85,6 +83,7 @@ func NewRoom(token RoomToken, rtype RoomType, manager IManager, step time.Durati
 		counter: MakeCounter(FillGaps),
 		manager: manager,
 		token:   token,
+		rtype:   rtype,
 		step:    step,
 
 		Routes:     make(map[string]Route),

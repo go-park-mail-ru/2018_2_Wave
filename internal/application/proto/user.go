@@ -1,6 +1,7 @@
 package proto
 
 import (
+	"encoding/json"
 	"Wave/internal/logger"
 	"sync/atomic"
 
@@ -115,6 +116,16 @@ func (u *User) Start() {
 		select {
 		case t := <-u.T:
 			u.PanicRecovery(t)
+
+		case m := <-u.input:
+			if r, ok := u.Rooms[m.GetRoomToken()]; ok {
+				if err := r.Receive(u, m); err != nil {
+					u.Log(err.Error())
+				}
+			} else {
+				u.Logf("Unknown room: %s", m.GetRoomToken())
+			}
+
 		case <-u.cancel:
 			u.Logf("user stopped")
 			return
@@ -142,7 +153,10 @@ func (u *User) receiveWorker() {
 			u.Stop()
 			return
 		}
-
+		{
+			b, _ := json.Marshal(m)
+			u.Logn(string(b))
+		}
 		u.input <- m
 	}
 }

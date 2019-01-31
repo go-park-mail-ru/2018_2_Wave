@@ -32,6 +32,7 @@ func NewHandler(LG *logger.Logger, Prof *metrics.Profiler, db *database.Database
 	return &Handler{
 		wsApp: func() *manager.Manager {
 			wsApp := manager.New("", wsAppTickRate, nil, Prof)
+			wsApp.SetLogger(LG)
 			wsApp.CreateLobby("snake", nil, snake.RoomType)
 			go wsApp.Start()
 			return wsApp

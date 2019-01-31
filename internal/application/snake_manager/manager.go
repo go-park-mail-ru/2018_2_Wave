@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"sync/atomic"
 	"Wave/internal/application/proto"
 	"Wave/internal/metrics"
 
@@ -70,20 +71,16 @@ func New(token proto.RoomToken, step time.Duration, db interface{}, prof *metric
 
 // GetNextUserID returns next user id
 func (m *Manager) GetNextUserID() proto.UserToken {
-	m.idsMutex.Lock()
-	defer m.idsMutex.Unlock()
-
-	m.lastUserID++
-	return proto.UserToken(strconv.FormatInt(m.lastUserID, 36))
+	id := atomic.AddInt64(&m.lastUserID, 1)
+	tk := proto.UserToken(strconv.FormatInt(id, 36))
+	return tk
 }
 
 // GetNextRoomID returns next room id
 func (m *Manager) GetNextRoomID() proto.RoomToken {
-	m.idsMutex.Lock()
-	defer m.idsMutex.Unlock()
-
-	m.lastRoomID++
-	return proto.RoomToken(strconv.FormatInt(m.lastRoomID, 36))
+	id := atomic.AddInt64(&m.lastRoomID, 1)
+	tk := proto.RoomToken(strconv.FormatInt(id, 36))
+	return tk
 }
 
 // CreateLobby -
@@ -148,6 +145,7 @@ func (m *Manager) onUserRemoved(u proto.IUser) {
 }
 
 func (m *Manager) onGetLobbyList(u proto.IUser, im proto.IInMessage) {
+	m.Log("onGetLobbyList")
 	data := []roomInfoPayload{}
 	for _, r := range m.rooms {
 		data = append(data, roomInfoPayload{
@@ -159,6 +157,7 @@ func (m *Manager) onGetLobbyList(u proto.IUser, im proto.IInMessage) {
 }
 
 func (m *Manager) onLobbyCreate(u proto.IUser, roomType proto.RoomType) {
+	m.Log("onLobbyCreate")
 	r, err := m.CreateLobby(m.GetNextRoomID(), u, roomType)
 	if err != nil {
 		return
@@ -169,16 +168,19 @@ func (m *Manager) onLobbyCreate(u proto.IUser, roomType proto.RoomType) {
 }
 
 func (m *Manager) onLobbyDelete(u proto.IUser, cmd proto.RoomToken) {
+	m.Log("onLobbyDelete")
 	m.RemoveLobby(cmd, u)
 }
 
 func (m *Manager) onAddToRoom(u proto.IUser, cmd proto.RoomToken) {
+	m.Log("onAddToRoom")
 	if r, ok := m.rooms[cmd]; ok {
 		u.Task(func() { u.EnterRoom(r) })
 	}
 }
 
 func (m *Manager) onRemoveFromRoom(u proto.IUser, cmd proto.RoomToken) {
+	m.Log("onRemoveFromRoom")
 	if r, ok := m.rooms[cmd]; ok {
 		u.Task(func() { u.ExitRoom(r) })
 	}
@@ -188,6 +190,7 @@ func (m *Manager) onRemoveFromRoom(u proto.IUser, cmd proto.RoomToken) {
 
 // -> quick_search
 func (m *Manager) onQSBegin(u proto.IUser, im proto.IInMessage) {
+	m.Log("onQSBegin")
 	p := &QSPayload{}
 	if err := im.ToStruct(p); err != nil {
 		return
@@ -200,11 +203,13 @@ func (m *Manager) onQSBegin(u proto.IUser, im proto.IInMessage) {
 
 // -> quick_search_abort
 func (m *Manager) onQSAbort(u proto.IUser, im proto.IInMessage) {
+	m.Log("onQSAbort")
 	m.builder.RemoveUser(u)
 }
 
 // -> quick_search_accept
 func (m *Manager) onQSAccept(u proto.IUser, im proto.IInMessage) {
+	m.Log("onQSAccept")
 	p := &QSAcceptPayload{}
 	if err := im.ToStruct(p); err != nil {
 		return
@@ -214,6 +219,7 @@ func (m *Manager) onQSAccept(u proto.IUser, im proto.IInMessage) {
 
 // <- quick_search_removed | quick_search_kick
 func (m *Manager) onQSRemoved(f *former, u proto.IUser) {
+	m.Log("onQSRemove")
 	m.SendTo(u, messageQSKick)
 	m.onQSStatus(f, messageQSRemoved)
 	m.Logf("search removed: u=%s", u.GetToken())
@@ -221,12 +227,14 @@ func (m *Manager) onQSRemoved(f *former, u proto.IUser) {
 
 // <- quick_search_added
 func (m *Manager) onQSAdded(f *former, u proto.IUser) {
+	m.Log("onQSAdded")
 	m.onQSStatus(f, messageQSAdded)
 	m.Logf("search added: u=%s", u.GetToken())
 }
 
 // <- quick_search_accept_status
 func (m *Manager) onQSAcceptStatus(f *former, u proto.IUser) {
+	m.Log("onQSAcceptStatus")
 	p := &QSStatusPayload{}
 	for _, u := range f.users {
 		if !u.bAccepted {
@@ -242,10 +250,12 @@ func (m *Manager) onQSAcceptStatus(f *former, u proto.IUser) {
 	for _, u := range f.users {
 		m.SendTo(u, om)
 	}
-	m.Logf("search accept", u.GetToken())
+	m.Log("onQSAcceptStatus",
+		"user", u.GetToken())
 }
 
 func (m *Manager) onQSStatus(f *former, om *proto.Response) {
+	m.Log("onQSStatus")
 	p := &QSStatusPayload{}
 	for _, u := range f.users {
 		p.Members = append(p.Members, QSStatusMemberPayload{
@@ -262,6 +272,7 @@ func (m *Manager) onQSStatus(f *former, om *proto.Response) {
 
 // <- quick_search_ready
 func (m *Manager) onQSReady(f *former) {
+	m.Log("onQSReady")
 	p := &QSReadyPayload{
 		AcceptTimeout: m.builder.acceptTime,
 	}
@@ -274,6 +285,7 @@ func (m *Manager) onQSReady(f *former) {
 
 // <- quick_search_done
 func (m *Manager) onQSDone(f *former) {
+	m.Log("onQSDone")
 	r, err := m.CreateLobby(m.GetNextRoomID(), nil, f.rType)
 	if err != nil {
 		return // TODO::
@@ -291,6 +303,7 @@ func (m *Manager) onQSDone(f *former) {
 
 // <- quick_search_failed
 func (m *Manager) onQSFailed(f *former) {
+	m.Log("onQSFailed")
 	for _, u := range f.users {
 		m.SendTo(u, messageQSFailed)
 	}

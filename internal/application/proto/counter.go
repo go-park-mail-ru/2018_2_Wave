@@ -72,7 +72,7 @@ func (r *Counter) getNextCounter() int64 {
 		r.mu.Lock()
 		defer r.mu.Unlock()
 
-		set := make([]bool, r.userCounter)
+		set := make([]bool, r.userCounter+1)
 		for _, c := range r.userCounterMap {
 			set[c] = true
 		}

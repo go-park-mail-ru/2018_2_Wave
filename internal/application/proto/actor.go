@@ -2,6 +2,8 @@ package proto
 
 import (
 	"Wave/internal/logger"
+	"fmt"
+	"runtime/debug"
 )
 
 // ----------------| ActorTask
@@ -47,18 +49,17 @@ func (a *Actor) Task(t ActorTask) error {
 
 // ->> log
 
-// Logf - patterned log
 func (a *Actor) Logf(pattern string, args ...interface{}) {
 	if a.LG == nil {
 		return
 	}
 	if a.LogMeta != nil {
-		args = append(args, a.LogMeta()...)
+		a.LG.Info(fmt.Sprintf(pattern, args...), a.LogMeta()...)
+	} else {
+		a.LG.Info(fmt.Sprintf(pattern, args...))
 	}
-	a.LG.Infof(pattern, args...)
 }
 
-// Log - log
 func (a *Actor) Log(msg string, args ...interface{}) {
 	if a.LG == nil {
 		return
@@ -67,6 +68,15 @@ func (a *Actor) Log(msg string, args ...interface{}) {
 		args = append(args, a.LogMeta()...)
 	}
 	a.LG.Info(msg, args...)
+}
+
+func (a *Actor) Logn(msg string, args ...interface{}) {
+	if len(msg) > 60 {
+		end := "..."
+		a.Log(msg[:60-len(end)]+end, args...)
+	} else {
+		a.Log(msg, args...)
+	}
 }
 
 func (a *Actor) SetLogger(l logger.ILogger) { a.LG = l }
@@ -80,21 +90,25 @@ func (a *Actor) PanicRecovery(code func()) {
 		nextLoop = false
 
 		func() { // try-catch emulation
-			defer func() {
-				if err := recover(); err != nil {
-					a.Logf("Panic was happened")
-
-					// don't coninue
-					if a.OnPanic != nil {
-						return
-					}
-					// start the code again
-					if a.OnPanic(err) {
-						nextLoop = true
-					}
-				}
-			}()
+			defer a.panicRecoveryEntery(&nextLoop)
 			code()
 		}()
+	}
+}
+
+func (a *Actor) panicRecoveryEntery(bNext *bool) {
+	if err := recover(); err != nil {
+		a.Log("Panic",
+			"error", err)
+		debug.PrintStack()
+
+		// don't coninue
+		if a.OnPanic == nil {
+			return
+		}
+		// start the code again
+		if a.OnPanic(err) {
+			*bNext = true
+		}
 	}
 }
