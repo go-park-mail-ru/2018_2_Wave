@@ -97,14 +97,34 @@ func (u *User) EnterRoom(r IRoom) error {
 	if r == nil {
 		return ErrorNil
 	}
-	return r.Task(func() { r.addUser(u) })
+	return r.Task(func() { 
+		if err := r.addUser(u); err != nil {
+			u.Log(err.Error())
+			return
+		}
+		u.Task(func() { 
+			u.Rooms[r.GetToken()] = r 
+			u.Log("room added",
+				"room_token", r.GetToken())
+		})
+	})
 }
 
 func (u *User) ExitRoom(r IRoom) error {
 	if r == nil {
 		return ErrorNil
 	}
-	return r.Task(func() { r.removeUser(u) })
+	return r.Task(func() {
+		if err := r.removeUser(u); err != nil {
+			u.Log(err.Error())
+			return
+		}
+		u.Task(func() { 
+			delete(u.Rooms, r.GetToken()) 
+			u.Log("room removed",
+				"room_token", r.GetToken())
+		})
+	})
 }
 
 func (u *User) Start() {
