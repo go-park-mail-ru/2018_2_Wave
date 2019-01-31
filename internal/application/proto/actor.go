@@ -40,7 +40,7 @@ func MakeActor(bufferSize int) Actor {
 
 // AddTask to the actor message queue
 func (a *Actor) Task(t ActorTask) error {
-	if t == nil {
+	if t != nil {
 		a.T <- t
 		return nil
 	}
