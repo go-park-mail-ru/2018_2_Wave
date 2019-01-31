@@ -102,7 +102,7 @@ func (s *syncCall) Call(code func()) *promise.Promise {
 			})
 		}
 		wg.Wait()
-
+		
 		// run the code
 		code()
 
@@ -112,10 +112,11 @@ func (s *syncCall) Call(code func()) *promise.Promise {
 			o.setSync(a, true)
 			a.setSync(o, true)
 			// unlock the actor
-			chans[o] <- ""
+			close(chans[o])
 		}
 		p.Resolve(nil)
 	})
+	a.Task(nil, func() { println("released") })
 	return p
 }
 

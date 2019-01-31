@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"Wave/internal/application/snake"
 	"Wave/internal/application/snake_manager"
 	"Wave/internal/database"
 	"Wave/internal/logger"
@@ -33,7 +32,7 @@ func NewHandler(LG *logger.Logger, Prof *metrics.Profiler, db *database.Database
 		wsApp: func() *manager.Manager {
 			wsApp := manager.New("", wsAppTickRate, nil, Prof)
 			wsApp.SetLogger(LG)
-			wsApp.CreateLobby("snake", nil, snake.RoomType)
+			// wsApp.CreateLobby("snake", nil, snake.RoomType)
 			go wsApp.Start()
 			return wsApp
 		}(),
