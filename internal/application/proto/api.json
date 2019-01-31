@@ -1,0 +1,11 @@
+[
+    {
+        "verbose": "sends when ws connection is esteblished",
+        "response": {
+            "status": "STATUS_TOKEN",
+            "payload": {
+                "user_token": ""
+            }
+        }
+    }
+]

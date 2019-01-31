@@ -170,8 +170,6 @@ func (b *builder) AddUser(u proto.IUser, roomType proto.RoomType, players int) {
 		// if not searches
 		if _, ok := b.u2f[u]; !ok {
 			b.getFormer(roomType, players).AddUser(u)
-		} else {
-			println("user already exists")
 		}
 	})
 }
@@ -197,8 +195,6 @@ func (b *builder) removeUser(u proto.IUser) {
 	if f, ok := b.u2f[u]; ok {
 		// if searches
 		f.RemoveUser(u)
-	} else {
-		println("user not found")
 	}
 }
 

@@ -116,7 +116,6 @@ func (s *syncCall) Call(code func()) *promise.Promise {
 		}
 		p.Resolve(nil)
 	})
-	a.Task(nil, func() { println("released") })
 	return p
 }
 

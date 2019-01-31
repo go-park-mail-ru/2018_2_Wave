@@ -133,6 +133,14 @@ func (u *User) Start() {
 	u.Logf("user started")
 	go u.PanicRecovery(u.receiveWorker)
 	go u.PanicRecovery(u.sendWorker)
+	
+	// send current user_id
+	u.Send(&OutMessage{
+		Status: "STATUS_TOKEN",
+		Payload: &userTokenPayload{
+			UserToken: u.GetToken(),
+		},
+	})
 
 	for {
 		select {
@@ -195,6 +203,11 @@ func (u *User) sendWorker() {
 }
 
 // ----------------| internal
+
+// easyjson:json
+type userTokenPayload struct {
+	UserToken UserToken `json:"user_token"`
+}
 
 func (u *User) onDisconnected() {
 	for _, r := range u.Rooms {
