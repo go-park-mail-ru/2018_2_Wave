@@ -174,7 +174,7 @@ func (r *Room) Start() {
 func (r *Room) Stop() {
 	r.cancel <- ""
 	if m := r.GetManager(); m != nil {
-		m.Task(func() { m.RemoveLobby(r.GetToken(), nil) })
+		m.Task(r, func() { m.RemoveLobby(r.GetToken(), nil) })
 	}
 }
 

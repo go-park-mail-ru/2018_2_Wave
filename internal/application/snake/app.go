@@ -115,7 +115,7 @@ func (a *App) onSnakeDead(u proto.IUser) {
 func (a *App) exit() {
 	a.Stop()
 	for _, u := range a.Users {
-		u.Task(func() { u.ExitRoom(a) })
+		u.Task(a, func() { u.ExitRoom(a) })
 	}
 }
 

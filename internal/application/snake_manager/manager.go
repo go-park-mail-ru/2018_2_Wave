@@ -1,9 +1,9 @@
 package manager
 
 import (
-	"sync/atomic"
 	"Wave/internal/application/proto"
 	"Wave/internal/metrics"
+	"sync/atomic"
 
 	"strconv"
 	"sync"
@@ -175,14 +175,14 @@ func (m *Manager) onLobbyDelete(u proto.IUser, cmd proto.RoomToken) {
 func (m *Manager) onAddToRoom(u proto.IUser, cmd proto.RoomToken) {
 	m.Log("onAddToRoom")
 	if r, ok := m.rooms[cmd]; ok {
-		u.Task(func() { u.EnterRoom(r) })
+		u.Task(m, func() { u.EnterRoom(r) })
 	}
 }
 
 func (m *Manager) onRemoveFromRoom(u proto.IUser, cmd proto.RoomToken) {
 	m.Log("onRemoveFromRoom")
 	if r, ok := m.rooms[cmd]; ok {
-		u.Task(func() { u.ExitRoom(r) })
+		u.Task(m, func() { u.ExitRoom(r) })
 	}
 }
 
@@ -291,14 +291,22 @@ func (m *Manager) onQSDone(f *former) {
 		return // TODO::
 	}
 
+	// I hate the funcking golang typization !!!
+	users := make([]proto.IActor, len(f.users))
+	for i, u := range f.users {
+		users[i] = u.IUser
+	}
+
 	om := messageQSDone.WithStruct(roomTokenPayload{
 		RoomToken: r.GetToken(),
 	})
-	for _, u := range f.users {
-		m.SendTo(u, om)
-		u.Task(func() { u.EnterRoom(r) })
-	}
-	m.Logf("search done")
+	r.Sync(users...).Call(func() {
+		for _, u := range f.users {
+			m.SendTo(u, om)
+			u.EnterRoom(r)
+		}
+		m.Logf("search done")
+	})
 }
 
 // <- quick_search_failed

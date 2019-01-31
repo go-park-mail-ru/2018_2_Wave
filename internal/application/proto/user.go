@@ -1,8 +1,8 @@
 package proto
 
 import (
-	"encoding/json"
 	"Wave/internal/logger"
+	"encoding/json"
 	"sync/atomic"
 
 	"github.com/gorilla/websocket"
@@ -97,34 +97,36 @@ func (u *User) EnterRoom(r IRoom) error {
 	if r == nil {
 		return ErrorNil
 	}
-	return r.Task(func() { 
+	r.Task(u, func() {
 		if err := r.addUser(u); err != nil {
 			u.Log(err.Error())
 			return
 		}
-		u.Task(func() { 
-			u.Rooms[r.GetToken()] = r 
+		u.Task(r, func() {
+			u.Rooms[r.GetToken()] = r
 			u.Log("room added",
 				"room_token", r.GetToken())
 		})
 	})
+	return nil
 }
 
 func (u *User) ExitRoom(r IRoom) error {
 	if r == nil {
 		return ErrorNil
 	}
-	return r.Task(func() {
+	r.Task(u, func() {
 		if err := r.removeUser(u); err != nil {
 			u.Log(err.Error())
 			return
 		}
-		u.Task(func() { 
-			delete(u.Rooms, r.GetToken()) 
+		u.Task(r, func() {
+			delete(u.Rooms, r.GetToken())
 			u.Log("room removed",
 				"room_token", r.GetToken())
 		})
 	})
+	return nil
 }
 
 func (u *User) Start() {
@@ -196,6 +198,6 @@ func (u *User) sendWorker() {
 
 func (u *User) onDisconnected() {
 	for _, r := range u.Rooms {
-		r.Task(func() { r.onDisconnected(u) })
+		r.Task(u, func() { r.onDisconnected(u) })
 	}
 }
