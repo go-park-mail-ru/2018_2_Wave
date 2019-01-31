@@ -96,27 +96,29 @@ func (a *App) onSnakeDead(u proto.IUser) {
 	}))
 
 	if len(a.game.user2snake) <= 1 {
+		// send a victory message
 		if len(a.game.user2snake) == 1 {
 			var w proto.IUser
 			for w = range a.game.user2snake {
+				// empty
 			}
-
 			serial, _ := a.GetUserSerial(w)
 			a.Broadcast(messageWin.WithStruct(&playerPayload{
 				UserToken:  w.GetToken(),
 				UserName:   w.GetName(),
 				UserSerial: serial,
 			}))
-		}
+		} 
+		// stop the room
 		a.exit()
 	}
 }
 
 func (a *App) exit() {
-	a.Stop()
 	for _, u := range a.Users {
 		u.Task(a, func() { u.ExitRoom(a) })
 	}
+	a.Stop()
 }
 
 // ----------------| helpers

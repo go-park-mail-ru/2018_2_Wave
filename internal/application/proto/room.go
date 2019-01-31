@@ -163,6 +163,18 @@ func (r *Room) Start() {
 				r.doReceive(p)
 			})
 		case <-r.cancel:
+			// finally, we should send all that messages
+			for bNext := true; bNext; {
+				select {
+				case m := <-r.broadcast:
+					r.PanicRecovery(func() {
+						r.doBroadcast(m)
+					})
+				default:
+					bNext = false
+				}
+			}
+			// and now we stop it down
 			r.PanicRecovery(r.doCancel)
 			r.Logf("room stopped")
 			return
