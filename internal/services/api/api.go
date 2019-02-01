@@ -50,12 +50,12 @@ func NewHandler(DB *psql.DatabaseModel, LG *lg.Logger, Prof *mc.Profiler) *Handl
 	go func() {
 		ticker := time.NewTicker(30 * time.Second)
 		for {
-			select{
-			case <- ticker.C:
+			select {
+			case <-ticker.C:
 				for user, t := range h.times {
 					// store out time sessions
 					diff := time.Since(t.last)
-					if diff > 30 * time.Second {
+					if diff > 30*time.Second {
 						h.DB.Ping(user, t.app, t.total)
 					}
 					delete(h.times, user)

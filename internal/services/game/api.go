@@ -4,9 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"Wave/internal/application/manager"
-	"Wave/internal/application/room"
-	"Wave/internal/application/snake"
+	"Wave/internal/application/snake_manager"
 	"Wave/internal/database"
 	"Wave/internal/logger"
 	"Wave/internal/metrics"
@@ -33,8 +31,9 @@ func NewHandler(LG *logger.Logger, Prof *metrics.Profiler, db *database.Database
 	return &Handler{
 		wsApp: func() *manager.Manager {
 			wsApp := manager.New("", wsAppTickRate, nil, Prof)
-			wsApp.CreateLobby(snake.RoomType, "snake")
-			go wsApp.Run()
+			wsApp.SetLogger(LG)
+			// wsApp.CreateLobby("snake", nil, snake.RoomType)
+			go wsApp.Start()
 			return wsApp
 		}(),
 		upgrader: websocket.Upgrader{
@@ -72,10 +71,10 @@ func (h *Handler) WSHandler(rw http.ResponseWriter, r *http.Request) {
 			h.LG.Sugar.Infof("WS get user name sheet %s", err)
 		}
 
-		user := room.NewUser(h.wsApp.GetNextUserID(), ws)
-		user.Name = username
-		user.LG = h.LG
-		user.AddToRoom(h.wsApp)
-		user.Listen()
+		u, err := h.wsApp.CreateUser(username, ws)
+		if err != nil {
+			panic(err)
+		}
+		u.Start()
 	}()
 }

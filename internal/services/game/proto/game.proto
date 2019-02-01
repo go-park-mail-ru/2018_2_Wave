@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-// protoc --go_out=plugins=grpc:. *.proto
-
-package game;
-
-service Game {
-}

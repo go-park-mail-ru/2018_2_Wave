@@ -23,13 +23,13 @@ const (
 
 func main() {
 	var (
-		conf   = config.Configure(confPath)
-		curlog = lg.Construct(logPath, logFile)
-		db     = database.New(curlog)
-		prof   = mc.Construct()
-		g      = gm.NewHandler(curlog, prof, db)
-		r      = mux.NewRouter()
+		conf = config.Configure(confPath)
+		log  = lg.Construct(logPath, logFile)
+		db   = database.New(log)
+		prof = mc.Construct()
+		g    = gm.NewHandler(log, prof, db)
+		r    = mux.NewRouter()
 	)
-	r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
+	r.HandleFunc("/conn/ws", mw.Chain(g.WSHandler, mw.WebSocketHeadersCheck(log, prof), mw.CORS(conf.CC, log, prof))).Methods("GET")
 	http.ListenAndServe(conf.Game.WsPort, handlers.RecoveryHandler()(r))
 }
