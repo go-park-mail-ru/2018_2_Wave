@@ -1,2 +1,0 @@
-{"level":"info","message":"PostgreSQL connection establishment succeeded","source":"database.go","who":"New"}
-{"level":"info","message":"starting grpc server on 127.0.0.1:8888","source":"main.go"}
