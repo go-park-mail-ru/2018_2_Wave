@@ -55,7 +55,7 @@ type RoomFactory func(_ RoomToken, _ IManager, db interface{}, step time.Duratio
 type Room struct {
 	Actor // base class
 
-	Users   map[UserToken]IUser
+	Users   IUserMap
 	Routes  map[string]Route
 	manager IManager
 
@@ -65,7 +65,8 @@ type Room struct {
 	token   RoomToken
 	rtype   RoomType
 
-	inMessages chan inLetter
+	command    chan func()
+	inMessages chan *inLetter
 	broadcast  chan IResponse
 	cancel     chan interface{}
 
@@ -86,9 +87,10 @@ func NewRoom(token RoomToken, rtype RoomType, manager IManager, step time.Durati
 		rtype:   rtype,
 		step:    step,
 
+		command:    make(chan func(), 100),
+		Users:      make(IUserMap),
 		Routes:     make(map[string]Route),
-		Users:      make(map[UserToken]IUser),
-		inMessages: make(chan inLetter, 100),
+		inMessages: make(chan *inLetter, 100),
 		broadcast:  make(chan IResponse, 100),
 		cancel:     make(chan interface{}, 6),
 	}
@@ -109,7 +111,7 @@ func (r *Room) Receive(u IUser, m IInMessage) error {
 	if u == nil || m == nil {
 		return ErrorNil
 	}
-	r.inMessages <- inLetter{u, m}
+	r.inMessages <- &inLetter{u, m}
 	return nil
 }
 
@@ -148,33 +150,12 @@ func (r *Room) onDisconnected(u IUser) {
 // Start serving
 func (r *Room) Start() {
 	r.Logf("room started")
+	r.PanicRecovery(r.comandBuilder)
 	for { // main room loop
 		select {
-		case <-r.ticker.C:
-			r.PanicRecovery(r.doTick)
-		case t := <-r.Actor.T:
-			r.PanicRecovery(t)
-		case m := <-r.broadcast:
-			r.PanicRecovery(func() {
-				r.doBroadcast(m)
-			})
-		case p := <-r.inMessages:
-			r.PanicRecovery(func() {
-				r.doReceive(p)
-			})
+		case c := <-r.command:
+			r.PanicRecovery(c)
 		case <-r.cancel:
-			// finally, we should send all that messages
-			for bNext := true; bNext; {
-				select {
-				case m := <-r.broadcast:
-					r.PanicRecovery(func() {
-						r.doBroadcast(m)
-					})
-				default:
-					bNext = false
-				}
-			}
-			// and now we stop it down
 			r.PanicRecovery(r.doCancel)
 			r.Logf("room stopped")
 			return
@@ -184,10 +165,14 @@ func (r *Room) Start() {
 
 // Stop the room - safe
 func (r *Room) Stop() {
-	r.cancel <- ""
-	if m := r.GetManager(); m != nil {
-		m.Task(r, func() { m.RemoveLobby(r.GetToken(), nil) })
-	}
+	r.Sync(r.Users.IActors()...).Call(func() {
+		for _, u := range r.Users {
+			u.ExitRoom(r)
+			delete(r.Users, u.GetToken())
+		}
+	}).Then(func() {
+		r.cancel <- ""
+	})
 }
 
 func (r *Room) GetTickTime() time.Duration                           { return r.step }
@@ -219,7 +204,39 @@ func (r *Room) Broadcast(m IResponse) error {
 	return nil
 }
 
-// ------| workers - main cycle workers
+// ------| workers
+
+func (r *Room) comandBuilder() {
+	defTime := time.Time{}
+	r.PanicRecoveryAsync(func() {
+		for {
+			if t := <-r.ticker.C; t != defTime {
+				r.command <- r.doTick
+			}
+		}
+	})
+	r.PanicRecoveryAsync(func() {
+		for {
+			if t := <-r.Actor.T; t != nil {
+				r.command <- t
+			}
+		}
+	})
+	r.PanicRecoveryAsync(func() {
+		for {
+			if m := <-r.broadcast; m != nil {
+				r.command <- func() { r.doBroadcast(m) }
+			}
+		}
+	})
+	r.PanicRecoveryAsync(func() {
+		for {
+			if p := <-r.inMessages; p != nil {
+				r.command <- func() { r.doReceive(*p) }
+			}
+		}
+	})
+}
 
 func (r *Room) doBroadcast(m IResponse) {
 	for _, u := range r.Users {

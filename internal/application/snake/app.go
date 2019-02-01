@@ -108,17 +108,17 @@ func (a *App) onSnakeDead(u proto.IUser) {
 				UserName:   w.GetName(),
 				UserSerial: serial,
 			}))
-		} 
+		}
 		// stop the room
 		a.exit()
 	}
 }
 
 func (a *App) exit() {
-	// for _, u := range a.Users {
-	// 	u.Task(a, func() { u.ExitRoom(a) })
-	// }
-	a.Stop()
+	m := a.GetManager()
+	m.Task(a, func() {
+		m.RemoveLobby(a.GetToken(), nil)
+	})
 }
 
 // ----------------| helpers

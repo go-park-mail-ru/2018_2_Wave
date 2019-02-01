@@ -58,6 +58,9 @@ type User struct {
 	cancel chan interface{}
 }
 
+type IUsers []IUser
+type IUserMap map[UserToken]IUser
+
 // NewUser - constructor
 func NewUser(token UserToken, conn *websocket.Conn, manager IManager) (*User, error) {
 	if conn == nil || manager == nil {
@@ -78,6 +81,14 @@ func NewUser(token UserToken, conn *websocket.Conn, manager IManager) (*User, er
 	}
 	u.Rooms[""] = manager
 	return u, nil
+}
+
+func (uu IUserMap) IActors() []IActor {
+	aa := []IActor{}
+	for _, u := range uu {
+		aa = append(aa, u)
+	}
+	return aa
 }
 
 // ------| << IUser
@@ -133,7 +144,7 @@ func (u *User) Start() {
 	u.Logf("user started")
 	go u.PanicRecovery(u.receiveWorker)
 	go u.PanicRecovery(u.sendWorker)
-	
+
 	// send current user_id
 	u.Send(&OutMessage{
 		Status: "STATUS_TOKEN",

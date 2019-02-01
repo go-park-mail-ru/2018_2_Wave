@@ -108,13 +108,15 @@ func (m *Manager) CreateLobby(roomToken proto.RoomToken, u proto.IUser, roomType
 func (m *Manager) RemoveLobby(roomToken proto.RoomToken, u proto.IUser) error {
 	if r, ok := m.rooms[roomToken]; ok {
 		if r.IsAbleToRemove(u) || u == nil {
-			r.Stop()
-			delete(m.rooms, roomToken)
-
-			// profiler
-			if m.prof != nil {
-				m.prof.ActiveRooms.Dec()
-			}
+			// first, stop the room
+			r.Task(m, r.Stop).Then(func() {
+				// then delete from the map
+				delete(m.rooms, roomToken)
+				// and finally - the profiler
+				if m.prof != nil {
+					m.prof.ActiveRooms.Dec()
+				}
+			})
 			return nil
 		}
 		return proto.ErrorForbiden
@@ -288,7 +290,7 @@ func (m *Manager) onQSDone(f *former) {
 	m.Log("onQSDone")
 	r, err := m.CreateLobby(m.GetNextRoomID(), nil, f.rType)
 	if err != nil {
-		return // TODO::
+		return 
 	}
 
 	// I hate the funcking golang typization !!!
@@ -296,7 +298,7 @@ func (m *Manager) onQSDone(f *former) {
 	for i, u := range f.users {
 		users[i] = u.IUser
 	}
-
+	
 	om := messageQSDone.WithStruct(roomTokenPayload{
 		RoomToken: r.GetToken(),
 	})

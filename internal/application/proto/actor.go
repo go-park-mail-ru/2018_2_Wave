@@ -3,7 +3,6 @@ package proto
 import (
 	"Wave/internal/logger"
 	"fmt"
-	"github.com/fanliao/go-promise"
 	"runtime/debug"
 	"sort"
 	"sync"
@@ -19,7 +18,7 @@ type ActorTask func()
 
 // IActor - Actor inteface
 type IActor interface {
-	Task(IActor, ActorTask) *promise.Promise
+	Task(IActor, ActorTask) IPipe
 	SetLogger(logger.ILogger)
 	GetLogger() logger.ILogger
 
@@ -31,10 +30,16 @@ type IActor interface {
 
 // ISyncCall - ??
 type ISyncCall interface {
-	Call(func()) *promise.Promise
+	Call(func()) IPipe
 }
 
-// ----------------| Actor
+// IPipe - ??
+type IPipe interface {
+	Then(func()) IPipe
+}
+
+// **********************************************|
+// **************************| 	Actor
 
 var actorUIDCounter uint64
 
@@ -47,10 +52,6 @@ type Actor struct {
 	syncMap map[IActor]bool        // sync map
 	syncMu  sync.Mutex             // sync map mutex
 	uid     uint64
-}
-
-type syncCall struct {
-	actors []IActor
 }
 
 // MakeActor - constructor
@@ -72,51 +73,7 @@ func (a *Actor) Sync(others ...IActor) ISyncCall {
 	sort.Slice(actors, func(i, j int) bool {
 		return actors[i].getUID() < actors[j].getUID()
 	})
-	return &syncCall{actors}
-}
-
-// Call - async function that sync the actors and execute the code
-func (s *syncCall) Call(code func()) *promise.Promise {
-	var (
-		a      = s.actors[0]
-		others = s.actors[1:]
-		chans  = map[IActor]chan interface{}{}
-		p      = promise.NewPromise()
-	)
-	a.Task(nil, func() {
-		// sync other actors
-		wg := sync.WaitGroup{}
-		wg.Add(len(others))
-		for _, o := range others {
-			// create a stop chanel
-			chans[o] = make(chan interface{})
-			// lock the actor
-			o.Task(a, func() {
-				// set sync flags
-				o.setSync(a, true)
-				a.setSync(o, true)
-				// set as sync
-				wg.Done()
-				// lock the actor
-				<-chans[o]
-			})
-		}
-		wg.Wait()
-		
-		// run the code
-		code()
-
-		// unlock other actors
-		for _, o := range others {
-			// unset sync flags
-			o.setSync(a, true)
-			a.setSync(o, true)
-			// unlock the actor
-			close(chans[o])
-		}
-		p.Resolve(nil)
-	})
-	return p
+	return &syncCall{actors, a}
 }
 
 func (a *Actor) setSync(o IActor, state bool) {
@@ -128,14 +85,8 @@ func (a *Actor) setSync(o IActor, state bool) {
 		delete(a.syncMap, o)
 	}
 }
-
-func (a *Actor) getSync(o IActor) bool {
-	return a.syncMap[o]
-}
-
-func (a *Actor) getUID() uint64 {
-	return a.uid
-}
+func (a *Actor) getSync(o IActor) bool { return a.syncMap[o] }
+func (a *Actor) getUID() uint64        { return a.uid }
 
 // ---------------------| task
 
@@ -143,25 +94,17 @@ func (a *Actor) getUID() uint64 {
 // @param o - task instigator
 // @param t	- task function
 // @retrun 	- task promice
-func (a *Actor) Task(o IActor, t ActorTask) *promise.Promise {
-	// nil task
-	if t == nil {
-		p := promise.NewPromise()
-		p.Reject(ErrorNil)
-		return p
-	}
-
-	// run the task or store it
-	p := promise.NewPromise()
-	if o != nil && o.getSync(a) {
-		// run the task immediately
-		t()
-		p.Resolve(nil)
-	} else {
-		// add the task to the task queue
-		a.T <- func() {
-			t()
-			p.Resolve(nil)
+func (a *Actor) Task(o IActor, task ActorTask) IPipe {
+	p := newPipe(a)
+	if task != nil {
+		clb := func() {
+			task()
+			p.done()
+		}
+		if o != nil && o.getSync(a) {
+			clb()
+		} else {
+			a.T <- clb
 		}
 	}
 	return p
@@ -213,6 +156,11 @@ func (a *Actor) GetLogger() logger.ILogger  { return a.LG }
 
 // ---------------------| panic recovery
 
+// PanicRecoveryAsync - async call with panic recovery
+func (a *Actor) PanicRecoveryAsync(code func()) {
+	go func() { a.PanicRecovery(code) }()
+}
+
 // PanicRecovery - panic recovery function
 // @see OnPanic()
 func (a *Actor) PanicRecovery(code func()) {
@@ -240,5 +188,77 @@ func (a *Actor) panicRecoveryEntery(bNext *bool) {
 		if a.OnPanic(err) {
 			*bNext = true
 		}
+	}
+}
+
+// **********************************************|
+// **************************| 	sync Call
+
+type syncCall struct {
+	actors []IActor
+	caller IActor
+}
+
+// Call - async function that sync the actors and execute the code
+func (s *syncCall) Call(code func()) IPipe {
+	var (
+		a      = s.actors[0]
+		others = s.actors[1:]
+		chans  = map[IActor]chan interface{}{}
+		p      = newPipe(s.caller)
+	)
+	a.Task(nil, func() {
+		// sync other actors
+		wg := sync.WaitGroup{}
+		wg.Add(len(others))
+		for _, o := range others {
+			chans[o] = make(chan interface{})
+			o.Task(a, func() {
+				o.setSync(a, true)
+				a.setSync(o, true)
+				wg.Done()
+				<-chans[o]
+			})
+		}
+		wg.Wait()
+
+		code()
+
+		// unlock other actors
+		for _, o := range others {
+			o.setSync(a, false)
+			a.setSync(o, false)
+			close(chans[o])
+		}
+		p.done()
+	})
+	return p
+}
+
+// **********************************************|
+// **************************| 	pipe
+
+type pipe struct {
+	callbacks []func()
+	a         IActor
+}
+
+func newPipe(a IActor) *pipe {
+	return &pipe{[]func(){}, a}
+}
+
+func (p *pipe) Then(code func()) IPipe {
+	p.callbacks = append(p.callbacks, code)
+	return p
+}
+
+func (p *pipe) done() {
+	if len(p.callbacks) > 0 {
+		callback := p.callbacks[0]
+		p.callbacks = p.callbacks[1:]
+		p.a.Task(nil, func() {
+			callback()
+			p.done()
+		})
 	}
 }
