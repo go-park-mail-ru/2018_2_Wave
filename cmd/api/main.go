@@ -57,7 +57,6 @@ func main() {
 	r.HandleFunc("/me/apps", mw.Chain(API.AddAppPOSTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 	r.HandleFunc("/me/apps", mw.Chain(API.MeShowAppsGetHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 
-	r.HandleFunc("/ping", mw.Chain(API.PingPOSTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 
 	curlog.Sugar.Infow("starting api server on "+conf.SC.Host+conf.SC.Port,
 		"source", "main.go")
