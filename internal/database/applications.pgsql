@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS app;
+DROP TABLE IF EXISTS app CASCADE;
 
 CREATE TABLE app (
     appid           BIGSERIAL       PRIMARY KEY,
@@ -8,6 +8,6 @@ CREATE TABLE app (
     image           TEXT            ,
     about           TEXT            ,
     installs        INT             DEFAULT 0,
-    price           INT             DEFAULT 0,
     category        TEXT
 );
+
