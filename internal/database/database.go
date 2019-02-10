@@ -10,7 +10,6 @@ import (
 	"github.com/namsral/flag"
 
 	"fmt"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -26,13 +25,13 @@ const (
 
 type DatabaseModel struct {
 	Database *sqlx.DB
-	LG       lg.ILogger
+	LG       lg.Logger
 }
 
-func New(lg_ lg.ILogger) *DatabaseModel {
+func New(lg_ *lg.Logger) *DatabaseModel {
 	var (
 		postgr = &DatabaseModel{
-			LG: lg_,
+			LG: *lg_,
 		}
 		dbuser     string
 		dbpassword string
@@ -44,9 +43,9 @@ func New(lg_ lg.ILogger) *DatabaseModel {
 	flag.StringVar(&dbpassword, "WAVE_DB_PASSWORD", "Wave", "")
 	flag.Parse()
 
-	postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
+	// postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
 
-	// postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
+	postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
 
 	if err != nil {
 		postgr.LG.Info(
@@ -378,7 +377,7 @@ func (model *DatabaseModel) Logout(cookie string) bool {
 	return true
 }
 
-func (model *DatabaseModel) Register(credentials models.UserCredentials) (string, error) {
+func (model *DatabaseModel) Register(credentials models.UserEdit) (string, error) {
 	if !ValidateUname(credentials.Username) || !ValidatePassword(credentials.Password) {
 		return "", fmt.Errorf("non-valid")
 	}
@@ -401,9 +400,9 @@ func (model *DatabaseModel) Register(credentials models.UserCredentials) (string
 	hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
 
 	model.Database.MustExec(`
-			INSERT INTO userinfo(username,password)
-			VALUES($1, $2);
-		`, credentials.Username, hashedPsswd)
+			INSERT INTO userinfo(username, password, avatar)
+			VALUES($1, $2, $3);
+		`, credentials.Username, hashedPsswd, credentials.Avatar)
 
 	model.Database.MustExec(`
 		INSERT INTO session(uid, cookie)
@@ -444,14 +443,14 @@ func (model *DatabaseModel) Info(cookie string) (string, error) {
 
 func (model *DatabaseModel) GetApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT link,url,name,image,about,installs,price,category
+		SELECT link,url,name,image,about,installs,category
 		FROM app
 	`)
 	defer rows.Close()
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Category); err != nil {
 
 			model.LG.Info(
 				"scan failed",
@@ -476,7 +475,7 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT link,url,name,image,about,installs,price,category
+		SELECT link,url,name,image,about,installs,category
 		FROM app
 		ORDER BY installs DESC;
 	`)
@@ -484,7 +483,7 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Category); err != nil {
 
 			model.LG.Info(
 				"scan failed",
@@ -509,10 +508,10 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
-		row := model.Database.QueryRowx(`SELECT link,url,name,image,about,installs,price,category
+		row := model.Database.QueryRowx(`SELECT link,url,name,image,about,installs,category
 										FROM app
 										WHERE name=$1;`, name)
-		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category)
+		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.Image, &app.About, &app.Installations, &app.Category)
 
 		if err != nil {
 
@@ -554,10 +553,10 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 
 func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app models.UserApplicationInstalled) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
-		row := model.Database.QueryRowx(`SELECT link,url,name,image,about,installs,price,category
+		row := model.Database.QueryRowx(`SELECT link,url,name,image,about,installs,category
 										FROM app
 										WHERE name=$1;`, name)
-		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.Image, &app.About, &app.Installations, &app.Price, &app.Category)
+		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.Image, &app.About, &app.Installations, &app.Category)
 
 		if err != nil {
 
@@ -634,7 +633,7 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 }
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applications) {
-	rows, _ := model.Database.Queryx(`SELECT link,url,name,image,about,installs,price,category
+	rows, _ := model.Database.Queryx(`SELECT link,url,name,image,about,installs,category
 										FROM app
 										JOIN userapp
 										USING(appid)
@@ -648,7 +647,7 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applicati
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Category); err != nil {
 
 			model.LG.Info(
 				"scan failed",
@@ -673,12 +672,13 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applicati
 
 func (model *DatabaseModel) AddApp(cookie string, appname string) {
 
-	model.Database.MustExec(`
-			UPDATE app
-			SET installs=installs+1
-			WHERE name=$1;
-		`, appname)
+	// model.Database.MustExec(`
+	// 		UPDATE app
+	// 		SET installs=installs+1
+	// 		WHERE name=$1;
+	// 	`, appname)
 
+	fmt.Println(cookie, appname)
 	model.Database.MustExec(`
 			INSERT INTO userapp(uid, appid)
 			VALUES(
@@ -689,7 +689,8 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 				,
 				(SELECT appid FROM app
 				WHERE name=$2)
-			);
+			)
+			ON CONFLICT DO NOTHING;
 		`, cookie, appname)
 
 	model.LG.Info(
@@ -697,33 +698,12 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 		"source", "database.go",
 		"who", "AddApp",
 	)
-
 	return
-}
-
-func (model *DatabaseModel) Ping(cookie string, app string, dt time.Duration) {
-	secs := float64(dt) / float64(time.Second)
-
-	model.Database.Exec(`
-		UPDATE userapp 
-		SET time_total=time_total + $3
-		WHERE appid=(
-				SELECT appid
-				FROM app
-				WHERE name=$1
-			)
-			AND uid=(
-				SELECT DISTINCT session.uid 
-				FROM session
-				JOIN userinfo USING(uid)
-				WHERE cookie=$2
-			)
-	`, app, cookie, secs)
 }
 
 func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT link,url,name,image,about,installs,price,category
+		SELECT link,url,name,image,about,installs,category
 		FROM app
 		WHERE category=$1
 		ORDER BY installs DESC;
@@ -732,7 +712,7 @@ func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.App
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Price, &temp.Category); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Category); err != nil {
 
 			model.LG.Info(
 				"scan failed",

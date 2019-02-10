@@ -13,22 +13,10 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 )
-
-type pinger struct {
-	user string
-	app  string
-}
-
-type data struct {
-	app   string
-	total time.Duration
-	last  time.Time
-}
 
 type Handler struct {
 	DB   psql.DatabaseModel
@@ -36,8 +24,6 @@ type Handler struct {
 	Prof *mc.Profiler
 	//AuthManager auth.AuthClient
 
-	times map[string]data
-	ping  chan pinger
 }
 
 func NewHandler(DB *psql.DatabaseModel, LG *lg.Logger, Prof *mc.Profiler) *Handler {
@@ -45,45 +31,7 @@ func NewHandler(DB *psql.DatabaseModel, LG *lg.Logger, Prof *mc.Profiler) *Handl
 		DB:   *DB,
 		LG:   LG,
 		Prof: Prof,
-		ping: make(chan pinger, 10),
 	}
-	go func() {
-		ticker := time.NewTicker(30 * time.Second)
-		for {
-			select {
-			case <-ticker.C:
-				for user, t := range h.times {
-					// store out time sessions
-					diff := time.Since(t.last)
-					if diff > 30*time.Second {
-						h.DB.Ping(user, t.app, t.total)
-					}
-					delete(h.times, user)
-				}
-			case p := <-h.ping:
-				if t, ok := h.times[p.user]; ok {
-					// the same app
-					if t.app == p.app {
-						diff := time.Since(t.last)
-						t.total = t.total + diff
-						t.last = time.Now()
-					} else { // an other app
-						h.DB.Ping(p.user, p.app, t.total)
-						t.total = 0
-						t.last = time.Now()
-					}
-					h.times[p.user] = t
-				} else {
-					// create a new session
-					h.times[p.user] = data{
-						app:   p.app,
-						total: 0,
-						last:  time.Now(),
-					}
-				}
-			}
-		}
-	}()
 	return h
 }
 
@@ -96,16 +44,16 @@ func (h *Handler) uploadHandler(r *http.Request) (created bool, path string) {
 			"source", "api.go",
 			"who", "uploadHandler")
 
-		return true, "/img/avatars/default"
+		return true, "img/avatars/default"
 	}
 
 	defer file.Close()
 
-	prefix := "/img/avatars/"
+	prefix := "img/avatars/"
 	hash := ksuid.New()
 	fileName := hash.String()
 
-	createPath := "." + prefix + fileName
+	createPath := "./" + prefix + fileName
 	path = prefix + fileName
 
 	out, err := os.Create(createPath)
@@ -150,9 +98,23 @@ func (h *Handler) SlashHandler(rw http.ResponseWriter, r *http.Request) {
 /******************** Register POST ********************/
 
 func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
-	user := models.UserCredentials{
+	user := models.UserEdit{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
+	}
+
+	var created bool
+	created, user.Avatar = h.uploadHandler(r)
+
+	if !created {
+		fr := models.ForbiddenRequest{
+			Reason: "Bad avatar",
+		}
+
+		payload, _ := fr.MarshalJSON()
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(rw, string(payload))
+		return
 	}
 
 	cookie, err := h.DB.Register(user)
@@ -658,22 +620,10 @@ func (h *Handler) MeShowAppsGetHandler(rw http.ResponseWriter, r *http.Request) 
 	return
 }
 
-func (h *Handler) PingPOSTHandler(rw http.ResponseWriter, r *http.Request) {
-	cookie := misc.GetSessionCookie(r)
-	appname := r.FormValue("name")
-	h.ping <- pinger{cookie, appname}
-
-	h.LG.Sugar.Infow("/ping succeeded",
-		"source", "api.go",
-		"who", "PingPOSTHandler")
-
-	return
-}
-
 func (h *Handler) CategoryGETHandler(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	var apps models.Applications
-	category := r.FormValue("category")
-	apps = h.DB.GetAppsByCattegory(category)
+	apps = h.DB.GetAppsByCattegory(vars["category"])
 
 	payload, _ := apps.MarshalJSON()
 	rw.WriteHeader(http.StatusOK)
