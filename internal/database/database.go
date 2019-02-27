@@ -443,21 +443,20 @@ func (model *DatabaseModel) Info(cookie string) (string, error) {
 
 func (model *DatabaseModel) GetApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT link,url,name,image,about,installs,category
+		SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
 		FROM app
 	`)
 	defer rows.Close()
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Category); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.NameDE, &temp.NameRU, &temp.Image, &temp.About, &temp.AboutDE, &temp.AboutRU, &temp.Installations, &temp.Category); err != nil {
 
 			model.LG.Info(
 				"scan failed",
 				"source", "database.go",
 				"who", "GetApps",
 			)
-
 			return models.Applications{}
 		}
 
@@ -475,15 +474,15 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT link,url,name,image,about,installs,category
-		FROM app
-		ORDER BY installs DESC;
+		SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+			FROM app
+			ORDER BY installs DESC;
 	`)
 	defer rows.Close()
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Category); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.NameDE, &temp.NameRU, &temp.Image, &temp.About, &temp.AboutDE, &temp.AboutRU, &temp.Installations, &temp.Category); err != nil {
 
 			model.LG.Info(
 				"scan failed",
@@ -508,10 +507,11 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 
 func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
-		row := model.Database.QueryRowx(`SELECT link,url,name,image,about,installs,category
-										FROM app
-										WHERE name=$1;`, name)
-		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.Image, &app.About, &app.Installations, &app.Category)
+		row := model.Database.QueryRowx(`
+			SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+				FROM app
+				WHERE name=$1;`, name)
+		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.NameDE, &app.NameRU, &app.Image, &app.About, &app.AboutDE, &app.AboutRU, &app.Installations, &app.Category)
 
 		if err != nil {
 
@@ -553,9 +553,10 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 
 func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app models.UserApplicationInstalled) {
 	if isPresent, problem := model.Present("app", "name", name); isPresent && problem == nil {
-		row := model.Database.QueryRowx(`SELECT link,url,name,image,about,installs,category
-										FROM app
-										WHERE name=$1;`, name)
+		row := model.Database.QueryRowx(`
+			SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+				FROM app
+				WHERE name=$1;`, name)
 		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.Image, &app.About, &app.Installations, &app.Category)
 
 		if err != nil {
@@ -633,15 +634,16 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 }
 
 func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applications) {
-	rows, _ := model.Database.Queryx(`SELECT link,url,name,image,about,installs,category
-										FROM app
-										JOIN userapp
-										USING(appid)
-										WHERE userapp.uid=(SELECT DISTINCT session.uid
-											FROM session
-											JOIN userinfo
-											USING(uid)
-											WHERE cookie=$1);
+	rows, _ := model.Database.Queryx(`
+	SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+		FROM app
+		JOIN userapp
+		USING(appid)
+		WHERE userapp.uid=(SELECT DISTINCT session.uid
+			FROM session
+			JOIN userinfo
+			USING(uid)
+			WHERE cookie=$1);
 	`, cookie)
 	defer rows.Close()
 
@@ -703,7 +705,7 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 
 func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
-		SELECT link,url,name,image,about,installs,category
+		SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
 		FROM app
 		WHERE category=$1
 		ORDER BY installs DESC;

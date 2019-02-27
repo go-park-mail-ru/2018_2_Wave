@@ -339,7 +339,8 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	cookie, err := h.DB.Login(user)
 
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
+		rw.WriteHeader(http.StatusForbidden)
+		// fmt.Fprintln(rw, string(payload))
 
 		h.LG.Sugar.Infow("/session failed",
 			"source", "api.go",

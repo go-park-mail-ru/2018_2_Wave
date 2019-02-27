@@ -1310,10 +1310,18 @@ func easyjsonD2b7633eDecodeWaveInternalModels12(in *jlexer.Lexer, out *Applicati
 			out.Url = string(in.String())
 		case "name":
 			out.Name = string(in.String())
+		case "name_de":
+			out.NameDE = string(in.String())
+		case "name_ru":
+			out.NameRU = string(in.String())
 		case "image":
 			out.Image = string(in.String())
 		case "about":
 			out.About = string(in.String())
+		case "about_de":
+			out.AboutDE = string(in.String())
+		case "about_ru":
+			out.AboutRU = string(in.String())
 		case "installs":
 			out.Installations = int(in.Int())
 		case "price":
@@ -1365,6 +1373,26 @@ func easyjsonD2b7633eEncodeWaveInternalModels12(out *jwriter.Writer, in Applicat
 		out.String(string(in.Name))
 	}
 	{
+		const prefix string = ",\"name_de\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.NameDE))
+	}
+	{
+		const prefix string = ",\"name_ru\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.NameRU))
+	}
+	{
 		const prefix string = ",\"image\":"
 		if first {
 			first = false
@@ -1383,6 +1411,26 @@ func easyjsonD2b7633eEncodeWaveInternalModels12(out *jwriter.Writer, in Applicat
 			out.RawString(prefix)
 		}
 		out.String(string(in.About))
+	}
+	{
+		const prefix string = ",\"about_de\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.AboutDE))
+	}
+	{
+		const prefix string = ",\"about_ru\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.AboutRU))
 	}
 	{
 		const prefix string = ",\"installs\":"
