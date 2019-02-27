@@ -22,12 +22,16 @@ CREATE TABLE session (
 CREATE TABLE app (
     appid           BIGSERIAL       PRIMARY KEY,
     url             TEXT            DEFAULT '',
-    link            TEXT            ,
-    name            TEXT            ,
-    image           TEXT            ,
-    about           TEXT            ,
+    link            TEXT            UNIQUE NOT NULL,
+    name            TEXT            NOT NULL,
+    name_de         TEXT            DEFAULT '',
+    name_ru         TEXT            DEFAULT '',
+    image           TEXT            DEFAULT '',
+    about           TEXT            DEFAULT '',
+    about_de        TEXT            DEFAULT '',
+    about_ru        TEXT            DEFAULT '',
     installs        INT             DEFAULT 0,
-    category        TEXT
+    category        TEXT            NOT NULL
 );
 
 
