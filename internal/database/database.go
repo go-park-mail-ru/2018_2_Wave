@@ -516,7 +516,7 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 		if err != nil {
 
 			model.LG.Info(
-				"GetApp failed, scan error",
+				"GetApp failed, scan err: "+err.Error(),
 				"source", "database.go",
 				"who", "GetApp",
 			)
@@ -557,12 +557,12 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 			SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
 				FROM app
 				WHERE name=$1;`, name)
-		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.Image, &app.About, &app.Installations, &app.Category)
+		err := row.Scan(&app.Link, &app.Url, &app.Name, &app.NameDE, &app.NameRU, &app.Image, &app.About, &app.AboutDE, &app.AboutRU, &app.Installations, &app.Category)
 
 		if err != nil {
 
 			model.LG.Info(
-				"GetApp failed, scan error",
+				"GetApp failed, scan error: "+err.Error(),
 				"source", "database.go",
 				"who", "GetApp",
 			)

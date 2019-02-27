@@ -57,6 +57,3 @@ RETURNS TRIGGER AS '
 CREATE TRIGGER update_installs
 AFTER INSERT ON userapp
 FOR EACH ROW EXECUTE PROCEDURE update_installs();
-
-INSERT INTO app(link, name, image, about, category) VALUES ('/terminal', 'Terminal', 'img/app_covers/terminal.jpg', 'App by Wave', '2018_2');
-INSERT INTO app(link, name, image, about, category) VALUES ('/snake', 'Snake', 'img/app_covers/snake.jpg', 'Game by Wave', '2018_2');
