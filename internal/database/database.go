@@ -649,7 +649,7 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applicati
 
 	for rows.Next() {
 		temp := models.Application{}
-		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Category); err != nil {
+		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.NameDE, &temp.NameRU, &temp.Image, &temp.About, &temp.AboutDE, &temp.AboutRU, &temp.Installations, &temp.Category); err != nil {
 
 			model.LG.Info(
 				"scan failed",
