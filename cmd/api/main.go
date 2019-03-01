@@ -42,6 +42,7 @@ func main() {
 	r.HandleFunc("/users", mw.Chain(API.RegisterPOSTHandler, mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 	r.HandleFunc("/users/me", mw.Chain(API.MeGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 	r.HandleFunc("/users/me", mw.Chain(API.EditMePUTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("PUT")
+	r.HandleFunc("/users/me/locale", mw.Chain(API.EditPOSTLocale, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 	r.HandleFunc("/users/{name}", mw.Chain(API.UserGETHandler, mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 	r.HandleFunc("/session", mw.Chain(API.LoginPOSTHandler, mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 	r.HandleFunc("/session", mw.Chain(API.LogoutDELETEHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("DELETE")
@@ -56,7 +57,6 @@ func main() {
 	r.HandleFunc("/apps/category/{category}", mw.Chain(API.CategoryGETHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
 	r.HandleFunc("/me/apps", mw.Chain(API.AddAppPOSTHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("POST")
 	r.HandleFunc("/me/apps", mw.Chain(API.MeShowAppsGetHandler, mw.Auth(curlog, prof), mw.CORS(conf.CC, curlog, prof))).Methods("GET")
-
 
 	curlog.Sugar.Infow("starting api server on "+conf.SC.Host+conf.SC.Port,
 		"source", "main.go")

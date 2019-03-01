@@ -125,6 +125,8 @@ func easyjsonD2b7633eDecodeWaveInternalModels1(in *jlexer.Lexer, out *UserExtend
 			out.Score = string(in.String())
 		case "avatar":
 			out.Avatar = string(in.String())
+		case "locale":
+			out.Locale = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -168,6 +170,16 @@ func easyjsonD2b7633eEncodeWaveInternalModels1(out *jwriter.Writer, in UserExten
 			out.RawString(prefix)
 		}
 		out.String(string(in.Avatar))
+	}
+	{
+		const prefix string = ",\"locale\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Locale))
 	}
 	out.RawByte('}')
 }

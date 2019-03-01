@@ -388,6 +388,72 @@ func (h *Handler) LoginPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/******************** EditLocale POST ********************/
+
+func (h *Handler) EditPOSTLocale(rw http.ResponseWriter, r *http.Request) {
+	locale := r.FormValue("locale")
+	cookie := misc.GetSessionCookie(r)
+
+	if locale != "en" && locale != "de" && locale != "ru" {
+		fr := models.ForbiddenRequest{
+			Reason: "Unsupported locale: " + locale,
+		}
+
+		payload, _ := fr.MarshalJSON()
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(rw, string(payload))
+
+		h.LG.Sugar.Infow(
+			"/users/me/locale failed, incorrect locale "+locale,
+			"source", "api.go",
+			"who", "EditPOSTLocale")
+	}
+
+	if cookie == "" {
+		fr := models.ForbiddenRequest{
+			Reason: "Incorrect password or/and username.",
+		}
+
+		payload, _ := fr.MarshalJSON()
+		rw.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(rw, string(payload))
+
+		h.LG.Sugar.Infow("/users/me/locale failed, incorrect password or/and username",
+			"source", "api.go",
+			"who", "LoginPOSTHandler")
+
+		h.Prof.HitsStats.
+			WithLabelValues("401", "UNAUTHORIZED").
+			Add(1)
+
+		return
+	}
+
+	err := h.DB.UpdateMyLocale(cookie, locale)
+
+	if err != nil {
+		rw.WriteHeader(http.StatusForbidden)
+		// fmt.Fprintln(rw, string(payload))
+
+		h.LG.Sugar.Infow(
+			"/users/me/locale failed, "+err.Error(),
+			"source", "api.go",
+			"who", "EditPOSTLocale")
+
+		h.Prof.HitsStats.
+			WithLabelValues("500", "INTERNAL SERVER ERROR").
+			Add(1)
+
+		return
+	}
+
+	h.LG.Sugar.Infow("/session succeeded",
+		"source", "api.go",
+		"who", "LoginPOSTHandler")
+
+	return
+}
+
 /******************** Logout DELETE ********************/
 
 func (h *Handler) LogoutDELETEHandler(rw http.ResponseWriter, r *http.Request) {

@@ -187,13 +187,13 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 
 func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExtended, err error) {
 	row := model.Database.QueryRowx(`
-		SELECT username, avatar, score
+		SELECT username, avatar, score, locale
 		FROM userinfo
 		JOIN session
 		USING(uid)
 		WHERE cookie=$1;
 	`, cookie)
-	err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
+	err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score, &profile.Locale)
 
 	if err != nil {
 
@@ -215,14 +215,44 @@ func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExte
 	return profile, nil
 }
 
+func (model *DatabaseModel) UpdateMyLocale(cookie string, locale string) (err error) {
+
+	model.Database.MustExec(`
+		UPDATE userinfo
+		SET locale=$1
+		WHERE uid=(
+			SELECT DISTINCT session.uid FROM session WHERE cookie=$2
+		);
+	`, locale, cookie)
+
+	if err != nil {
+
+		model.LG.Info(
+			"getmyprofile failed, scan error",
+			"source", "database.go",
+			"who", "GetMyProfile",
+		)
+
+		return err
+	}
+
+	model.LG.Info(
+		"getmyprofile succeeded",
+		"source", "database.go",
+		"who", "GetMyProfile",
+	)
+
+	return nil
+}
+
 func (model *DatabaseModel) GetProfile(username string) (profile models.UserExtended, err error) {
 	if isPresent, problem := model.Present(UserInfoTable, UsernameCol, username); isPresent && problem == nil {
 		row := model.Database.QueryRowx(`
-			SELECT username, avatar, score
+			SELECT username, avatar, score, locale
 			FROM userinfo
 			WHERE username=$1;
 		`, username)
-		err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score)
+		err = row.Scan(&profile.Username, &profile.Avatar, &profile.Score, &profile.Locale)
 
 		if err != nil {
 
