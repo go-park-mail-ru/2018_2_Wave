@@ -9,6 +9,7 @@ CREATE TABLE userinfo (
     username    TEXT            NOT NULL,
     password    VARCHAR(60)     NOT NULL,
     score       INT             DEFAULT 0,
+    locale      TEXT            DEFAULT 'en',
     avatar      TEXT            DEFAULT 'img/avatars/default'
 );
 
