@@ -1,4 +1,5 @@
 TRUNCATE app CASCADE;
+TRUNCATE userapp CASCADE;
 
 INSERT INTO app(link, name, name_de, name_ru, image, about, about_de, about_ru, category)
     VALUES (
@@ -34,7 +35,7 @@ INSERT INTO app(link, url, name, name_de, name_ru, image, about, about_de, about
         'Quizzy',
         'Quizzy',
         'img/app_covers/proto.jpg',
-        'SImple duel quiz by __proto__',
+        'Simple duel quiz by __proto__',
         'Duel quiz von __proto__',
         'Дуэль-викторина от __proto__',
         '2018_2'
@@ -62,7 +63,7 @@ INSERT INTO app(link, url, name, name_de, name_ru, image, about, about_de, about
         'Fange den Alien!',
         'Поймай пришельца!',
         'img/app_covers/catch.jpg',
-        'Dont let the alien leave the field!\nGame by ItBerries',
+        'Dont let the alien leave the field! Game by ItBerries',
         'Lass den Alien nicht das Feld verlassen!',
         'Не позвольте пришельцу покинуть поле!',
         '2018_1'
@@ -76,9 +77,9 @@ INSERT INTO app(link, url, name, name_de, name_ru, image, about, about_de, about
         'Die Wächter',
         'Стражники',
         'img/app_covers/guardians.jpg',
-        'Unusual 3D multi-player puzzle.\nGame by Chunk',
-        'Ungewöhnliches 3D Multiplayer Puzzle.\nSpiel von Chunk',
-        'Необычная 3D головоломка для нескольких игроков.\nИгра от команды Chunk',
+        'Unusual 3D multi-player puzzle. Game by Chunk',
+        'Ungewöhnliches 3D Multiplayer Puzzle. Spiel von Chunk',
+        'Необычная 3D головоломка для нескольких игроков. Игра от команды Chunk',
         '2017_2'
     );
 
@@ -90,7 +91,7 @@ INSERT INTO app(link, url, name, name_de, name_ru, image, about, about_de, about
         'Rhythm Blast',
         'Rhythm Blast',
         'img/app_covers/rhytmblast.jpg',
-        'Space arcanoid on steroids.\nGame by Glitchless',
+        'Space arcanoid on steroids. Game by Glitchless',
         'Arcade-Spiel im Weltraum von Glitchless',
         'Космический арканоид от Glitchless',
         '2017_2'
