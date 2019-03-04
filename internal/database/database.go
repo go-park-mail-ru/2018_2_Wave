@@ -502,6 +502,36 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 	return apps
 }
 
+func (model *DatabaseModel) GetCategories() (categories models.Categories) {
+	rows, _ := model.Database.Queryx(`
+		SELECT DISTINCT category FROM app ORDER BY category DESC;
+	`)
+	defer rows.Close()
+	var temp string
+	for rows.Next() {
+		if err := rows.Scan(&temp); err != nil {
+
+			model.LG.Info(
+				"scan failed",
+				"source", "database.go",
+				"who", "GetPopularApps",
+			)
+
+			return models.Categories{}
+		}
+
+		categories.Categories = append(categories.Categories, temp)
+	}
+
+	model.LG.Info(
+		"GetPopularApps succeeded",
+		"source", "database.go",
+		"who", "GetPopularApps",
+	)
+
+	return categories
+}
+
 func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 	rows, _ := model.Database.Queryx(`
 		SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category

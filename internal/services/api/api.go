@@ -581,6 +581,25 @@ func (h *Handler) ShowAppsPopularGETHandler(rw http.ResponseWriter, r *http.Requ
 	return
 }
 
+func (h *Handler) ShowCategoriesGETHandler(rw http.ResponseWriter, r *http.Request) {
+	var cats models.Categories
+	cats = h.DB.GetCategories()
+
+	payload, _ := cats.MarshalJSON()
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintln(rw, string(payload))
+
+	h.LG.Sugar.Infow("/apps succeeded",
+		"source", "api.go",
+		"who", "ShowAppsGETHandler")
+
+	h.Prof.HitsStats.
+		WithLabelValues("200", "OK").
+		Add(1)
+
+	return
+}
+
 func (h *Handler) AppGETHandler(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	app := h.DB.GetApp(vars["name"])

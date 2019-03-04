@@ -1242,7 +1242,110 @@ func (v *ForbiddenRequest) UnmarshalJSON(data []byte) error {
 func (v *ForbiddenRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2b7633eDecodeWaveInternalModels10(l, v)
 }
-func easyjsonD2b7633eDecodeWaveInternalModels11(in *jlexer.Lexer, out *Applications) {
+func easyjsonD2b7633eDecodeWaveInternalModels11(in *jlexer.Lexer, out *Categories) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "categories":
+			if in.IsNull() {
+				in.Skip()
+				out.Categories = nil
+			} else {
+				in.Delim('[')
+				if out.Categories == nil {
+					if !in.IsDelim(']') {
+						out.Categories = make([]string, 0, 4)
+					} else {
+						out.Categories = []string{}
+					}
+				} else {
+					out.Categories = (out.Categories)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v10 string
+					v10 = string(in.String())
+					out.Categories = append(out.Categories, v10)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeWaveInternalModels11(out *jwriter.Writer, in Categories) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"categories\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Categories == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v11, v12 := range in.Categories {
+				if v11 > 0 {
+					out.RawByte(',')
+				}
+				out.String(string(v12))
+			}
+			out.RawByte(']')
+		}
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v Categories) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2b7633eEncodeWaveInternalModels11(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v Categories) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeWaveInternalModels11(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *Categories) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeWaveInternalModels11(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *Categories) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeWaveInternalModels11(l, v)
+}
+func easyjsonD2b7633eDecodeWaveInternalModels12(in *jlexer.Lexer, out *Applications) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1277,9 +1380,9 @@ func easyjsonD2b7633eDecodeWaveInternalModels11(in *jlexer.Lexer, out *Applicati
 					out.Applications = (out.Applications)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v10 Application
-					(v10).UnmarshalEasyJSON(in)
-					out.Applications = append(out.Applications, v10)
+					var v13 Application
+					(v13).UnmarshalEasyJSON(in)
+					out.Applications = append(out.Applications, v13)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -1294,7 +1397,7 @@ func easyjsonD2b7633eDecodeWaveInternalModels11(in *jlexer.Lexer, out *Applicati
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeWaveInternalModels11(out *jwriter.Writer, in Applications) {
+func easyjsonD2b7633eEncodeWaveInternalModels12(out *jwriter.Writer, in Applications) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1310,11 +1413,11 @@ func easyjsonD2b7633eEncodeWaveInternalModels11(out *jwriter.Writer, in Applicat
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v11, v12 := range in.Applications {
-				if v11 > 0 {
+			for v14, v15 := range in.Applications {
+				if v14 > 0 {
 					out.RawByte(',')
 				}
-				(v12).MarshalEasyJSON(out)
+				(v15).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -1325,27 +1428,27 @@ func easyjsonD2b7633eEncodeWaveInternalModels11(out *jwriter.Writer, in Applicat
 // MarshalJSON supports json.Marshaler interface
 func (v Applications) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeWaveInternalModels11(&w, v)
+	easyjsonD2b7633eEncodeWaveInternalModels12(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Applications) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeWaveInternalModels11(w, v)
+	easyjsonD2b7633eEncodeWaveInternalModels12(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Applications) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeWaveInternalModels11(&r, v)
+	easyjsonD2b7633eDecodeWaveInternalModels12(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Applications) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeWaveInternalModels11(l, v)
+	easyjsonD2b7633eDecodeWaveInternalModels12(l, v)
 }
-func easyjsonD2b7633eDecodeWaveInternalModels12(in *jlexer.Lexer, out *Application) {
+func easyjsonD2b7633eDecodeWaveInternalModels13(in *jlexer.Lexer, out *Application) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1398,7 +1501,7 @@ func easyjsonD2b7633eDecodeWaveInternalModels12(in *jlexer.Lexer, out *Applicati
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeWaveInternalModels12(out *jwriter.Writer, in Application) {
+func easyjsonD2b7633eEncodeWaveInternalModels13(out *jwriter.Writer, in Application) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1528,23 +1631,23 @@ func easyjsonD2b7633eEncodeWaveInternalModels12(out *jwriter.Writer, in Applicat
 // MarshalJSON supports json.Marshaler interface
 func (v Application) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeWaveInternalModels12(&w, v)
+	easyjsonD2b7633eEncodeWaveInternalModels13(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Application) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeWaveInternalModels12(w, v)
+	easyjsonD2b7633eEncodeWaveInternalModels13(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Application) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeWaveInternalModels12(&r, v)
+	easyjsonD2b7633eDecodeWaveInternalModels13(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Application) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeWaveInternalModels12(l, v)
+	easyjsonD2b7633eDecodeWaveInternalModels13(l, v)
 }
