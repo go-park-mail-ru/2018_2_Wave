@@ -1,0 +1,897 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">Wave/internal/database/database.go (22.5%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package database
+
+import (
+        "Wave/internal/misc"
+        "Wave/internal/models"
+        "flag"
+        "strconv"
+
+        "fmt"
+
+        "github.com/jmoiron/sqlx"
+        _ "github.com/lib/pq"
+)
+
+const (
+        UserInfoTable = "userinfo"
+        UsernameCol   = "username"
+
+        SessionTable = "session"
+        CookieCol    = "cookie"
+)
+
+type DatabaseModel struct {
+        Database *sqlx.DB
+        // LG       lg.Logger
+}
+
+func New( /*lg_ *lg.Logger*/ ) *DatabaseModel <span class="cov8" title="1">{
+        var (
+                postgr = &amp;DatabaseModel{
+                        // LG: *lg_,
+                }
+                dbuser     string
+                dbpassword string
+                dbname     string
+                //                err        error
+        )
+        flag.StringVar(&amp;dbuser, "WAVE_DB_USER", "Wave", "")
+        flag.StringVar(&amp;dbname, "WAVE_DB_NAME", "Wave", "")
+        flag.StringVar(&amp;dbpassword, "WAVE_DB_PASSWORD", "Wave", "")
+        flag.Parse()
+
+        // postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
+
+        postgr.Database, _ = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
+
+        // if err != nil {
+        //         // postgr.LG.Info(
+        //         //         "PostgreSQL connection establishment failed",
+        //         //         "source", "database.go",
+        //         //         "who", "New",
+        //         // )
+
+        //         os.Exit(1)
+        // }
+
+        // postgr.LG.Info(
+        //         "PostgreSQL connection establishment succeeded",
+        //         "source", "database.go",
+        //         "who", "New",
+        // )
+
+        return postgr
+}</span>
+
+func (model *DatabaseModel) Present(tableName string, colName string, target string) (fl bool, err error) <span class="cov0" title="0">{
+        var exists string
+        row := model.Database.QueryRowx("SELECT EXISTS (SELECT true FROM " +
+                tableName + " WHERE " + colName + "='" + target + "');")
+        err = row.Scan(&amp;exists)
+
+        if err != nil </span><span class="cov0" title="0">{
+
+                // model.LG.Info(
+                //         "Scan failed",
+                //         "source", "database.go",
+                //         "who", "Present",
+                // )
+
+                return false, err
+        }</span>
+
+        <span class="cov0" title="0">fl, err = strconv.ParseBool(exists)
+
+        if err != nil </span><span class="cov0" title="0">{
+
+                // model.LG.Info(
+                //         "strconv.ParseBool failed",
+                //         "source", "database.go",
+                //         "who", "Present",
+                // )
+
+                return false, err
+        }</span>
+
+        <span class="cov0" title="0">return fl, nil</span>
+}
+
+func ValidateUname(target string) bool <span class="cov8" title="1">{
+        if len(target) &lt; 4 </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">return true</span>
+}
+
+func ValidatePassword(target string) bool <span class="cov8" title="1">{
+        if len(target) &lt; 4 </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">return true</span>
+}
+
+func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie string, err error) <span class="cov0" title="0">{
+        if isPresent, problem := model.Present(UserInfoTable, UsernameCol, credentials.Username); isPresent &amp;&amp; problem == nil </span><span class="cov0" title="0">{
+                var psswd string
+
+                row := model.Database.QueryRowx(`
+                        SELECT password
+                        FROM userinfo
+                        WHERE username=$1;
+                `, credentials.Username)
+
+                err := row.Scan(&amp;psswd)
+
+                if err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "Scan failed",
+                        //         "source", "database.go",
+                        //         "who", "LogIn",
+                        // )
+
+                        return "", err
+                }</span>
+
+                <span class="cov0" title="0">if misc.PasswordsMatched(psswd, credentials.Password) </span><span class="cov0" title="0">{
+                        cookie := misc.GenerateCookie()
+                        model.Database.MustExec(`
+                                INSERT INTO session(uid, cookie)
+                                VALUES(
+                                        (SELECT uid FROM userinfo WHERE username=$1),
+                                        $2
+                                );
+                        `, credentials.Username, cookie)
+
+                        // model.LG.Info(
+                        //         "login succeeded, cookie set",
+                        //         "source", "database.go",
+                        //         "who", "LogIn",
+                        // )
+
+                        return cookie, nil
+                }</span> else<span class="cov0" title="0"> {
+                        // model.LG.Info(
+                        //         "login failed, wrong password",
+                        //         "source", "database.go",
+                        //         "who", "LogIn",
+                        // )
+
+                        return "", nil
+                }</span>
+        } else<span class="cov0" title="0"> if problem != nil </span><span class="cov0" title="0">{
+
+                // model.LG.Info(
+                //         "Present failed",
+                //         "source", "database.go",
+                //         "who", "LogIn",
+                // )
+
+                return "", problem
+        }</span>
+
+        // model.LG.Info(
+        //         "login failed, no such user",
+        //         "source", "database.go",
+        //         "who", "LogIn",
+        // )
+
+        <span class="cov0" title="0">return "", nil</span>
+}
+
+func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExtended, err error) <span class="cov8" title="1">{
+        row := model.Database.QueryRowx(`
+                SELECT username, avatar, score, locale
+                FROM userinfo
+                JOIN session
+                USING(uid)
+                WHERE cookie=$1;
+        `, cookie)
+        err = row.Scan(&amp;profile.Username, &amp;profile.Avatar, &amp;profile.Score, &amp;profile.Locale)
+
+        if err != nil </span><span class="cov0" title="0">{
+
+                // model.LG.Info(
+                //         "getmyprofile failed, scan error",
+                //         "source", "database.go",
+                //         "who", "GetMyProfile",
+                // )
+
+                return models.UserExtended{}, err
+        }</span>
+
+        // model.LG.Info(
+        //         "getmyprofile succeeded",
+        //         "source", "database.go",
+        //         "who", "GetMyProfile",
+        // )
+
+        <span class="cov8" title="1">return profile, nil</span>
+}
+
+func (model *DatabaseModel) UpdateMyLocale(cookie string, locale string) (err error) <span class="cov0" title="0">{
+
+        model.Database.MustExec(`
+                UPDATE userinfo
+                SET locale=$1
+                WHERE uid=(
+                        SELECT DISTINCT session.uid FROM session WHERE cookie=$2
+                );
+        `, locale, cookie)
+
+        if err != nil </span><span class="cov0" title="0">{
+
+                // model.LG.Info(
+                //         "getmyprofile failed, scan error",
+                //         "source", "database.go",
+                //         "who", "GetMyProfile",
+                // )
+
+                return err
+        }</span>
+
+        // model.LG.Info(
+        //         "getmyprofile succeeded",
+        //         "source", "database.go",
+        //         "who", "GetMyProfile",
+        // )
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (model *DatabaseModel) GetProfile(username string) (profile models.UserExtended, err error) <span class="cov0" title="0">{
+        if isPresent, problem := model.Present(UserInfoTable, UsernameCol, username); isPresent &amp;&amp; problem == nil </span><span class="cov0" title="0">{
+                row := model.Database.QueryRowx(`
+                        SELECT username, avatar, score, locale
+                        FROM userinfo
+                        WHERE username=$1;
+                `, username)
+                err = row.Scan(&amp;profile.Username, &amp;profile.Avatar, &amp;profile.Score, &amp;profile.Locale)
+
+                if err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "getprofile failed, scan error",
+                        //         "source", "database.go",
+                        //         "who", "GetProfile",
+                        // )
+
+                        return models.UserExtended{}, err
+                }</span>
+
+                // model.LG.Info(
+                //         "getprofile succeeded",
+                //         "source", "database.go",
+                //         "who", "GetProfile",
+                // )
+
+                <span class="cov0" title="0">return profile, nil</span>
+        } else<span class="cov0" title="0"> if problem != nil </span><span class="cov0" title="0">{
+
+                // model.LG.Info(
+                //         "Present failed",
+                //         "source", "database.go",
+                //         "who", "GetProfile",
+                // )
+
+                return models.UserExtended{}, err
+        }</span>
+
+        // model.LG.Info(
+        //         "getprofile failed, user doesn't exist",
+        //         "source", "database.go",
+        //         "who", "GetProfile",
+        // )
+
+        <span class="cov0" title="0">return models.UserExtended{}, nil</span>
+}
+
+func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string) error <span class="cov0" title="0">{
+        if profile.Username != "" </span><span class="cov0" title="0">{
+                isPresent, problem := model.Present(UserInfoTable, UsernameCol, profile.Username)
+                if problem != nil </span><span class="cov0" title="0">{
+                        // model.LG.Info(
+                        //         "Present failed",
+                        //         "source", "database.go",
+                        //         "who", "UpdateProfile",
+                        // )
+
+                        return problem
+                }</span>
+                <span class="cov0" title="0">if !isPresent </span><span class="cov0" title="0">{
+                        if ValidateUname(profile.Username) </span><span class="cov0" title="0">{
+                                model.Database.MustExec(`
+                                        UPDATE userinfo
+                                        SET username=$1
+                                        WHERE userinfo.uid = (
+                                                SELECT DISCTINCT session.uid from session
+                                                JOIN userinfo
+                                                USING(uid)
+                                                WHERE cookie=$2
+                                        );
+                                `, profile.Username, cookie)
+
+                                // model.LG.Info(
+                                //         "update profile succeeded, username updated",
+                                //         "source", "database.go",
+                                //         "who", "UpdateProfile",
+                                // )
+                        }</span> else <span class="cov0" title="0">{
+
+                                // model.LG.Info(
+                                //         "update profile failed, invalid username",
+                                //         "source", "database.go",
+                                //         "who", "UpdateProfile",
+                                // )
+                        }</span>
+                }
+                <span class="cov0" title="0">if isPresent </span>{<span class="cov0" title="0">
+                        // model.LG.Info(
+                        //         "update profile failed, username already in use",
+                        //         "source", "database.go",
+                        //         "who", "UpdateProfile",
+                        // )
+                }</span>
+        }
+
+        <span class="cov0" title="0">if profile.Password != "" </span><span class="cov0" title="0">{
+                if ValidatePassword(profile.Password) </span><span class="cov0" title="0">{
+                        hashedPsswd := misc.GeneratePasswordHash(profile.Password)
+                        model.Database.MustExec(`
+                                UPDATE userinfo
+                                SET password=$1
+                                WHERE userinfo.uid = (
+                                        SELECT DISTINCT session.uid from session
+                                        JOIN userinfo
+                                        USING(uid)
+                                        WHERE cookie=$2
+                                );
+                        `, hashedPsswd, cookie)
+
+                        // model.LG.Info(
+                        //         "update profile succeeded, password updated",
+                        //         "source", "database.go",
+                        //         "who", "UpdateProfile",
+                        // )
+                }</span> else <span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "update profile failed, invalid password",
+                        //         "source", "database.go",
+                        //         "who", "UpdateProfile",
+                        // )
+                }</span>
+        }
+
+        <span class="cov0" title="0">if profile.Avatar != "" </span><span class="cov0" title="0">{
+                model.Database.MustExec(`
+                        UPDATE userinfo
+                        SET avatar=$1
+                        WHERE userinfo.uid = (
+                                SELECT DISTINCT session.uid from session
+                                JOIN userinfo
+                                USING(uid)
+                                WHERE cookie=$2
+                        );
+                `, profile.Avatar, cookie)
+
+                // model.LG.Info(
+                //         "update profile succeeded, avatar updated",
+                //         "source", "database.go",
+                //         "who", "UpdateProfile",
+                // )
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (model *DatabaseModel) Logout(cookie string) bool <span class="cov0" title="0">{
+        model.Database.QueryRowx(`
+        DELETE
+        FROM session
+        WHERE cookie=$1;
+        `, cookie)
+
+        // model.LG.Info(
+        //         "logout succeeded",
+        //         "source", "database.go",
+        //         "who", "Logout",
+        // )
+
+        return true
+}</span>
+
+func (model *DatabaseModel) Register(credentials models.UserEdit) (string, error) <span class="cov8" title="1">{
+        if !ValidateUname(credentials.Username) || !ValidatePassword(credentials.Password) </span><span class="cov8" title="1">{
+                return "", fmt.Errorf("non-valid")
+        }</span>
+
+        <span class="cov8" title="1">var exists string
+
+        row := model.Database.QueryRowx(`SELECT EXISTS
+                                                                        (SELECT true FROM userinfo
+                                                                        WHERE username=$1);
+                                                                        `, credentials.Username)
+        err := row.Scan(&amp;exists)
+        err = err
+        fl, _ := strconv.ParseBool(exists)
+
+        if fl == true </span><span class="cov8" title="1">{
+                return "", fmt.Errorf("exists")
+        }</span>
+
+        <span class="cov8" title="1">cookie := misc.GenerateCookie()
+        hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
+
+        model.Database.MustExec(`
+                        INSERT INTO userinfo(username, password, avatar)
+                        VALUES($1, $2, $3);
+                `, credentials.Username, hashedPsswd, credentials.Avatar)
+
+        model.Database.MustExec(`
+                INSERT INTO session(uid, cookie)
+                VALUES(
+                        (SELECT uid FROM userinfo WHERE username=$1),
+                        $2
+                );
+        `, credentials.Username, cookie)
+
+        // model.LG.Info(
+        //         "signup succeeded",
+        //         "source", "database.go",
+        //         "who", "Register",
+        // )
+
+        model.AddApp(cookie, "Terminal")
+        model.AddApp(cookie, "Snake")
+        return cookie, nil</span>
+}
+
+func (model *DatabaseModel) Info(cookie string) (string, error) <span class="cov0" title="0">{
+        username := ""
+        if err := model.Database.QueryRow(`
+                SELECT username
+                FROM (
+                        SELECT uid
+                        FROM session
+                        WHERE cookie=$1
+                ) u
+                INNER JOIN userinfo USING(uid);
+        `, cookie).Scan(&amp;username); err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov0" title="0">return username, nil</span>
+}
+
+/*************************************** App API ***************************************/
+
+func (model *DatabaseModel) GetApps() (apps models.Applications) <span class="cov0" title="0">{
+        rows, _ := model.Database.Queryx(`
+                SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+                FROM app
+        `)
+        defer rows.Close()
+
+        for rows.Next() </span><span class="cov0" title="0">{
+                temp := models.Application{}
+                if err := rows.Scan(&amp;temp.Link, &amp;temp.Url, &amp;temp.Name, &amp;temp.NameDE, &amp;temp.NameRU, &amp;temp.Image, &amp;temp.About, &amp;temp.AboutDE, &amp;temp.AboutRU, &amp;temp.Installations, &amp;temp.Category); err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "scan failed",
+                        //         "source", "database.go",
+                        //         "who", "GetApps",
+                        // )
+
+                        return models.Applications{}
+                }</span>
+
+                <span class="cov0" title="0">apps.Applications = append(apps.Applications, temp)</span>
+        }
+
+        // model.LG.Info(
+        //         "GetApps succeeded",
+        //         "source", "database.go",
+        //         "who", "GetApps",
+        // )
+
+        <span class="cov0" title="0">return apps</span>
+}
+
+func (model *DatabaseModel) GetCategories() (categories models.Categories) <span class="cov0" title="0">{
+        rows, _ := model.Database.Queryx(`
+                SELECT DISTINCT category FROM app ORDER BY category DESC;
+        `)
+        defer rows.Close()
+        var temp string
+        for rows.Next() </span><span class="cov0" title="0">{
+                if err := rows.Scan(&amp;temp); err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "scan failed",
+                        //         "source", "database.go",
+                        //         "who", "GetPopularApps",
+                        // )
+
+                        return models.Categories{}
+                }</span>
+
+                <span class="cov0" title="0">categories.Categories = append(categories.Categories, temp)</span>
+        }
+
+        // model.LG.Info(
+        //         "GetPopularApps succeeded",
+        //         "source", "database.go",
+        //         "who", "GetPopularApps",
+        // )
+
+        <span class="cov0" title="0">return categories</span>
+}
+
+func (model *DatabaseModel) GetPopularApps() (apps models.Applications) <span class="cov0" title="0">{
+        rows, _ := model.Database.Queryx(`
+                SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+                        FROM app
+                        ORDER BY installs DESC;
+        `)
+        defer rows.Close()
+
+        for rows.Next() </span><span class="cov0" title="0">{
+                temp := models.Application{}
+                if err := rows.Scan(&amp;temp.Link, &amp;temp.Url, &amp;temp.Name, &amp;temp.NameDE, &amp;temp.NameRU, &amp;temp.Image, &amp;temp.About, &amp;temp.AboutDE, &amp;temp.AboutRU, &amp;temp.Installations, &amp;temp.Category); err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "scan failed",
+                        //         "source", "database.go",
+                        //         "who", "GetPopularApps",
+                        // )
+
+                        return models.Applications{}
+                }</span>
+
+                <span class="cov0" title="0">apps.Applications = append(apps.Applications, temp)</span>
+        }
+
+        // model.LG.Info(
+        //         "GetPopularApps succeeded",
+        //         "source", "database.go",
+        //         "who", "GetPopularApps",
+        // )
+
+        <span class="cov0" title="0">return apps</span>
+}
+
+func (model *DatabaseModel) GetApp(name string) (app models.Application) <span class="cov0" title="0">{
+        if isPresent, problem := model.Present("app", "name", name); isPresent &amp;&amp; problem == nil </span><span class="cov0" title="0">{
+                row := model.Database.QueryRowx(`
+                        SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+                                FROM app
+                                WHERE name=$1;`, name)
+                err := row.Scan(&amp;app.Link, &amp;app.Url, &amp;app.Name, &amp;app.NameDE, &amp;app.NameRU, &amp;app.Image, &amp;app.About, &amp;app.AboutDE, &amp;app.AboutRU, &amp;app.Installations, &amp;app.Category)
+
+                if err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "GetApp failed, scan err: "+err.Error(),
+                        //         "source", "database.go",
+                        //         "who", "GetApp",
+                        // )
+
+                        return models.Application{}
+                }</span>
+
+                // model.LG.Info(
+                //         "GetApp succeeded",
+                //         "source", "database.go",
+                //         "who", "GetApp",
+                // )
+
+                <span class="cov0" title="0">return app</span>
+        } else<span class="cov0" title="0"> if problem != nil </span><span class="cov0" title="0">{
+
+                // model.LG.Info(
+                //         "Present failed",
+                //         "source", "database.go",
+                //         "who", "GetApp",
+                // )
+
+                return models.Application{}
+        }</span>
+
+        // model.LG.Info(
+        //         "GetApp failed, app doesn't exist",
+        //         "source", "database.go",
+        //         "who", "GetApp",
+        // )
+
+        <span class="cov0" title="0">return models.Application{}</span>
+}
+
+func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app models.UserApplicationInstalled) <span class="cov0" title="0">{
+        if isPresent, problem := model.Present("app", "name", name); isPresent &amp;&amp; problem == nil </span><span class="cov0" title="0">{
+                row := model.Database.QueryRowx(`
+                        SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+                                FROM app
+                                WHERE name=$1;`, name)
+                err := row.Scan(&amp;app.Link, &amp;app.Url, &amp;app.Name, &amp;app.NameDE, &amp;app.NameRU, &amp;app.Image, &amp;app.About, &amp;app.AboutDE, &amp;app.AboutRU, &amp;app.Installations, &amp;app.Category)
+
+                if err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "GetApp failed, scan error: "+err.Error(),
+                        //         "source", "database.go",
+                        //         "who", "GetApp",
+                        // )
+
+                        return models.UserApplicationInstalled{}
+                }</span>
+
+                <span class="cov0" title="0">var exists string
+                rowInst := model.Database.QueryRowx(`SELECT EXISTS
+                                                                                        (SELECT true
+                                                                                        FROM userapp
+                                                                                        JOIN app
+                                                                                        USING(appid)
+                                                                                        WHERE userapp.uid=(SELECT DISTINCT session.uid
+                                                                                                FROM session JOIN userinfo
+                                                                                                USING(uid)
+                                                                                                WHERE cookie=$1) AND name=$2);`, cookie, name)
+                err = rowInst.Scan(&amp;exists)
+
+                if err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "Scan failed",
+                        //         "source", "database.go",
+                        //         "who", "Present",
+                        // )
+
+                        return models.UserApplicationInstalled{}
+                }</span>
+
+                <span class="cov0" title="0">app.Installed, err = strconv.ParseBool(exists)
+
+                if err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "strconv.ParseBool failed",
+                        //         "source", "database.go",
+                        //         "who", "Present",
+                        // )
+
+                        return models.UserApplicationInstalled{}
+                }</span>
+
+                // model.LG.Info(
+                //         "GetApp succeeded",
+                //         "source", "database.go",
+                //         "who", "GetApp",
+                // )
+
+                <span class="cov0" title="0">return app</span>
+        } else<span class="cov0" title="0"> if problem != nil </span><span class="cov0" title="0">{
+
+                // model.LG.Info(
+                //         "Present failed",
+                //         "source", "database.go",
+                //         "who", "GetApp",
+                // )
+
+                return models.UserApplicationInstalled{}
+        }</span>
+
+        // model.LG.Info(
+        //         "GetApp failed, app doesn't exist",
+        //         "source", "database.go",
+        //         "who", "GetApp",
+        // )
+
+        <span class="cov0" title="0">return models.UserApplicationInstalled{}</span>
+}
+
+func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applications) <span class="cov0" title="0">{
+        rows, _ := model.Database.Queryx(`
+        SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+                FROM app
+                JOIN userapp
+                USING(appid)
+                WHERE userapp.uid=(SELECT DISTINCT session.uid
+                        FROM session
+                        JOIN userinfo
+                        USING(uid)
+                        WHERE cookie=$1);
+        `, cookie)
+        defer rows.Close()
+
+        for rows.Next() </span><span class="cov0" title="0">{
+                temp := models.Application{}
+                if err := rows.Scan(&amp;temp.Link, &amp;temp.Url, &amp;temp.Name, &amp;temp.NameDE, &amp;temp.NameRU, &amp;temp.Image, &amp;temp.About, &amp;temp.AboutDE, &amp;temp.AboutRU, &amp;temp.Installations, &amp;temp.Category); err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "scan failed",
+                        //         "source", "database.go",
+                        //         "who", "GetMyApps",
+                        // )
+
+                        return models.Applications{}
+                }</span>
+
+                <span class="cov0" title="0">user_apps.Applications = append(user_apps.Applications, temp)</span>
+        }
+
+        // model.LG.Info(
+        //         "GetMyApps succeeded",
+        //         "source", "database.go",
+        //         "who", "GetMyApps",
+        // )
+
+        <span class="cov0" title="0">return user_apps</span>
+}
+
+func (model *DatabaseModel) AddApp(cookie string, appname string) <span class="cov8" title="1">{
+
+        // model.Database.MustExec(`
+        //                 UPDATE app
+        //                 SET installs=installs+1
+        //                 WHERE name=$1;
+        //         `, appname)
+
+        fmt.Println(cookie, appname)
+        model.Database.MustExec(`
+                        INSERT INTO userapp(uid, appid)
+                        VALUES(
+                                (SELECT DISTINCT session.uid FROM session
+                                JOIN userinfo
+                                USING(uid)
+                                WHERE cookie=$1)
+                                ,
+                                (SELECT appid FROM app
+                                WHERE name=$2)
+                        )
+                        ON CONFLICT DO NOTHING;
+                `, cookie, appname)
+
+        // model.LG.Info(
+        //         "AddApp succeeded",
+        //         "source", "database.go",
+        //         "who", "AddApp",
+        // )
+        return
+}</span>
+
+func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.Applications) <span class="cov0" title="0">{
+        rows, _ := model.Database.Queryx(`
+                SELECT link,url,name,name_de,name_ru,image,about,about_de,about_ru,installs,category
+                FROM app
+                WHERE category=$1
+                ORDER BY installs DESC;
+        `, category)
+        defer rows.Close()
+
+        for rows.Next() </span><span class="cov0" title="0">{
+                temp := models.Application{}
+                if err := rows.Scan(&amp;temp.Link, &amp;temp.Url, &amp;temp.Name, &amp;temp.Image, &amp;temp.About, &amp;temp.Installations, &amp;temp.Category); err != nil </span><span class="cov0" title="0">{
+
+                        // model.LG.Info(
+                        //         "scan failed",
+                        //         "source", "database.go",
+                        //         "who", "GetPopularApps",
+                        // )
+
+                        return models.Applications{}
+                }</span>
+
+                <span class="cov0" title="0">apps.Applications = append(apps.Applications, temp)</span>
+        }
+
+        // model.LG.Info(
+        //         "GetPopularApps succeeded",
+        //         "source", "database.go",
+        //         "who", "GetPopularApps",
+        // )
+
+        <span class="cov0" title="0">return apps</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
