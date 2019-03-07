@@ -77,6 +77,9 @@ func (r *Counter) getNextCounter() int64 {
 			set[c] = true
 		}
 		for i, bUsed := range set {
+			if i == 0 {
+				continue
+			}
 			if bUsed {
 				continue
 			}
