@@ -18,7 +18,10 @@
             "http://192.168.137.1:3000/",
             "SNAKEWAVE.COM",
             "snakewave.com",
-            "https://snakewave.com"
+            "https://snakewave.com",
+            "SNAKEWAVE.DE",
+            "snakewave.de",
+            "https://snakewave.de"
         ],
         "headers": [
             "Content-type"
