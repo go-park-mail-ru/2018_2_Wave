@@ -430,9 +430,9 @@ func (model *DatabaseModel) Register(credentials models.UserEdit) (string, error
 	hashedPsswd := misc.GeneratePasswordHash(credentials.Password)
 
 	model.Database.MustExec(`
-			INSERT INTO userinfo(username, password, avatar)
-			VALUES($1, $2, $3);
-		`, credentials.Username, hashedPsswd, credentials.Avatar)
+			INSERT INTO userinfo(username, password, avatar, locale)
+			VALUES($1, $2, $3, $4);
+		`, credentials.Username, hashedPsswd, credentials.Avatar, credentials.Locale)
 
 	model.Database.MustExec(`
 		INSERT INTO session(uid, cookie)

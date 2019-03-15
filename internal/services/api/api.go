@@ -101,6 +101,7 @@ func (h *Handler) RegisterPOSTHandler(rw http.ResponseWriter, r *http.Request) {
 	user := models.UserEdit{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
+		Locale:   r.FormValue("locale"),
 	}
 
 	var created bool

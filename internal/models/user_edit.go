@@ -5,4 +5,5 @@ type UserEdit struct {
 	Username string `json:"username", omitempty`
 	Password string `json:"password", omitempty`
 	Avatar   string `json:"avatar", omitempty`
+	Locale   string `json:"locale", omitempty`
 }
