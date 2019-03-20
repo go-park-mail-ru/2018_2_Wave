@@ -1,13 +1,10 @@
 package database
 
 import (
-	lg "Wave/internal/logger"
 	"Wave/internal/misc"
 	"Wave/internal/models"
-	"os"
+	"flag"
 	"strconv"
-
-	"github.com/namsral/flag"
 
 	"fmt"
 
@@ -25,18 +22,18 @@ const (
 
 type DatabaseModel struct {
 	Database *sqlx.DB
-	LG       lg.Logger
+	// LG       lg.Logger
 }
 
-func New(lg_ *lg.Logger) *DatabaseModel {
+func New( /*lg_ *lg.Logger*/ ) *DatabaseModel {
 	var (
 		postgr = &DatabaseModel{
-			LG: *lg_,
+			// LG: *lg_,
 		}
 		dbuser     string
 		dbpassword string
 		dbname     string
-		err        error
+		//		err        error
 	)
 	flag.StringVar(&dbuser, "WAVE_DB_USER", "Wave", "")
 	flag.StringVar(&dbname, "WAVE_DB_NAME", "Wave", "")
@@ -45,24 +42,23 @@ func New(lg_ *lg.Logger) *DatabaseModel {
 
 	// postgr.Database, err = sqlx.Connect("postgres", "user="+dbuser+" password="+dbpassword+" dbname='"+dbname+"' "+"sslmode=disable")
 
-	postgr.Database, err = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
+	postgr.Database, _ = sqlx.Connect("postgres", "user=waveapp password='surf' dbname='wave' sslmode=disable")
 
-	if err != nil {
-		postgr.LG.Info(
-			"PostgreSQL connection establishment failed",
-			"source", "database.go",
-			"who", "New",
-		)
+	// if err != nil {
+	// 	// postgr.LG.Info(
+	// 	// 	"PostgreSQL connection establishment failed",
+	// 	// 	"source", "database.go",
+	// 	// 	"who", "New",
+	// 	// )
 
-		os.Exit(1)
-		// exitting
-	}
+	// 	os.Exit(1)
+	// }
 
-	postgr.LG.Info(
-		"PostgreSQL connection establishment succeeded",
-		"source", "database.go",
-		"who", "New",
-	)
+	// postgr.LG.Info(
+	// 	"PostgreSQL connection establishment succeeded",
+	// 	"source", "database.go",
+	// 	"who", "New",
+	// )
 
 	return postgr
 }
@@ -75,11 +71,11 @@ func (model *DatabaseModel) Present(tableName string, colName string, target str
 
 	if err != nil {
 
-		model.LG.Info(
-			"Scan failed",
-			"source", "database.go",
-			"who", "Present",
-		)
+		// model.LG.Info(
+		// 	"Scan failed",
+		// 	"source", "database.go",
+		// 	"who", "Present",
+		// )
 
 		return false, err
 	}
@@ -88,11 +84,11 @@ func (model *DatabaseModel) Present(tableName string, colName string, target str
 
 	if err != nil {
 
-		model.LG.Info(
-			"strconv.ParseBool failed",
-			"source", "database.go",
-			"who", "Present",
-		)
+		// model.LG.Info(
+		// 	"strconv.ParseBool failed",
+		// 	"source", "database.go",
+		// 	"who", "Present",
+		// )
 
 		return false, err
 	}
@@ -130,11 +126,11 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 
 		if err != nil {
 
-			model.LG.Info(
-				"Scan failed",
-				"source", "database.go",
-				"who", "LogIn",
-			)
+			// model.LG.Info(
+			// 	"Scan failed",
+			// 	"source", "database.go",
+			// 	"who", "LogIn",
+			// )
 
 			return "", err
 		}
@@ -149,38 +145,38 @@ func (model *DatabaseModel) Login(credentials models.UserCredentials) (cookie st
 				);
 			`, credentials.Username, cookie)
 
-			model.LG.Info(
-				"login succeeded, cookie set",
-				"source", "database.go",
-				"who", "LogIn",
-			)
+			// model.LG.Info(
+			// 	"login succeeded, cookie set",
+			// 	"source", "database.go",
+			// 	"who", "LogIn",
+			// )
 
 			return cookie, nil
 		} else {
-			model.LG.Info(
-				"login failed, wrong password",
-				"source", "database.go",
-				"who", "LogIn",
-			)
+			// model.LG.Info(
+			// 	"login failed, wrong password",
+			// 	"source", "database.go",
+			// 	"who", "LogIn",
+			// )
 
 			return "", nil
 		}
 	} else if problem != nil {
 
-		model.LG.Info(
-			"Present failed",
-			"source", "database.go",
-			"who", "LogIn",
-		)
+		// model.LG.Info(
+		// 	"Present failed",
+		// 	"source", "database.go",
+		// 	"who", "LogIn",
+		// )
 
 		return "", problem
 	}
 
-	model.LG.Info(
-		"login failed, no such user",
-		"source", "database.go",
-		"who", "LogIn",
-	)
+	// model.LG.Info(
+	// 	"login failed, no such user",
+	// 	"source", "database.go",
+	// 	"who", "LogIn",
+	// )
 
 	return "", nil
 }
@@ -197,20 +193,20 @@ func (model *DatabaseModel) GetMyProfile(cookie string) (profile models.UserExte
 
 	if err != nil {
 
-		model.LG.Info(
-			"getmyprofile failed, scan error",
-			"source", "database.go",
-			"who", "GetMyProfile",
-		)
+		// model.LG.Info(
+		// 	"getmyprofile failed, scan error",
+		// 	"source", "database.go",
+		// 	"who", "GetMyProfile",
+		// )
 
 		return models.UserExtended{}, err
 	}
 
-	model.LG.Info(
-		"getmyprofile succeeded",
-		"source", "database.go",
-		"who", "GetMyProfile",
-	)
+	// model.LG.Info(
+	// 	"getmyprofile succeeded",
+	// 	"source", "database.go",
+	// 	"who", "GetMyProfile",
+	// )
 
 	return profile, nil
 }
@@ -227,20 +223,20 @@ func (model *DatabaseModel) UpdateMyLocale(cookie string, locale string) (err er
 
 	if err != nil {
 
-		model.LG.Info(
-			"getmyprofile failed, scan error",
-			"source", "database.go",
-			"who", "GetMyProfile",
-		)
+		// model.LG.Info(
+		// 	"getmyprofile failed, scan error",
+		// 	"source", "database.go",
+		// 	"who", "GetMyProfile",
+		// )
 
 		return err
 	}
 
-	model.LG.Info(
-		"getmyprofile succeeded",
-		"source", "database.go",
-		"who", "GetMyProfile",
-	)
+	// model.LG.Info(
+	// 	"getmyprofile succeeded",
+	// 	"source", "database.go",
+	// 	"who", "GetMyProfile",
+	// )
 
 	return nil
 }
@@ -256,38 +252,38 @@ func (model *DatabaseModel) GetProfile(username string) (profile models.UserExte
 
 		if err != nil {
 
-			model.LG.Info(
-				"getprofile failed, scan error",
-				"source", "database.go",
-				"who", "GetProfile",
-			)
+			// model.LG.Info(
+			// 	"getprofile failed, scan error",
+			// 	"source", "database.go",
+			// 	"who", "GetProfile",
+			// )
 
 			return models.UserExtended{}, err
 		}
 
-		model.LG.Info(
-			"getprofile succeeded",
-			"source", "database.go",
-			"who", "GetProfile",
-		)
+		// model.LG.Info(
+		// 	"getprofile succeeded",
+		// 	"source", "database.go",
+		// 	"who", "GetProfile",
+		// )
 
 		return profile, nil
 	} else if problem != nil {
 
-		model.LG.Info(
-			"Present failed",
-			"source", "database.go",
-			"who", "GetProfile",
-		)
+		// model.LG.Info(
+		// 	"Present failed",
+		// 	"source", "database.go",
+		// 	"who", "GetProfile",
+		// )
 
 		return models.UserExtended{}, err
 	}
 
-	model.LG.Info(
-		"getprofile failed, user doesn't exist",
-		"source", "database.go",
-		"who", "GetProfile",
-	)
+	// model.LG.Info(
+	// 	"getprofile failed, user doesn't exist",
+	// 	"source", "database.go",
+	// 	"who", "GetProfile",
+	// )
 
 	return models.UserExtended{}, nil
 }
@@ -296,11 +292,11 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 	if profile.Username != "" {
 		isPresent, problem := model.Present(UserInfoTable, UsernameCol, profile.Username)
 		if problem != nil {
-			model.LG.Info(
-				"Present failed",
-				"source", "database.go",
-				"who", "UpdateProfile",
-			)
+			// model.LG.Info(
+			// 	"Present failed",
+			// 	"source", "database.go",
+			// 	"who", "UpdateProfile",
+			// )
 
 			return problem
 		}
@@ -317,26 +313,26 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 					);
 				`, profile.Username, cookie)
 
-				model.LG.Info(
-					"update profile succeeded, username updated",
-					"source", "database.go",
-					"who", "UpdateProfile",
-				)
+				// model.LG.Info(
+				// 	"update profile succeeded, username updated",
+				// 	"source", "database.go",
+				// 	"who", "UpdateProfile",
+				// )
 			} else {
 
-				model.LG.Info(
-					"update profile failed, invalid username",
-					"source", "database.go",
-					"who", "UpdateProfile",
-				)
+				// model.LG.Info(
+				// 	"update profile failed, invalid username",
+				// 	"source", "database.go",
+				// 	"who", "UpdateProfile",
+				// )
 			}
 		}
 		if isPresent {
-			model.LG.Info(
-				"update profile failed, username already in use",
-				"source", "database.go",
-				"who", "UpdateProfile",
-			)
+			// model.LG.Info(
+			// 	"update profile failed, username already in use",
+			// 	"source", "database.go",
+			// 	"who", "UpdateProfile",
+			// )
 		}
 	}
 
@@ -354,18 +350,18 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 				);
 			`, hashedPsswd, cookie)
 
-			model.LG.Info(
-				"update profile succeeded, password updated",
-				"source", "database.go",
-				"who", "UpdateProfile",
-			)
+			// model.LG.Info(
+			// 	"update profile succeeded, password updated",
+			// 	"source", "database.go",
+			// 	"who", "UpdateProfile",
+			// )
 		} else {
 
-			model.LG.Info(
-				"update profile failed, invalid password",
-				"source", "database.go",
-				"who", "UpdateProfile",
-			)
+			// model.LG.Info(
+			// 	"update profile failed, invalid password",
+			// 	"source", "database.go",
+			// 	"who", "UpdateProfile",
+			// )
 		}
 	}
 
@@ -381,11 +377,11 @@ func (model *DatabaseModel) UpdateProfile(profile models.UserEdit, cookie string
 			);
 		`, profile.Avatar, cookie)
 
-		model.LG.Info(
-			"update profile succeeded, avatar updated",
-			"source", "database.go",
-			"who", "UpdateProfile",
-		)
+		// model.LG.Info(
+		// 	"update profile succeeded, avatar updated",
+		// 	"source", "database.go",
+		// 	"who", "UpdateProfile",
+		// )
 	}
 
 	return nil
@@ -398,11 +394,11 @@ func (model *DatabaseModel) Logout(cookie string) bool {
 	WHERE cookie=$1;
 	`, cookie)
 
-	model.LG.Info(
-		"logout succeeded",
-		"source", "database.go",
-		"who", "Logout",
-	)
+	// model.LG.Info(
+	// 	"logout succeeded",
+	// 	"source", "database.go",
+	// 	"who", "Logout",
+	// )
 
 	return true
 }
@@ -442,11 +438,11 @@ func (model *DatabaseModel) Register(credentials models.UserEdit) (string, error
 		);
 	`, credentials.Username, cookie)
 
-	model.LG.Info(
-		"signup succeeded",
-		"source", "database.go",
-		"who", "Register",
-	)
+	// model.LG.Info(
+	// 	"signup succeeded",
+	// 	"source", "database.go",
+	// 	"who", "Register",
+	// )
 
 	model.AddApp(cookie, "Terminal")
 	model.AddApp(cookie, "Snake")
@@ -482,22 +478,23 @@ func (model *DatabaseModel) GetApps() (apps models.Applications) {
 		temp := models.Application{}
 		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.NameDE, &temp.NameRU, &temp.Image, &temp.About, &temp.AboutDE, &temp.AboutRU, &temp.Installations, &temp.Category); err != nil {
 
-			model.LG.Info(
-				"scan failed",
-				"source", "database.go",
-				"who", "GetApps",
-			)
+			// model.LG.Info(
+			// 	"scan failed",
+			// 	"source", "database.go",
+			// 	"who", "GetApps",
+			// )
+
 			return models.Applications{}
 		}
 
 		apps.Applications = append(apps.Applications, temp)
 	}
 
-	model.LG.Info(
-		"GetApps succeeded",
-		"source", "database.go",
-		"who", "GetApps",
-	)
+	// model.LG.Info(
+	// 	"GetApps succeeded",
+	// 	"source", "database.go",
+	// 	"who", "GetApps",
+	// )
 
 	return apps
 }
@@ -511,11 +508,11 @@ func (model *DatabaseModel) GetCategories() (categories models.Categories) {
 	for rows.Next() {
 		if err := rows.Scan(&temp); err != nil {
 
-			model.LG.Info(
-				"scan failed",
-				"source", "database.go",
-				"who", "GetPopularApps",
-			)
+			// model.LG.Info(
+			// 	"scan failed",
+			// 	"source", "database.go",
+			// 	"who", "GetPopularApps",
+			// )
 
 			return models.Categories{}
 		}
@@ -523,11 +520,11 @@ func (model *DatabaseModel) GetCategories() (categories models.Categories) {
 		categories.Categories = append(categories.Categories, temp)
 	}
 
-	model.LG.Info(
-		"GetPopularApps succeeded",
-		"source", "database.go",
-		"who", "GetPopularApps",
-	)
+	// model.LG.Info(
+	// 	"GetPopularApps succeeded",
+	// 	"source", "database.go",
+	// 	"who", "GetPopularApps",
+	// )
 
 	return categories
 }
@@ -544,11 +541,11 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 		temp := models.Application{}
 		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.NameDE, &temp.NameRU, &temp.Image, &temp.About, &temp.AboutDE, &temp.AboutRU, &temp.Installations, &temp.Category); err != nil {
 
-			model.LG.Info(
-				"scan failed",
-				"source", "database.go",
-				"who", "GetPopularApps",
-			)
+			// model.LG.Info(
+			// 	"scan failed",
+			// 	"source", "database.go",
+			// 	"who", "GetPopularApps",
+			// )
 
 			return models.Applications{}
 		}
@@ -556,11 +553,11 @@ func (model *DatabaseModel) GetPopularApps() (apps models.Applications) {
 		apps.Applications = append(apps.Applications, temp)
 	}
 
-	model.LG.Info(
-		"GetPopularApps succeeded",
-		"source", "database.go",
-		"who", "GetPopularApps",
-	)
+	// model.LG.Info(
+	// 	"GetPopularApps succeeded",
+	// 	"source", "database.go",
+	// 	"who", "GetPopularApps",
+	// )
 
 	return apps
 }
@@ -575,38 +572,38 @@ func (model *DatabaseModel) GetApp(name string) (app models.Application) {
 
 		if err != nil {
 
-			model.LG.Info(
-				"GetApp failed, scan err: "+err.Error(),
-				"source", "database.go",
-				"who", "GetApp",
-			)
+			// model.LG.Info(
+			// 	"GetApp failed, scan err: "+err.Error(),
+			// 	"source", "database.go",
+			// 	"who", "GetApp",
+			// )
 
 			return models.Application{}
 		}
 
-		model.LG.Info(
-			"GetApp succeeded",
-			"source", "database.go",
-			"who", "GetApp",
-		)
+		// model.LG.Info(
+		// 	"GetApp succeeded",
+		// 	"source", "database.go",
+		// 	"who", "GetApp",
+		// )
 
 		return app
 	} else if problem != nil {
 
-		model.LG.Info(
-			"Present failed",
-			"source", "database.go",
-			"who", "GetApp",
-		)
+		// model.LG.Info(
+		// 	"Present failed",
+		// 	"source", "database.go",
+		// 	"who", "GetApp",
+		// )
 
 		return models.Application{}
 	}
 
-	model.LG.Info(
-		"GetApp failed, app doesn't exist",
-		"source", "database.go",
-		"who", "GetApp",
-	)
+	// model.LG.Info(
+	// 	"GetApp failed, app doesn't exist",
+	// 	"source", "database.go",
+	// 	"who", "GetApp",
+	// )
 
 	return models.Application{}
 }
@@ -621,11 +618,11 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 
 		if err != nil {
 
-			model.LG.Info(
-				"GetApp failed, scan error: "+err.Error(),
-				"source", "database.go",
-				"who", "GetApp",
-			)
+			// model.LG.Info(
+			// 	"GetApp failed, scan error: "+err.Error(),
+			// 	"source", "database.go",
+			// 	"who", "GetApp",
+			// )
 
 			return models.UserApplicationInstalled{}
 		}
@@ -644,11 +641,11 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 
 		if err != nil {
 
-			model.LG.Info(
-				"Scan failed",
-				"source", "database.go",
-				"who", "Present",
-			)
+			// model.LG.Info(
+			// 	"Scan failed",
+			// 	"source", "database.go",
+			// 	"who", "Present",
+			// )
 
 			return models.UserApplicationInstalled{}
 		}
@@ -657,38 +654,38 @@ func (model *DatabaseModel) GetAppPersonal(cookie string, name string) (app mode
 
 		if err != nil {
 
-			model.LG.Info(
-				"strconv.ParseBool failed",
-				"source", "database.go",
-				"who", "Present",
-			)
+			// model.LG.Info(
+			// 	"strconv.ParseBool failed",
+			// 	"source", "database.go",
+			// 	"who", "Present",
+			// )
 
 			return models.UserApplicationInstalled{}
 		}
 
-		model.LG.Info(
-			"GetApp succeeded",
-			"source", "database.go",
-			"who", "GetApp",
-		)
+		// model.LG.Info(
+		// 	"GetApp succeeded",
+		// 	"source", "database.go",
+		// 	"who", "GetApp",
+		// )
 
 		return app
 	} else if problem != nil {
 
-		model.LG.Info(
-			"Present failed",
-			"source", "database.go",
-			"who", "GetApp",
-		)
+		// model.LG.Info(
+		// 	"Present failed",
+		// 	"source", "database.go",
+		// 	"who", "GetApp",
+		// )
 
 		return models.UserApplicationInstalled{}
 	}
 
-	model.LG.Info(
-		"GetApp failed, app doesn't exist",
-		"source", "database.go",
-		"who", "GetApp",
-	)
+	// model.LG.Info(
+	// 	"GetApp failed, app doesn't exist",
+	// 	"source", "database.go",
+	// 	"who", "GetApp",
+	// )
 
 	return models.UserApplicationInstalled{}
 }
@@ -711,11 +708,11 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applicati
 		temp := models.Application{}
 		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.NameDE, &temp.NameRU, &temp.Image, &temp.About, &temp.AboutDE, &temp.AboutRU, &temp.Installations, &temp.Category); err != nil {
 
-			model.LG.Info(
-				"scan failed",
-				"source", "database.go",
-				"who", "GetMyApps",
-			)
+			// model.LG.Info(
+			// 	"scan failed",
+			// 	"source", "database.go",
+			// 	"who", "GetMyApps",
+			// )
 
 			return models.Applications{}
 		}
@@ -723,11 +720,11 @@ func (model *DatabaseModel) GetMyApps(cookie string) (user_apps models.Applicati
 		user_apps.Applications = append(user_apps.Applications, temp)
 	}
 
-	model.LG.Info(
-		"GetMyApps succeeded",
-		"source", "database.go",
-		"who", "GetMyApps",
-	)
+	// model.LG.Info(
+	// 	"GetMyApps succeeded",
+	// 	"source", "database.go",
+	// 	"who", "GetMyApps",
+	// )
 
 	return user_apps
 }
@@ -755,11 +752,11 @@ func (model *DatabaseModel) AddApp(cookie string, appname string) {
 			ON CONFLICT DO NOTHING;
 		`, cookie, appname)
 
-	model.LG.Info(
-		"AddApp succeeded",
-		"source", "database.go",
-		"who", "AddApp",
-	)
+	// model.LG.Info(
+	// 	"AddApp succeeded",
+	// 	"source", "database.go",
+	// 	"who", "AddApp",
+	// )
 	return
 }
 
@@ -776,11 +773,11 @@ func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.App
 		temp := models.Application{}
 		if err := rows.Scan(&temp.Link, &temp.Url, &temp.Name, &temp.Image, &temp.About, &temp.Installations, &temp.Category); err != nil {
 
-			model.LG.Info(
-				"scan failed",
-				"source", "database.go",
-				"who", "GetPopularApps",
-			)
+			// model.LG.Info(
+			// 	"scan failed",
+			// 	"source", "database.go",
+			// 	"who", "GetPopularApps",
+			// )
 
 			return models.Applications{}
 		}
@@ -788,11 +785,11 @@ func (model *DatabaseModel) GetAppsByCattegory(category string) (apps models.App
 		apps.Applications = append(apps.Applications, temp)
 	}
 
-	model.LG.Info(
-		"GetPopularApps succeeded",
-		"source", "database.go",
-		"who", "GetPopularApps",
-	)
+	// model.LG.Info(
+	// 	"GetPopularApps succeeded",
+	// 	"source", "database.go",
+	// 	"who", "GetPopularApps",
+	// )
 
 	return apps
 }
